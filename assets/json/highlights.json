@@ -1,0 +1,26 @@
+[
+  {
+    "id": "h_100",
+    "shopId": "shopee",
+    "title": "Tai nghe True Wireless XYZ",
+    "imageUrl": "https://picsum.photos/seed/highlight1/640/640",
+    "priceOriginal": 499000,
+    "priceDeal": 299000,
+    "discountPercent": 40,
+    "productLink": "https://example.com/p/xyz",
+    "validUntil": "2025-11-05T00:00:00Z",
+    "badge": "HOT"
+  },
+  {
+    "id": "h_101",
+    "shopId": "lazada",
+    "title": "Nồi chiên không dầu ABC",
+    "imageUrl": "https://picsum.photos/seed/highlight2/640/640",
+    "priceOriginal": 1899000,
+    "priceDeal": 1299000,
+    "discountPercent": 32,
+    "productLink": "https://example.com/p/abc",
+    "validUntil": "2025-10-30T00:00:00Z",
+    "badge": "FLASH"
+  }
+]

@@ -1,0 +1,7 @@
+[
+  {"id":"food","name":"Ăn uống","slug":"an-uong","iconUrl":"https://example.com/icon/food.png","parentId":null,"order":1},
+  {"id":"market","name":"Đi chợ","slug":"di-cho","iconUrl":"https://example.com/icon/market.png","parentId":null,"order":2},
+  {"id":"tech","name":"Công nghệ","slug":"cong-nghe","iconUrl":"https://example.com/icon/tech.png","parentId":null,"order":3},
+  {"id":"beauty","name":"Làm đẹp","slug":"lam-dep","iconUrl":"https://example.com/icon/beauty.png","parentId":null,"order":4},
+  {"id":"home","name":"Nhà cửa","slug":"nha-cua","iconUrl":"https://example.com/icon/home.png","parentId":null,"order":5}
+]
