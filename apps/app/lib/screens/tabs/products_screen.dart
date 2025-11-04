@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../widgets/banner_slider.dart';
 import '../../widgets/section_title.dart';
 import '../../widgets/category_pill.dart';
 import '../../widgets/product_tile.dart';
-import '../../widgets/voucher_card.dart';
 
 import '../../models/category.dart';
 import '../../models/product.dart';
@@ -19,37 +17,27 @@ import '../../data/impl/category_repo_mock.dart';
 import '../../data/impl/product_repo_mock.dart';
 import '../../data/impl/coupon_repo_mock.dart';
 
-import '../detail/voucher_detail_screen.dart';
-
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+class ProductsScreen extends StatefulWidget {
+  const ProductsScreen({super.key});
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<ProductsScreen> createState() => _ProductsScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-  // Banner demo
-  final _banners = const [
-    'assets/images/OIP.webp',
-    'assets/images/OIP.webp',
-    'assets/images/OIP.webp',
-  ];
-
-  // Repo (mock)
+class _ProductsScreenState extends State<ProductsScreen> {
+  // Repo (mock cho demo)
   final CategoryRepo _catRepo = CategoryRepoMock();
   final ProductRepo _productRepo = ProductRepoMock();
   final CouponRepo _couponRepo = CouponRepoMock();
 
   // State
   final _scrollCtrl = ScrollController();
-  final _products = <Product>[];
-  final _hotProducts = <Product>[];
-  final _hotCoupons = <Coupon>[];
 
   List<Category> _cats = [];
+  final _hotProducts = <Product>[];
+  final _products = <Product>[];
   List<Coupon> _allCoupons = [];
-  int? _selectedCat;
 
+  int? _selectedCat;
   int _page = 1;
   bool _loading = false;
   bool _end = false;
@@ -68,34 +56,28 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _init() async {
-    // Tải danh mục
+    // tải danh mục
     _cats = await _catRepo.list();
 
-    // Tải coupons phục vụ tính giá & hiển thị mã hot
-    final allCp = await _couponRepo.list(pageSize: 999);
-    _allCoupons = allCp.data;
+    // lấy tất cả coupon (mock) để tính giá giảm cho item
+    final cp = await _couponRepo.list(pageSize: 999);
+    _allCoupons = cp.data;
 
-    // Mã hot
-    _hotCoupons
-      ..clear()
-      ..addAll(await _couponRepo.hot(limit: 8));
-
-    // Sản phẩm hot
+    // sản phẩm hot
     _hotProducts
       ..clear()
       ..addAll(await _productRepo.hot(limit: 8));
 
-    // Trang sản phẩm đầu tiên
-    await _loadFirstProducts();
+    await _loadFirst();
 
     if (mounted) setState(() {});
   }
 
-  Future<void> _loadFirstProducts() async {
+  Future<void> _loadFirst() async {
     setState(() => _loading = true);
     final PageResult<Product> page = await _productRepo.list(
       page: 1,
-      pageSize: 10,
+      pageSize: 20,
       categoryId: _selectedCat,
     );
     setState(() {
@@ -108,12 +90,12 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  Future<void> _loadMoreProducts() async {
+  Future<void> _loadMore() async {
     if (_loading || _end) return;
     setState(() => _loading = true);
     final PageResult<Product> page = await _productRepo.list(
       page: _page + 1,
-      pageSize: 10,
+      pageSize: 20,
       categoryId: _selectedCat,
     );
     setState(() {
@@ -127,22 +109,18 @@ class _HomeScreenState extends State<HomeScreen> {
   void _onScroll() {
     if (_scrollCtrl.position.pixels >=
         _scrollCtrl.position.maxScrollExtent - 200) {
-      _loadMoreProducts();
+      _loadMore();
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return RefreshIndicator(
-      onRefresh: _loadFirstProducts,
+      onRefresh: _loadFirst,
       child: ListView(
         controller: _scrollCtrl,
         padding: const EdgeInsets.only(bottom: 24),
         children: [
-          const SizedBox(height: 8),
-          BannerSlider(images: _banners),
-
-          const SizedBox(height: 16),
           // Danh mục
           const SectionTitle('Danh mục'),
           SizedBox(
@@ -158,7 +136,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     'Tất cả',
                     onTap: () {
                       setState(() => _selectedCat = null);
-                      _loadFirstProducts();
+                      _loadFirst();
                     },
                   ),
                 ),
@@ -170,7 +148,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       selected: _selectedCat == c.id,
                       onSelected: (_) {
                         setState(() => _selectedCat = c.id);
-                        _loadFirstProducts();
+                        _loadFirst();
                       },
                     ),
                   ),
@@ -180,6 +158,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
 
           const SizedBox(height: 12),
+
           // Sản phẩm hot (horizontal)
           const SectionTitle('Sản phẩm hot'),
           if (_hotProducts.isEmpty)
@@ -206,43 +185,8 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
 
           const SizedBox(height: 12),
-          // Mã giảm giá hot
-          const SectionTitle('Mã giảm giá hot'),
-          if (_hotCoupons.isEmpty)
-            const Padding(
-              padding: EdgeInsets.all(16),
-              child: Center(child: CircularProgressIndicator()),
-            )
-          else
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: _hotCoupons
-                    .map(
-                      (c) => SizedBox(
-                        width: 170,
-                        child: VoucherCard(
-                          c: c,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    VoucherDetailScreen(couponId: c.id),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    )
-                    .toList(),
-              ),
-            ),
 
-          const SizedBox(height: 12),
-          // Tất cả sản phẩm (paging)
+          // Tất cả sản phẩm (infinite scroll)
           const SectionTitle('Tất cả sản phẩm'),
           if (_products.isEmpty && _loading)
             const Padding(

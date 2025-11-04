@@ -1,13 +1,10 @@
-import 'dart:convert';
-import 'package:flutter/services.dart' show rootBundle;
 import '../../models/category.dart';
+import '../repo/category_repo.dart'; // 👈 import interface (đường dẫn đúng)
 
-class CategoryRepoMock {
-  Future<List<Category>> list() async {
-    final raw = await rootBundle.loadString('assets/json/categories.json');
-    final list =
-        (jsonDecode(raw) as List).map((e) => Category.fromJson(e)).toList();
-    list.sort((a, b) => a.order.compareTo(b.order));
-    return list;
-  }
+class CategoryRepoMock implements CategoryRepo {
+  final List<Category> _cats =
+      List.generate(10, (i) => Category(id: i + 1, name: 'Danh mục ${i + 1}'));
+
+  @override
+  Future<List<Category>> list() async => _cats;
 }

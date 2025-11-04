@@ -1,55 +1,99 @@
-import 'dart:convert';
-import 'package:flutter/services.dart' show rootBundle;
+import 'dart:math';
+import '../../core/result.dart';
 import '../../models/coupon.dart';
+import '../repo/coupon_repo.dart';
 
-class CouponRepoMock {
-  /// sort: 'endAtAsc' | 'priorityDesc' | null
-  Future<List<Coupon>> list({
+class CouponRepoMock implements CouponRepo {
+  final _rnd = Random(3);
+  final List<Coupon> _all = [];
+
+  CouponRepoMock() {
+    for (int i = 0; i < 160; i++) {
+      final isPercent = _rnd.nextBool();
+      final value = isPercent
+          ? [10, 15, 20, 30, 40, 50, 70][_rnd.nextInt(7)]
+          : [10000, 20000, 30000, 50000, 80000][_rnd.nextInt(5)];
+      final maxDiscount = isPercent
+          ? [null, 30000, 50000, 80000, 120000][_rnd.nextInt(5)]
+          : value;
+
+      _all.add(
+        Coupon(
+          id: i + 1,
+          title: 'Ưu đãi ${isPercent ? "$value%" : "${value ~/ 1000}k"}',
+          code: 'CODE${100 + i}',
+          shopId: _rnd.nextInt(4) + 1,
+          categoryId: _rnd.nextInt(10) + 1,
+          categoryIds: const [],
+          applicableTypes: ([
+            'Accessory',
+            'Shoes',
+            'Bag',
+            'Gadget',
+            'Cosmetic',
+            'Outfit',
+            'Kitchen',
+            'Audio',
+            'Smart Home',
+            'Cleaning',
+          ]..shuffle(_rnd)).take(3).toList(),
+          discountType: isPercent ? DiscountType.percent : DiscountType.fixed,
+          discountValue: value,
+          maxDiscount: maxDiscount,
+          minOrder: [null, 99000, 199000, 299000][_rnd.nextInt(4)],
+          endAt: DateTime.now().add(Duration(days: _rnd.nextInt(20) - 5)),
+          isHot: _rnd.nextDouble() < .25,
+          priority: 50 + _rnd.nextInt(50),
+          tags: _rnd.nextDouble() < .25 ? const ['hot'] : const [],
+          imageUrl: 'https://picsum.photos/seed/c$i/640/360',
+          trackingLink: 'https://example.com/promo/$i',
+          deeplink: null,
+          terms: const [
+            'Không cộng dồn chương trình khác',
+            'Áp dụng cho mặt hàng chỉ định',
+          ],
+        ),
+      );
+    }
+  }
+
+  @override
+  Future<List<Coupon>> hot({int limit = 8}) async =>
+      _all.where((c) => c.isHot || c.priority >= 80).take(limit).toList();
+
+  @override
+  Future<PageResult<Coupon>> list({
     int page = 1,
-    int limit = 20,
+    int pageSize = 20,
+    int? categoryId,
     String? q,
-    String? shopId,
-    String? categoryId,
-    String? sort,
   }) async {
-    final raw = await rootBundle.loadString('assets/json/coupons.json');
-    final list =
-        (jsonDecode(raw) as List).map((e) => Coupon.fromJson(e)).toList();
-
-    Iterable<Coupon> data = list;
-
-    if (q != null && q.trim().isNotEmpty) {
-      final lower = q.toLowerCase();
-      data = data.where((c) =>
-          c.title.toLowerCase().contains(lower) ||
-          c.code.toLowerCase().contains(lower) ||
-          c.shopId.toLowerCase().contains(lower));
-    }
-
-    if (shopId != null && shopId.isNotEmpty) {
-      data = data.where((c) => c.shopId == shopId);
-    }
-
-    if (categoryId != null && categoryId.isNotEmpty) {
-      data = data.where((c) => c.categoryIds.contains(categoryId));
-    }
-
-    if (sort == 'endAtAsc') {
-      final tmp = data.toList()..sort((a, b) => a.endAt.compareTo(b.endAt));
-      data = tmp;
-    } else if (sort == 'priorityDesc') {
-      final tmp = data.toList()
-        ..sort((a, b) => (b.priority ?? 0).compareTo(a.priority ?? 0));
-      data = tmp;
-    }
-
-    return data.skip((page - 1) * limit).take(limit).toList();
+    var data = _all;
+    if (categoryId != null)
+      data = data
+          .where(
+            (c) =>
+                c.categoryId == categoryId ||
+                c.categoryIds.contains(categoryId),
+          )
+          .toList();
+    if (q != null && q.isNotEmpty)
+      data = data
+          .where(
+            (c) =>
+                c.title.toLowerCase().contains(q.toLowerCase()) ||
+                c.code.toLowerCase().contains(q.toLowerCase()),
+          )
+          .toList();
+    data.sort((a, b) => (b.priority).compareTo(a.priority));
+    final start = (page - 1) * pageSize, end = start + pageSize;
+    final slice = start >= data.length
+        ? <Coupon>[]
+        : data.sublist(start, end > data.length ? data.length : end);
+    final hasMore = end < data.length;
+    return PageResult(data: slice, hasMore: hasMore, nextPage: page + 1);
   }
 
-  Future<Coupon> getById(String id) async {
-    final raw = await rootBundle.loadString('assets/json/coupons.json');
-    final list =
-        (jsonDecode(raw) as List).map((e) => Coupon.fromJson(e)).toList();
-    return list.firstWhere((c) => c.id == id);
-  }
+  @override
+  Future<Coupon?> getById(int id) async => _all.firstWhere((e) => e.id == id);
 }

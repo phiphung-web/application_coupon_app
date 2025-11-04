@@ -1,48 +1,44 @@
-import { Injectable } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
-import { Like, Repository } from "typeorm";
-import { Coupon } from "../../entities/coupon.entity";
-import { Category } from "../../entities/category.entity";
-import { Shop } from "../../entities/shop.entity";
-import { CouponQuery } from "./dto";
+// src/modules/coupons/coupons.service.ts
+calcDiscount(price: number, c: Coupon) {
+  const raw = c.type === 'PERCENT' ? Math.floor(price * c.value / 100) : c.value;
+  const capped = c.maxDiscount ? Math.min(raw, c.maxDiscount) : raw;
+  return Math.max(capped, 0);
+}
 
-@Injectable()
-export class CouponsService {
-  constructor(
-    @InjectRepository(Coupon) private coupons: Repository<Coupon>,
-    @InjectRepository(Category) private categories: Repository<Category>,
-    @InjectRepository(Shop) private shops: Repository<Shop>
-  ) {}
+async preview(dto: PreviewDto) {
+  const c = await this.repo.findOne({
+    where: { code: dto.couponCode },
+    relations: ['shop', 'category', 'applicableCategories'],
+  });
+  if (!c) return { canApply: false, reason: 'Mã không tồn tại' };
 
-  async list(qry: CouponQuery) {
-    const page = Math.max(1, Number(qry.page) || 1);
-    const limit = Math.min(50, Math.max(1, Number(qry.limit) || 20));
-    const skip = (page - 1) * limit;
+  if (new Date(c.expiredAt) < new Date()) return { canApply: false, reason: 'Mã đã hết hạn' };
+  if (c.minOrder && dto.price < c.minOrder) return { canApply: false, reason: 'Chưa đạt đơn tối thiểu' };
+  if (dto.shopId && c.shop?.id && c.shop.id !== dto.shopId) return { canApply: false, reason: 'Sai shop' };
 
-    const where: any = {};
-    if (qry.q) where.title = Like(`%${qry.q}%`);
-    if (qry.shopId) where.shop = { id: Number(qry.shopId) };
-    if (qry.categoryKey) where.category = { key: qry.categoryKey };
+  // kiểm tra phạm vi áp dụng theo danh mục/loại
+  const allowCat =
+    !dto.categoryId ||
+    c.category?.id === dto.categoryId ||
+    (c.applicableCategories?.some((x) => x.id === dto.categoryId));
 
-    const order: any = {};
-    switch (qry.sort) {
-      case "endAtDesc":
-        order.endAt = "DESC";
-        break;
-      case "createdDesc":
-        order.createdAt = "DESC";
-        break;
-      default:
-        order.endAt = "ASC";
+  const allowType =
+    !dto.type ||
+    (c.applicableTypes?.includes(dto.type) && !(c.excludedTypes?.includes(dto.type)));
+
+  if (!allowCat || !allowType) return { canApply: false, reason: 'Không áp dụng cho sản phẩm này' };
+
+  const discount = this.calcDiscount(dto.price, c);
+  const finalPrice = Math.max(dto.price - discount, 0);
+
+  return {
+    canApply: true,
+    discount,
+    finalPrice,
+    meta: {
+      type: c.type, value: c.value, maxDiscount: c.maxDiscount, minOrder: c.minOrder,
+      code: c.code, expiredAt: c.expiredAt,
+      applicableTypes: c.applicableTypes ?? [],
     }
-
-    const [items, total] = await this.coupons.findAndCount({
-      where,
-      order,
-      take: limit,
-      skip,
-    });
-
-    return { page, limit, total, items };
-  }
+  };
 }

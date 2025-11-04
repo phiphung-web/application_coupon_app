@@ -1,76 +1,74 @@
 import 'package:flutter/material.dart';
+import '../core/money.dart';
+import '../models/coupon.dart';
 import 'app_image.dart';
-import 'countdown.dart';
+import 'badge.dart';
 
 class VoucherCard extends StatelessWidget {
-  final String title;
-  final String code;
-  final String shop;
-  final DateTime endAt;
-  final String? imageUrl;
-  final String? badge;
+  final Coupon c;
   final VoidCallback? onTap;
-  final VoidCallback? onFav;
-
-  const VoucherCard({
-    super.key,
-    required this.title,
-    required this.code,
-    required this.shop,
-    required this.endAt,
-    this.imageUrl,
-    this.badge,
-    this.onTap,
-    this.onFav,
-  });
+  const VoucherCard({super.key, required this.c, this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: InkWell(
-        onTap: onTap,
-        child: Row(
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Ink(
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ClipRRect(
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(12),
-                bottomLeft: Radius.circular(12),
-              ),
-              child: AppImage(imageUrl, w: 110, h: 110),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (badge != null)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFFEDD5),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(badge!, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
-                      ),
-                    const SizedBox(height: 4),
-                    Text(
-                      title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-                    ),
-                    const SizedBox(height: 6),
-                    Text('Mã: $code · Shop: $shop', style: const TextStyle(color: Colors.black54)),
-                    const SizedBox(height: 4),
-                    Countdown(endAtUtc: endAt),
-                  ],
+            if (c.imageUrl != null)
+              ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(12),
+                ),
+                child: AppImage(
+                  c.imageUrl,
+                  w: double.infinity,
+                  h: 100,
+                  fit: BoxFit.cover,
                 ),
               ),
-            ),
-            const Padding(
-              padding: EdgeInsets.only(right: 8),
-              child: Icon(Icons.chevron_right),
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          c.title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (c.isHot || c.priority >= 80 || c.tags.contains('hot'))
+                        const SizedBox(width: 8),
+                      if (c.isHot || c.priority >= 80 || c.tags.contains('hot'))
+                        const Badge('HOT'),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      Chip(label: Text(c.code)),
+                      if (c.minOrder != null)
+                        Chip(label: Text('Min ${money(c.minOrder!)}')),
+                      if (c.maxDiscount != null)
+                        Chip(label: Text('Max ${money(c.maxDiscount!)}')),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text('HSD: ${c.endAt}'),
+                ],
+              ),
             ),
           ],
         ),

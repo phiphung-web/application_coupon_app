@@ -58,7 +58,8 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final showRecent = !loading && results.isEmpty && ctrl.text.isEmpty && recent.isNotEmpty;
+    final showRecent =
+        !loading && results.isEmpty && ctrl.text.isEmpty && recent.isNotEmpty;
 
     return SafeArea(
       child: Column(
@@ -72,7 +73,9 @@ class _SearchScreenState extends State<SearchScreen> {
               filled: true,
               fillColor: const Color(0xFFF1F3F5),
               border: OutlineInputBorder(
-                borderSide: BorderSide.none, borderRadius: BorderRadius.circular(12)),
+                borderSide: BorderSide.none,
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
             onChanged: _onChanged,
             onSubmitted: _searchNow,
@@ -91,7 +94,13 @@ class _SearchScreenState extends State<SearchScreen> {
                 separatorBuilder: (_, __) => const SizedBox(width: 8),
                 itemBuilder: (context, i) {
                   if (i == 0) {
-                    return Row(children: const [Icon(Icons.history), SizedBox(width: 6), Text('Gần đây')]);
+                    return Row(
+                      children: const [
+                        Icon(Icons.history),
+                        SizedBox(width: 6),
+                        Text('Gần đây'),
+                      ],
+                    );
                   }
                   final k = recent[i - 1];
                   return ActionChip(
@@ -124,10 +133,19 @@ class _SearchScreenState extends State<SearchScreen> {
                           code: c.code,
                           shop: c.shopId,
                           endAt: c.endAt,
-                          imageUrl: c.imageUrl?.startsWith('http') == true ? c.imageUrl : null,
-                          badge: (c.tags.contains('hot') || (c.priority ?? 0) >= 80) ? 'HOT' : null,
+                          imageUrl: c.imageUrl?.startsWith('http') == true
+                              ? c.imageUrl
+                              : null,
+                          badge:
+                              (c.tags.contains('hot') ||
+                                  (c.priority ?? 0) >= 80)
+                              ? 'HOT'
+                              : null,
                           onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => VoucherDetailScreen(couponId: c.id)),
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  VoucherDetailScreen(couponId: c.id),
+                            ),
                           ),
                         ),
                       );

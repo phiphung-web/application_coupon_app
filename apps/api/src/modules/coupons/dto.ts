@@ -1,9 +1,8 @@
-export type SortKey = "endAtAsc" | "endAtDesc" | "createdDesc";
-export interface CouponQuery {
-  page?: number;
-  limit?: number;
-  q?: string;
-  shopId?: number;
-  categoryKey?: string;
-  sort?: SortKey;
+// src/modules/coupons/dto.ts
+export class PreviewDto {
+  price: number;         // giá sp
+  categoryId?: number;   // danh mục của sp
+  type?: string;         // loại sp (nếu dùng)
+  shopId?: number;       // shop của sp
+  couponCode: string;
 }
