@@ -1,23 +1,18 @@
-import { Module } from "@nestjs/common";
-import { TypeOrmModule } from "@nestjs/typeorm";
-import { Coupon } from "../entities/coupon.entity";
-import { Shop } from "../entities/shop.entity";
-import { Category } from "../entities/category.entity";
-import { CouponsModule } from "./coupons/coupons.module";
-import { ShopsModule } from "./shops/shops.module";
-import { ReportsModule } from "./reports/reports.module";
+import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { ProductsModule } from './products/products.module';
+import { CouponsModule } from './coupons/coupons.module';
+import { CategoriesModule } from './categories/categories.module';
+import { ShopsModule } from './shops/shops.module';
+import { AppDataSource } from '../typeorm.config';
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot({
-      type: "sqlite",
-      database: "data.sqlite",
-      synchronize: true, // DEV only
-      entities: [Coupon, Shop, Category],
-    }),
-    CouponsModule,
+    TypeOrmModule.forRoot(AppDataSource.options),
+    CategoriesModule,
     ShopsModule,
-    ReportsModule,
+    ProductsModule,
+    CouponsModule,
   ],
 })
 export class AppModule {}

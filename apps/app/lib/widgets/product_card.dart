@@ -1,55 +1,97 @@
-import '../core/discount.dart';
-import '../models/product.dart';
-import '../models/coupon.dart';
 import 'package:flutter/material.dart';
-import 'app_image.dart';
+import '../../models/product.dart';
+import '../../core/money.dart';
+import '../screens/detail/product_detail_screen.dart';
+import '../widgets/app_image.dart';
 
 class ProductCard extends StatelessWidget {
   final Product product;
-  final List<Coupon> coupons;
-  const ProductCard({super.key, required this.product, required this.coupons});
+  const ProductCard({super.key, required this.product});
 
   @override
   Widget build(BuildContext context) {
-    final r = bestDiscount(product, coupons);
-    return SizedBox(
-      width: 180,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          AppImage(url: product.image, height: 110, radius: 12),
-          const SizedBox(height: 8),
-          Text(product.name, maxLines: 2, overflow: TextOverflow.ellipsis),
-          const SizedBox(height: 6),
-          Row(
-            children: [
-              Text(
-                _money(r.finalPrice),
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-              const SizedBox(width: 6),
-              Text(
-                _money(product.price),
-                style: const TextStyle(decoration: TextDecoration.lineThrough),
-              ),
-            ],
-          ),
-          if (r.coupon != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Text(
-                'Tiết kiệm ${_money(r.discount)} với ${r.coupon!.code}',
-                style: const TextStyle(fontSize: 12),
-              ),
+    return InkWell(
+      borderRadius: BorderRadius.circular(14),
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ProductDetailScreen(productId: product.id),
+        ),
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(.05),
+              blurRadius: 6,
+              offset: const Offset(0, 3),
             ),
-        ],
+          ],
+        ),
+        padding: const EdgeInsets.all(8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Ảnh
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: AppImage(product.imageUrl, h: 120, w: double.infinity),
+            ),
+            const SizedBox(height: 8),
+
+            // Tên
+            Text(
+              product.name,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+            const SizedBox(height: 4),
+
+            // Giá
+            Row(
+              children: [
+                Text(
+                  money(product.basePrice),
+                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+                ),
+                if (product.oldPrice != null) ...[
+                  const SizedBox(width: 6),
+                  Text(
+                    money(product.oldPrice!),
+                    style: const TextStyle(
+                      decoration: TextDecoration.lineThrough,
+                      fontSize: 12,
+                      color: Colors.black54,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            const SizedBox(height: 2),
+
+            // Tag nhỏ
+            Row(
+              children: [
+                if (product.discountPercent != null)
+                  Text(
+                    '${product.discountPercent}% OFF',
+                    style: const TextStyle(color: Colors.red, fontSize: 12, fontWeight: FontWeight.w600),
+                  ),
+                const SizedBox(width: 6),
+                const Text(
+                  'PROMO CODE',
+                  style: TextStyle(color: Colors.green, fontSize: 12, fontWeight: FontWeight.w500),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
-
-  String _money(int v) =>
-      '${v.toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}đ';
 }

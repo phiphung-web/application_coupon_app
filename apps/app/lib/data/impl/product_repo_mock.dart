@@ -4,7 +4,9 @@ import '../../models/product.dart';
 import '../repo/product_repo.dart';
 
 class ProductRepoMock implements ProductRepo {
-  final _rnd = Random(7);
+  final _rnd = Random(11);
+  final List<Product> _all = [];
+
   static const _types = [
     'Accessory',
     'Shoes',
@@ -17,11 +19,17 @@ class ProductRepoMock implements ProductRepo {
     'Smart Home',
     'Cleaning',
   ];
-  final List<Product> _all = [];
+  static const _shops = [
+    {'id': 'shopee', 'name': 'Shopee'},
+    {'id': 'lazada', 'name': 'Lazada'},
+    {'id': 'tiki', 'name': 'Tiki'},
+    {'id': 'amazon', 'name': 'Amazon'},
+  ];
+  static const _badges = ['Top Pick', 'Amazon\'s Choice', 'HOT', null];
 
   ProductRepoMock() {
-    for (int i = 0; i < 120; i++) {
-      final price = [
+    for (int i = 0; i < 180; i++) {
+      final base = [
         99000,
         149000,
         199000,
@@ -30,23 +38,37 @@ class ProductRepoMock implements ProductRepo {
         499000,
         799000,
       ][_rnd.nextInt(7)];
+      final hasSale = _rnd.nextBool();
+      final salePct = [0, 10, 15, 20, 30, 40, 50, 70][_rnd.nextInt(8)];
+      final sale = hasSale ? (base - (base * salePct ~/ 100)) : null;
+      final shop = _shops[_rnd.nextInt(_shops.length)];
+      final bIndex = _rnd.nextInt(_badges.length);
+
       _all.add(
         Product(
           id: i + 1,
           name: 'Sản phẩm #${i + 1}',
-          imageUrl: 'https://picsum.photos/seed/p$i/640/360',
-          basePrice: price,
+          imageUrl: 'https://picsum.photos/seed/p$i/640/640',
+          basePrice: base,
+          originalPrice: orig,
+          finalPrice: sale,
           categoryId: _rnd.nextInt(10) + 1,
           type: _types[_rnd.nextInt(_types.length)],
-          shopId: _rnd.nextInt(4) + 1,
-          source: ['Shopee', 'Lazada', 'Tiki', 'Amazon'][_rnd.nextInt(4)],
+          shopId: shop['id'] as String?,
+          shopName: shop['name'] as String?,
+          badge: _badges[bIndex],
         ),
       );
     }
   }
 
   @override
-  Future<List<Product>> hot({int limit = 8}) async => _all.take(limit).toList();
+  Future<List<Product>> hot({int limit = 8}) async {
+    // lấy theo % OFF cao nhất
+    final list = [..._all]
+      ..sort((a, b) => b.discountPercent.compareTo(a.discountPercent));
+    return list.take(limit).toList();
+  }
 
   @override
   Future<PageResult<Product>> list({
@@ -56,12 +78,13 @@ class ProductRepoMock implements ProductRepo {
     String? q,
   }) async {
     var data = _all;
-    if (categoryId != null)
+    if (categoryId != null) {
       data = data.where((p) => p.categoryId == categoryId).toList();
-    if (q != null && q.isNotEmpty)
-      data = data
-          .where((p) => p.name.toLowerCase().contains(q.toLowerCase()))
-          .toList();
+    }
+    if (q != null && q.isNotEmpty) {
+      final qq = q.toLowerCase();
+      data = data.where((p) => p.name.toLowerCase().contains(qq)).toList();
+    }
     final start = (page - 1) * pageSize;
     final end = start + pageSize;
     final slice = start >= data.length
@@ -72,5 +95,11 @@ class ProductRepoMock implements ProductRepo {
   }
 
   @override
-  Future<Product?> getById(int id) async => _all.firstWhere((e) => e.id == id);
+  Future<Product?> getById(int id) async {
+    try {
+      return _all.firstWhere((e) => e.id == id);
+    } catch (_) {
+      return null;
+    }
+  }
 }

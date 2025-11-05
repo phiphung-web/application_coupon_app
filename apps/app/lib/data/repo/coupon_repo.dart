@@ -9,5 +9,7 @@ abstract class CouponRepo {
     int? categoryId,
     String? q,
   });
-  Future<Coupon?> getById(int id);
+
+  // Đổi int -> String
+  Future<Coupon?> getById(String id);
 }

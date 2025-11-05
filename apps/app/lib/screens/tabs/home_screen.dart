@@ -3,23 +3,21 @@ import 'package:flutter/material.dart';
 import '../../widgets/banner_slider.dart';
 import '../../widgets/section_title.dart';
 import '../../widgets/category_pill.dart';
-import '../../widgets/product_tile.dart';
-import '../../widgets/voucher_card.dart';
+import '../../widgets/product_card.dart';
 
-import '../../models/category.dart';
 import '../../models/product.dart';
-import '../../models/coupon.dart';
+import '../../models/category.dart';
 import '../../core/result.dart';
 
-import '../../data/repo/category_repo.dart';
 import '../../data/repo/product_repo.dart';
-import '../../data/repo/coupon_repo.dart';
-
-import '../../data/impl/category_repo_mock.dart';
+import '../../data/repo/category_repo.dart';
 import '../../data/impl/product_repo_mock.dart';
-import '../../data/impl/coupon_repo_mock.dart';
+import '../../data/impl/category_repo_mock.dart';
 
-import '../detail/voucher_detail_screen.dart';
+import '../detail/product_detail_screen.dart';
+
+import 'hot_products_screen.dart';
+import 'categories_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -30,26 +28,27 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   // Banner demo
   final _banners = const [
-    'assets/images/OIP.webp',
-    'assets/images/OIP.webp',
-    'assets/images/OIP.webp',
+    'assets/images/slider1.png',
+    'assets/images/slider2.png',
+    'assets/images/slider3.png',
   ];
 
   // Repo (mock)
-  final CategoryRepo _catRepo = CategoryRepoMock();
   final ProductRepo _productRepo = ProductRepoMock();
-  final CouponRepo _couponRepo = CouponRepoMock();
+  final CategoryRepo _catRepo = CategoryRepoMock();
 
-  // State
+  // State chung
   final _scrollCtrl = ScrollController();
-  final _products = <Product>[];
-  final _hotProducts = <Product>[];
-  final _hotCoupons = <Coupon>[];
-
   List<Category> _cats = [];
-  List<Coupon> _allCoupons = [];
-  int? _selectedCat;
 
+  // Top trending (ngang)
+  final List<Product> _hotProducts = [];
+  // Gợi ý hôm nay (ngang)
+  final List<Product> _suggestProducts = [];
+
+  // Grid theo danh mục (2 cột + paging)
+  final List<Product> _gridProducts = [];
+  int? _selectedCat;
   int _page = 1;
   bool _loading = false;
   bool _end = false;
@@ -68,38 +67,38 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _init() async {
-    // Tải danh mục
+    // danh mục
     _cats = await _catRepo.list();
 
-    // Tải coupons phục vụ tính giá & hiển thị mã hot
-    final allCp = await _couponRepo.list(pageSize: 999);
-    _allCoupons = allCp.data;
-
-    // Mã hot
-    _hotCoupons
-      ..clear()
-      ..addAll(await _couponRepo.hot(limit: 8));
-
-    // Sản phẩm hot
+    // top trending
     _hotProducts
       ..clear()
-      ..addAll(await _productRepo.hot(limit: 8));
+      ..addAll(await _productRepo.hot(limit: 10));
 
-    // Trang sản phẩm đầu tiên
-    await _loadFirstProducts();
+    // gợi ý hôm nay (lấy trang đầu)
+    final PageResult<Product> first = await _productRepo.list(
+      page: 1,
+      pageSize: 12,
+    );
+    _suggestProducts
+      ..clear()
+      ..addAll(first.data);
+
+    // grid theo danh mục (tất cả)
+    await _loadFirstGrid();
 
     if (mounted) setState(() {});
   }
 
-  Future<void> _loadFirstProducts() async {
+  Future<void> _loadFirstGrid() async {
     setState(() => _loading = true);
     final PageResult<Product> page = await _productRepo.list(
       page: 1,
-      pageSize: 10,
+      pageSize: 20,
       categoryId: _selectedCat,
     );
     setState(() {
-      _products
+      _gridProducts
         ..clear()
         ..addAll(page.data);
       _page = 1;
@@ -108,16 +107,16 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  Future<void> _loadMoreProducts() async {
+  Future<void> _loadMoreGrid() async {
     if (_loading || _end) return;
     setState(() => _loading = true);
     final PageResult<Product> page = await _productRepo.list(
       page: _page + 1,
-      pageSize: 10,
+      pageSize: 20,
       categoryId: _selectedCat,
     );
     setState(() {
-      _products.addAll(page.data);
+      _gridProducts.addAll(page.data);
       _page += 1;
       _end = !page.hasMore;
       _loading = false;
@@ -127,14 +126,14 @@ class _HomeScreenState extends State<HomeScreen> {
   void _onScroll() {
     if (_scrollCtrl.position.pixels >=
         _scrollCtrl.position.maxScrollExtent - 200) {
-      _loadMoreProducts();
+      _loadMoreGrid();
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return RefreshIndicator(
-      onRefresh: _loadFirstProducts,
+      onRefresh: _loadFirstGrid,
       child: ListView(
         controller: _scrollCtrl,
         padding: const EdgeInsets.only(bottom: 24),
@@ -142,9 +141,100 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 8),
           BannerSlider(images: _banners),
 
-          const SizedBox(height: 16),
-          // Danh mục
-          const SectionTitle('Danh mục'),
+          // ===== Top trending (sản phẩm hot) =====
+          SectionTitle(
+            'Top trending',
+            trailing: TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const HotProductsScreen()),
+                );
+              },
+              child: const Text('View All'),
+            ),
+          ),
+          if (_hotProducts.isEmpty)
+            const Padding(
+              padding: EdgeInsets.all(16),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else
+            SizedBox(
+              height: 300, // tránh overflow
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemBuilder: (_, i) => SizedBox(
+                  width: 170,
+                  child: ProductCard(
+                    product: _hotProducts[i],
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            ProductDetailScreen(productId: _hotProducts[i].id),
+                      ),
+                    ),
+                  ),
+                ),
+                separatorBuilder: (_, __) => const SizedBox(width: 12),
+                itemCount: _hotProducts.length,
+              ),
+            ),
+
+          const SizedBox(height: 8),
+
+          // ===== Gợi ý hôm nay (list ngang) =====
+          const SectionTitle('Gợi ý hôm nay'),
+          if (_suggestProducts.isEmpty)
+            const Padding(
+              padding: EdgeInsets.all(16),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else
+            SizedBox(
+              height: 300, // tránh overflow
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemBuilder: (_, i) => SizedBox(
+                  width: 170,
+                  child: ProductCard(
+                    product: _suggestProducts[i],
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ProductDetailScreen(
+                          productId: _suggestProducts[i].id,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                separatorBuilder: (_, __) => const SizedBox(width: 12),
+                itemCount: _suggestProducts.length,
+              ),
+            ),
+
+          const SizedBox(height: 12),
+
+          // ===== Danh mục =====
+          SectionTitle(
+            'Danh mục',
+            trailing: TextButton(
+              onPressed: () async {
+                final selected = await Navigator.push<int?>(
+                  context,
+                  MaterialPageRoute(builder: (_) => const CategoriesScreen()),
+                );
+                if (selected != null) {
+                  setState(() => _selectedCat = selected);
+                }
+              },
+              child: const Text('View all'),
+            ),
+          ),
           SizedBox(
             height: 44,
             child: ListView(
@@ -158,7 +248,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     'Tất cả',
                     onTap: () {
                       setState(() => _selectedCat = null);
-                      _loadFirstProducts();
+                      _loadFirstGrid();
                     },
                   ),
                 ),
@@ -170,7 +260,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       selected: _selectedCat == c.id,
                       onSelected: (_) {
                         setState(() => _selectedCat = c.id);
-                        _loadFirstProducts();
+                        _loadFirstGrid();
                       },
                     ),
                   ),
@@ -180,88 +270,38 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
 
           const SizedBox(height: 12),
-          // Sản phẩm hot (horizontal)
-          const SectionTitle('Sản phẩm hot'),
-          if (_hotProducts.isEmpty)
-            const Padding(
-              padding: EdgeInsets.all(16),
-              child: Center(child: CircularProgressIndicator()),
-            )
-          else
-            SizedBox(
-              height: 170,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemBuilder: (_, i) => SizedBox(
-                  width: 300,
-                  child: ProductTile(
-                    product: _hotProducts[i],
-                    coupons: _allCoupons,
-                  ),
-                ),
-                separatorBuilder: (_, __) => const SizedBox(width: 12),
-                itemCount: _hotProducts.length,
-              ),
-            ),
 
-          const SizedBox(height: 12),
-          // Mã giảm giá hot
-          const SectionTitle('Mã giảm giá hot'),
-          if (_hotCoupons.isEmpty)
-            const Padding(
-              padding: EdgeInsets.all(16),
-              child: Center(child: CircularProgressIndicator()),
-            )
-          else
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: _hotCoupons
-                    .map(
-                      (c) => SizedBox(
-                        width: 170,
-                        child: VoucherCard(
-                          c: c,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    VoucherDetailScreen(couponId: c.id),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    )
-                    .toList(),
-              ),
-            ),
-
-          const SizedBox(height: 12),
-          // Tất cả sản phẩm (paging)
-          const SectionTitle('Tất cả sản phẩm'),
-          if (_products.isEmpty && _loading)
+          // ===== Grid sản phẩm (2 cột) theo danh mục =====
+          const SectionTitle('Sản phẩm theo danh mục'),
+          if (_gridProducts.isEmpty && _loading)
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 24),
               child: Center(child: CircularProgressIndicator()),
             )
           else
-            Column(
-              children: _products
-                  .map(
-                    (p) => Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 6,
-                      ),
-                      child: ProductTile(product: p, coupons: _allCoupons),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  childAspectRatio: 0.55, // bạn đã chỉnh để hết overflow
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                ),
+                itemCount: _gridProducts.length,
+                itemBuilder: (_, i) => ProductCard(
+                  product: _gridProducts[i],
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          ProductDetailScreen(productId: _gridProducts[i].id),
                     ),
-                  )
-                  .toList(),
+                  ),
+                ),
+              ),
             ),
           if (_loading)
             const Padding(

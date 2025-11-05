@@ -1,35 +1,47 @@
-// src/entities/coupon.entity.ts
-export type CouponType = 'PERCENT' | 'FIXED';
+import { Column, Entity, Index, PrimaryColumn } from "typeorm";
 
-@Entity('coupons')
+export type DiscountType = "PERCENT" | "FIXED";
+
+@Entity("coupons")
 export class Coupon {
-  @PrimaryGeneratedColumn() id: number;
+  @PrimaryColumn({ length: 64 })
+  id: string;
 
-  @Column() title: string;
-  @Column({ unique: true }) code: string;
+  @Index() @Column({ length: 200 }) title: string;
+  @Index() @Column({ length: 64 }) code: string;
 
-  @Column({ type: 'varchar' }) type: CouponType;   // PERCENT|FIXED
-  @Column({ type: 'integer' }) value: number;      // % khi PERCENT | số tiền khi FIXED
-  @Column({ type: 'integer', default: 0 }) maxDiscount: number; // trần giảm
+  @Column({ type: "varchar", length: 10 })
+  discountType: DiscountType;
 
-  @Column({ type: 'integer', nullable: true }) minOrder?: number;
-  @Column({ default: false }) isHot: boolean;
+  @Column("int")
+  discountValue: number;
 
-  @ManyToOne(() => Shop, (s) => s.coupons) shop: Shop;
-  @ManyToOne(() => Category, (c) => c.coupons) category: Category; // áp theo danh mục chính
+  @Column("int", { nullable: true }) minSpend?: number;
+  @Column("int", { nullable: true }) maxDiscount?: number;
 
-  // Nhiều danh mục áp dụng thêm (tuỳ bạn có Product entity hay chưa)
-  @ManyToMany(() => Category)
-  @JoinTable({ name: 'coupon_applicable_categories' })
-  applicableCategories: Category[];
+  @Column({ type: "timestamptz", nullable: true })
+  expiredAt?: Date;
 
-  // Loại sản phẩm áp dụng (ví dụ: 'Accessory','Shoes',...) – lưu nhanh bằng JSON
-  @Column({ type: 'simple-json', nullable: true })
-  applicableTypes?: string[];     // hiển thị lên “item mã”
+  @Column("int", { nullable: true })
+  categoryId?: number;
 
-  @Column({ type: 'simple-json', nullable: true })
-  excludedTypes?: string[];       // loại trừ (nếu có)
+  @Column({ type: "simple-array", nullable: true })
+  applicableTypes?: string[];
 
-  @Column({ type: 'datetime' }) expiredAt: Date;
-  @CreateDateColumn() createdAt: Date;
+  @Column({ nullable: true })
+  shopId?: string;
+
+  @Column({ nullable: true })
+  imageUrl?: string;
+
+  @Column({ type: "simple-array", nullable: true })
+  tags?: string[];
+
+  @Column("int", { nullable: true })
+  priority?: number;
+
+  @Column({ nullable: true }) trackingLink?: string;
+  @Column({ nullable: true }) deeplink?: string;
+
+  @Column({ default: true }) isActive: boolean;
 }

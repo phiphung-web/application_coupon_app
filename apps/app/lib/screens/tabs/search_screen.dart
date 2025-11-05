@@ -1,159 +1,194 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
-import '../../widgets/voucher_card.dart';
+
+import '../../models/product.dart';
+import '../../models/coupon.dart';
+import '../../core/result.dart';
+
+import '../../data/repo/product_repo.dart';
+import '../../data/repo/coupon_repo.dart';
+import '../../data/impl/product_repo_mock.dart';
 import '../../data/impl/coupon_repo_mock.dart';
+
+import '../../widgets/product_card.dart';
+import '../../widgets/coupon_list_item.dart';
+import '../detail/product_detail_screen.dart';
 import '../detail/voucher_detail_screen.dart';
-import '../../data/impl/search_history_local.dart';
-import '../../widgets/empty_state.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
+
   @override
   State<SearchScreen> createState() => _SearchScreenState();
 }
 
 class _SearchScreenState extends State<SearchScreen> {
-  final repo = CouponRepoMock();
-  final history = SearchHistoryLocal();
-  final ctrl = TextEditingController();
+  final _productRepo = ProductRepoMock();
+  final _couponRepo = CouponRepoMock();
 
-  List results = [];
-  List<String> recent = [];
-  bool loading = false;
-  Timer? _debounce;
+  final _queryCtrl = TextEditingController();
+  String _q = '';
 
-  @override
-  void initState() {
-    super.initState();
-    _loadHistory();
-  }
+  // state kết quả
+  final List<Product> _products = [];
+  final List<Coupon> _coupons = [];
+  bool _loadingProducts = false;
+  bool _loadingCoupons = false;
 
   @override
   void dispose() {
-    _debounce?.cancel();
-    ctrl.dispose();
+    _queryCtrl.dispose();
     super.dispose();
   }
 
-  Future<void> _loadHistory() async {
-    final h = await history.get();
-    if (mounted) setState(() => recent = h);
-  }
-
-  Future<void> _searchNow(String q) async {
-    setState(() => loading = true);
-    if (q.trim().isNotEmpty) await history.add(q);
-    final data = await repo.list(q: q, limit: 20);
+  Future<void> _search() async {
+    final q = _q.trim();
     setState(() {
-      results = data;
-      loading = false;
+      _loadingProducts = true;
+      _loadingCoupons = true;
     });
-    _loadHistory();
-  }
 
-  void _onChanged(String q) {
-    _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 400), () => _searchNow(q));
+    final PageResult<Product> p = await _productRepo.list(page: 1, pageSize: 40, q: q.isEmpty ? null : q);
+    final PageResult<Coupon> c = await _couponRepo.list(page: 1, pageSize: 40, q: q.isEmpty ? null : q);
+
+    if (!mounted) return;
+    setState(() {
+      _products
+        ..clear()
+        ..addAll(p.data);
+      _coupons
+        ..clear()
+        ..addAll(c.data);
+      _loadingProducts = false;
+      _loadingCoupons = false;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final showRecent =
-        !loading && results.isEmpty && ctrl.text.isEmpty && recent.isNotEmpty;
-
-    return SafeArea(
-      child: Column(
-        children: [
-          const SizedBox(height: 8),
-          TextField(
-            controller: ctrl,
-            decoration: InputDecoration(
-              hintText: 'Tìm voucher, shop, mã…',
-              prefixIcon: const Icon(Icons.search),
-              filled: true,
-              fillColor: const Color(0xFFF1F3F5),
-              border: OutlineInputBorder(
-                borderSide: BorderSide.none,
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            onChanged: _onChanged,
-            onSubmitted: _searchNow,
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          titleSpacing: 8,
+          title: _SearchField(
+            controller: _queryCtrl,
+            onSubmitted: (v) {
+              _q = v;
+              _search();
+            },
+            onClear: () {
+              _queryCtrl.clear();
+              _q = '';
+              _search();
+            },
           ),
-          const SizedBox(height: 12),
-          if (loading) const LinearProgressIndicator(),
-
-          if (showRecent)
-            SizedBox(
-              height: 40,
-              child: ListView.separated(
-                primary: false,
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                itemCount: recent.length + 1,
-                separatorBuilder: (_, __) => const SizedBox(width: 8),
-                itemBuilder: (context, i) {
-                  if (i == 0) {
-                    return Row(
-                      children: const [
-                        Icon(Icons.history),
-                        SizedBox(width: 6),
-                        Text('Gần đây'),
-                      ],
-                    );
-                  }
-                  final k = recent[i - 1];
-                  return ActionChip(
-                    label: Text(k),
-                    onPressed: () {
-                      ctrl.text = k;
-                      _searchNow(k);
-                    },
-                  );
-                },
-              ),
-            ),
-
-          const SizedBox(height: 8),
-          Expanded(
-            child: results.isEmpty && !loading
-                ? const EmptyState(
-                    icon: Icons.search_off,
-                    title: 'Không có kết quả',
-                    subtitle: 'Thử từ khóa khác, ví dụ: freeship, 50%, shopee',
-                  )
-                : ListView.builder(
-                    itemCount: results.length,
-                    itemBuilder: (_, i) {
-                      final c = results[i];
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: VoucherCard(
-                          title: c.title,
-                          code: c.code,
-                          shop: c.shopId,
-                          endAt: c.endAt,
-                          imageUrl: c.imageUrl?.startsWith('http') == true
-                              ? c.imageUrl
-                              : null,
-                          badge:
-                              (c.tags.contains('hot') ||
-                                  (c.priority ?? 0) >= 80)
-                              ? 'HOT'
-                              : null,
-                          onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  VoucherDetailScreen(couponId: c.id),
+          bottom: const TabBar(
+            isScrollable: false,
+            tabs: [
+              Tab(text: 'Sản phẩm'),
+              Tab(text: 'Coupon'),
+            ],
+          ),
+        ),
+        body: TabBarView(
+          children: [
+            // ===== Tab Sản phẩm =====
+            _loadingProducts
+                ? const Center(child: CircularProgressIndicator())
+                : (_products.isEmpty
+                    ? const _EmptyState()
+                    : Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: GridView.builder(
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            childAspectRatio: 0.55,
+                            crossAxisSpacing: 12,
+                            mainAxisSpacing: 12,
+                          ),
+                          itemCount: _products.length,
+                          itemBuilder: (_, i) => ProductCard(
+                            product: _products[i],
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ProductDetailScreen(productId: _products[i].id),
+                              ),
                             ),
                           ),
                         ),
-                      );
-                    },
-                  ),
-          ),
-        ],
+                      )),
+
+            // ===== Tab Coupon =====
+            _loadingCoupons
+                ? const Center(child: CircularProgressIndicator())
+                : (_coupons.isEmpty
+                    ? const _EmptyState()
+                    : ListView.separated(
+                        padding: const EdgeInsets.all(16),
+                        itemBuilder: (_, i) => CouponListItem(
+                          c: _coupons[i],
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => VoucherDetailScreen(couponId: _coupons[i].id),
+                            ),
+                          ),
+                        ),
+                        separatorBuilder: (_, __) => const SizedBox(height: 12),
+                        itemCount: _coupons.length,
+                      )),
+          ],
+        ),
       ),
+    );
+  }
+}
+
+class _SearchField extends StatelessWidget {
+  final TextEditingController controller;
+  final ValueChanged<String> onSubmitted;
+  final VoidCallback onClear;
+
+  const _SearchField({
+    required this.controller,
+    required this.onSubmitted,
+    required this.onClear,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: controller,
+      textInputAction: TextInputAction.search,
+      onSubmitted: onSubmitted,
+      decoration: InputDecoration(
+        hintText: 'Tìm voucher, shop, sản phẩm…',
+        prefixIcon: const Icon(Icons.search),
+        filled: true,
+        fillColor: Theme.of(context).colorScheme.surfaceVariant.withOpacity(.4),
+        contentPadding: const EdgeInsets.symmetric(vertical: 0),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        suffixIcon: controller.text.isNotEmpty
+            ? IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: onClear,
+              )
+            : null,
+      ),
+    );
+  }
+}
+
+class _EmptyState extends StatelessWidget {
+  const _EmptyState();
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: Text('Không có kết quả'),
     );
   }
 }

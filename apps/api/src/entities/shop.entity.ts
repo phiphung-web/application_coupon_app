@@ -1,20 +1,24 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from "typeorm";
-import { Coupon } from "./coupon.entity";
+import { Column, Entity, Index, PrimaryColumn } from 'typeorm';
 
-@Entity()
+@Entity('shops')
 export class Shop {
-  @PrimaryGeneratedColumn()
-  id: number;
+  // FE đang dùng id: string
+  @PrimaryColumn({ length: 50 })
+  id: string;
 
-  @Column({ unique: true })
-  slug: string;
-
-  @Column()
+  @Index()
+  @Column({ length: 120 })
   name: string;
 
   @Column({ nullable: true })
-  logoUrl: string;
+  logoUrl?: string;
 
-  @OneToMany(() => Coupon, (c) => c.shop)
-  coupons: Coupon[];
+  @Column({ nullable: true })
+  domain?: string;
+
+  @Column('int', { default: 0 })
+  priority: number;
+
+  @Column({ default: true })
+  isActive: boolean;
 }

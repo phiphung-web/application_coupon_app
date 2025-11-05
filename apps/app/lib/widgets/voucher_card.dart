@@ -1,78 +1,112 @@
 import 'package:flutter/material.dart';
-import '../core/money.dart';
-import '../models/coupon.dart';
-import 'app_image.dart';
-import 'badge.dart';
+import '../../models/coupon.dart';
+import '../../core/money.dart';
+import '../screens/detail/voucher_detail_screen.dart';
+import '../widgets/app_image.dart';
 
 class VoucherCard extends StatelessWidget {
-  final Coupon c;
-  final VoidCallback? onTap;
-  const VoucherCard({super.key, required this.c, this.onTap});
+  final Coupon coupon;
+  const VoucherCard({super.key, required this.coupon});
 
   @override
   Widget build(BuildContext context) {
+    final isHot = coupon.tags.contains('hot') || (coupon.priority ?? 0) >= 80;
+
     return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Ink(
-        decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(14),
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => VoucherDetailScreen(couponId: coupon.id),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(.05),
+              blurRadius: 6,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.all(10),
+        child: Row(
           children: [
-            if (c.imageUrl != null)
-              ClipRRect(
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(12),
-                ),
-                child: AppImage(
-                  c.imageUrl,
-                  w: double.infinity,
-                  h: 100,
-                  fit: BoxFit.cover,
-                ),
-              ),
-            Padding(
-              padding: const EdgeInsets.all(12),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: AppImage(coupon.imageUrl, w: 80, h: 80, fit: BoxFit.cover),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          c.title,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      if (c.isHot || c.priority >= 80 || c.tags.contains('hot'))
-                        const SizedBox(width: 8),
-                      if (c.isHot || c.priority >= 80 || c.tags.contains('hot'))
-                        const Badge('HOT'),
-                    ],
+                  Text(
+                    coupon.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
                   Wrap(
-                    spacing: 8,
+                    spacing: 6,
                     children: [
-                      Chip(label: Text(c.code)),
-                      if (c.minOrder != null)
-                        Chip(label: Text('Min ${money(c.minOrder!)}')),
-                      if (c.maxDiscount != null)
-                        Chip(label: Text('Max ${money(c.maxDiscount!)}')),
+                      _chip('Code: ${coupon.code}', primary: true, context: context),
+                      if (coupon.maxDiscount != null)
+                        _chip('Giảm ${money(coupon.maxDiscount!)}', context: context),
                     ],
                   ),
-                  const SizedBox(height: 6),
-                  Text('HSD: ${c.endAt}'),
+                  const SizedBox(height: 4),
+                  Text('HSD: ${_fmtDate(coupon.expiredAt)}',
+                      style: const TextStyle(fontSize: 12, color: Colors.black54)),
                 ],
               ),
             ),
+            if (isHot)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.black87,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Text(
+                  'HOT',
+                  style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                ),
+              ),
           ],
         ),
       ),
     );
+  }
+
+  Widget _chip(String text, {bool primary = false, required BuildContext context}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: primary
+            ? Theme.of(context).colorScheme.primary.withOpacity(.1)
+            : Colors.grey.shade200,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 11,
+          color: primary
+              ? Theme.of(context).colorScheme.primary
+              : Colors.black87,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+    );
+  }
+
+  String _fmtDate(DateTime? d) {
+    if (d == null) return '-';
+    return '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
   }
 }

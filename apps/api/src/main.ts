@@ -1,12 +1,11 @@
-import 'reflect-metadata';
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './modules/app.module';
+import { NestFactory } from "@nestjs/core";
+import { AppModule } from "./modules/app.module";
+import { ValidationPipe } from "@nestjs/common";
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { cors: true });
-  app.setGlobalPrefix('api');
-  const port = process.env.PORT ? Number(process.env.PORT) : 3000;
-  await app.listen(port);
-  console.log(`✅ API running at http://localhost:${port}/api`);
+  const app = await NestFactory.create(AppModule);
+  app.enableCors();
+  app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
+  await app.listen(3000);
 }
 bootstrap();

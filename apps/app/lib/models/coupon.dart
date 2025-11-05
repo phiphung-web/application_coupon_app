@@ -1,55 +1,89 @@
-enum DiscountType { percent, fixed }
-
 class Coupon {
-  final int id;
-  final String title;
+  final String id;
   final String code;
+  final String title;
 
-  // Áp dụng & liên hệ sản phẩm
-  final int? shopId;
-  final int? categoryId; // danh mục chính
-  final List<int> categoryIds; // nhiều danh mục (nếu có)
-  final List<String> applicableTypes; // loại/mặt hàng áp dụng (Accessory,...)
+  /// Loại giảm: 'PERCENT' hoặc 'FIXED'
+  final String discountType;
 
-  // Điều kiện & mức giảm
-  final DiscountType discountType; // percent|fixed
-  final int discountValue; // % hoặc số tiền
-  final int? maxDiscount; // trần giảm
-  final int? minOrder; // đơn tối thiểu
+  /// Giá trị giảm (VD: 10 = 10% hoặc 50000đ)
+  final int discountValue;
 
-  // Thời gian & UI
-  final DateTime endAt;
-  final bool isHot;
-  final int priority;
+  /// Giảm tối đa (dành cho loại PERCENT)
+  final int? maxDiscount;
+
+  /// Giá trị đơn hàng tối thiểu để áp dụng (nếu có)
+  final int? minSpend;
+
+  /// Danh mục áp dụng (0 = tất cả)
+  final int? categoryId;
+
+  /// Các loại sản phẩm có thể áp dụng (VD: ['Shoes', 'Gadget'])
+  final List<String>? applicableTypes;
+
+  /// Ngày hết hạn
+  final DateTime? expiredAt;
+
+  /// Độ ưu tiên / độ hot
+  final int? priority;
+
+  /// Nhãn, tag (VD: ['hot', 'exclusive'])
   final List<String> tags;
 
-  // Media & link
+  /// Shop áp dụng (VD: 'shopee', 'tiki')
+  final String? shopId;
+
+  /// Hình ảnh minh họa
   final String? imageUrl;
-  final String? trackingLink;
+
+  /// Link tới sản phẩm / deeplink
   final String? deeplink;
 
-  // Mô tả điều kiện
-  final List<String> terms;
+  /// Link tracking (nếu có)
+  final String? trackingLink;
 
   const Coupon({
     required this.id,
-    required this.title,
     required this.code,
-    required this.endAt,
+    required this.title,
     required this.discountType,
     required this.discountValue,
-    this.shopId,
-    this.categoryId,
-    this.categoryIds = const [],
-    this.applicableTypes = const [],
     this.maxDiscount,
-    this.minOrder,
-    this.isHot = false,
-    this.priority = 0,
+    this.minSpend,
+    this.categoryId,
+    this.applicableTypes,
+    this.expiredAt,
+    this.priority,
     this.tags = const [],
+    this.shopId,
     this.imageUrl,
-    this.trackingLink,
     this.deeplink,
-    this.terms = const [],
+    this.trackingLink,
   });
+
+  /// Fake từ JSON nếu có dữ liệu
+  factory Coupon.fromJson(Map<String, dynamic> json) {
+    return Coupon(
+      id: json['id'].toString(),
+      code: json['code'] ?? '',
+      title: json['title'] ?? '',
+      discountType: json['discountType'] ?? 'PERCENT',
+      discountValue: json['discountValue'] ?? 0,
+      maxDiscount: json['maxDiscount'],
+      minSpend: json['minSpend'],
+      categoryId: json['categoryId'],
+      applicableTypes: json['applicableTypes'] == null
+          ? []
+          : List<String>.from(json['applicableTypes']),
+      expiredAt: json['expiredAt'] != null
+          ? DateTime.tryParse(json['expiredAt'])
+          : null,
+      priority: json['priority'],
+      tags: json['tags'] == null ? [] : List<String>.from(json['tags']),
+      shopId: json['shopId'],
+      imageUrl: json['imageUrl'],
+      deeplink: json['deeplink'],
+      trackingLink: json['trackingLink'],
+    );
+  }
 }

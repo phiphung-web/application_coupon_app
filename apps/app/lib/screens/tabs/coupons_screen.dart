@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
 
-import '../../widgets/section_title.dart';
-import '../../widgets/category_pill.dart';
-import '../../widgets/voucher_card.dart';
-
 import '../../models/category.dart';
 import '../../models/coupon.dart';
 import '../../core/result.dart';
 
-import '../../data/repo/category_repo.dart';
 import '../../data/repo/coupon_repo.dart';
-
-import '../../data/impl/category_repo_mock.dart';
+import '../../data/repo/category_repo.dart';
 import '../../data/impl/coupon_repo_mock.dart';
+import '../../data/impl/category_repo_mock.dart';
 
+import '../../widgets/section_title.dart';
+import '../../widgets/category_pill.dart';
+import '../../widgets/coupon_list_item.dart';
 import '../detail/voucher_detail_screen.dart';
+import 'hot_coupons_screen.dart';
+import 'coupon_categories_screen.dart';
 
 class CouponsScreen extends StatefulWidget {
   const CouponsScreen({super.key});
@@ -23,18 +23,18 @@ class CouponsScreen extends StatefulWidget {
 }
 
 class _CouponsScreenState extends State<CouponsScreen> {
-  // Repo (mock)
-  final CategoryRepo _catRepo = CategoryRepoMock();
   final CouponRepo _couponRepo = CouponRepoMock();
+  final CategoryRepo _catRepo = CategoryRepoMock();
 
-  // State
   final _scrollCtrl = ScrollController();
 
+  // state
   List<Category> _cats = [];
-  final _hotCoupons = <Coupon>[];
-  final _coupons = <Coupon>[];
-
   int? _selectedCat;
+
+  final List<Coupon> _hot = [];
+  final List<Coupon> _items = [];
+
   int _page = 1;
   bool _loading = false;
   bool _end = false;
@@ -53,33 +53,27 @@ class _CouponsScreenState extends State<CouponsScreen> {
   }
 
   Future<void> _init() async {
-    // Danh mục
     _cats = await _catRepo.list();
-
-    // Mã hot
-    _hotCoupons
+    _hot
       ..clear()
-      ..addAll(await _couponRepo.hot(limit: 8));
-
-    // Trang đầu
+      ..addAll(await _couponRepo.hot(limit: 20));
     await _loadFirst();
-
     if (mounted) setState(() {});
   }
 
   Future<void> _loadFirst() async {
     setState(() => _loading = true);
-    final PageResult<Coupon> page = await _couponRepo.list(
+    final PageResult<Coupon> res = await _couponRepo.list(
       page: 1,
-      pageSize: 20,
+      pageSize: 24,
       categoryId: _selectedCat,
     );
     setState(() {
-      _coupons
+      _items
         ..clear()
-        ..addAll(page.data);
+        ..addAll(res.data);
       _page = 1;
-      _end = !page.hasMore;
+      _end = !res.hasMore;
       _loading = false;
     });
   }
@@ -87,15 +81,15 @@ class _CouponsScreenState extends State<CouponsScreen> {
   Future<void> _loadMore() async {
     if (_loading || _end) return;
     setState(() => _loading = true);
-    final PageResult<Coupon> page = await _couponRepo.list(
+    final PageResult<Coupon> res = await _couponRepo.list(
       page: _page + 1,
-      pageSize: 20,
+      pageSize: 24,
       categoryId: _selectedCat,
     );
     setState(() {
-      _coupons.addAll(page.data);
+      _items.addAll(res.data);
       _page += 1;
-      _end = !page.hasMore;
+      _end = !res.hasMore;
       _loading = false;
     });
   }
@@ -115,8 +109,69 @@ class _CouponsScreenState extends State<CouponsScreen> {
         controller: _scrollCtrl,
         padding: const EdgeInsets.only(bottom: 24),
         children: [
-          // Danh mục mã áp dụng
-          const SectionTitle('Danh mục mã áp dụng'),
+          // ===== Mã hot =====
+          SectionTitle(
+            'Mã hot',
+            trailing: TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const HotCouponsScreen()),
+                );
+              },
+              child: const Text('View all'),
+            ),
+          ),
+          if (_hot.isEmpty)
+            const Padding(
+              padding: EdgeInsets.all(16),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else
+            SizedBox(
+              height: 200, // đủ cho coupon item ngang
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemBuilder: (_, i) => SizedBox(
+                  width: 320, // item ngang cố định
+                  child: CouponListItem(
+                    c: _hot[i],
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            VoucherDetailScreen(couponId: _hot[i].id),
+                      ),
+                    ),
+                  ),
+                ),
+                separatorBuilder: (_, __) => const SizedBox(width: 12),
+                itemCount: _hot.length,
+              ),
+            ),
+
+          const SizedBox(height: 8),
+
+          // ===== Danh mục mã =====
+          SectionTitle(
+            'Danh mục mã',
+            trailing: TextButton(
+              onPressed: () async {
+                final selected = await Navigator.push<int?>(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const CouponCategoriesScreen(),
+                  ),
+                );
+                if (selected != null) {
+                  setState(() => _selectedCat = selected);
+                  _loadFirst();
+                }
+              },
+              child: const Text('View all'),
+            ),
+          ),
           SizedBox(
             height: 44,
             child: ListView(
@@ -134,86 +189,50 @@ class _CouponsScreenState extends State<CouponsScreen> {
                     },
                   ),
                 ),
-                ..._cats.map((c) => Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: ChoiceChip(
-                        label: Text(c.name),
-                        selected: _selectedCat == c.id,
-                        onSelected: (_) {
-                          setState(() => _selectedCat = c.id);
-                          _loadFirst();
-                        },
+                ..._cats
+                    .take(12)
+                    .map(
+                      (c) => Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: ChoiceChip(
+                          label: Text(c.name),
+                          selected: _selectedCat == c.id,
+                          onSelected: (_) {
+                            setState(() => _selectedCat = c.id);
+                            _loadFirst();
+                          },
+                        ),
                       ),
-                    )),
+                    ),
               ],
             ),
           ),
 
           const SizedBox(height: 12),
 
-          // Mã giảm giá hot (tuỳ chọn: hiển thị đầu trang)
-          if (_hotCoupons.isNotEmpty) const SectionTitle('Mã hot'),
-          if (_hotCoupons.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: _hotCoupons
-                    .map(
-                      (c) => SizedBox(
-                        width: 170,
-                        child: VoucherCard(
-                          c: c,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    VoucherDetailScreen(couponId: c.id),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    )
-                    .toList(),
-              ),
-            ),
-
-          if (_hotCoupons.isNotEmpty) const SizedBox(height: 12),
-
-          // Danh sách mã
-          const SectionTitle('Danh sách mã'),
-          if (_coupons.isEmpty && _loading)
+          // ===== List mã theo danh mục =====
+          const SectionTitle('Mã theo danh mục'),
+          if (_items.isEmpty && _loading)
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 24),
               child: Center(child: CircularProgressIndicator()),
             )
           else
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                children: _coupons
-                    .map(
-                      (c) => Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: VoucherCard(
-                          c: c,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    VoucherDetailScreen(couponId: c.id),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    )
-                    .toList(),
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(16),
+              itemBuilder: (_, i) => CouponListItem(
+                c: _items[i],
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => VoucherDetailScreen(couponId: _items[i].id),
+                  ),
+                ),
               ),
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              itemCount: _items.length,
             ),
 
           if (_loading)

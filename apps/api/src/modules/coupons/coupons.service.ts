@@ -1,44 +1,59 @@
-// src/modules/coupons/coupons.service.ts
-calcDiscount(price: number, c: Coupon) {
-  const raw = c.type === 'PERCENT' ? Math.floor(price * c.value / 100) : c.value;
-  const capped = c.maxDiscount ? Math.min(raw, c.maxDiscount) : raw;
-  return Math.max(capped, 0);
-}
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { ILike, MoreThan, Repository } from 'typeorm';
+import { Coupon } from '../../entities/coupon.entity';
+import { CreateCouponDto, QueryCouponsDto, UpdateCouponDto } from './dto';
 
-async preview(dto: PreviewDto) {
-  const c = await this.repo.findOne({
-    where: { code: dto.couponCode },
-    relations: ['shop', 'category', 'applicableCategories'],
-  });
-  if (!c) return { canApply: false, reason: 'Mã không tồn tại' };
+@Injectable()
+export class CouponsService {
+  constructor(@InjectRepository(Coupon) private repo: Repository<Coupon>) {}
 
-  if (new Date(c.expiredAt) < new Date()) return { canApply: false, reason: 'Mã đã hết hạn' };
-  if (c.minOrder && dto.price < c.minOrder) return { canApply: false, reason: 'Chưa đạt đơn tối thiểu' };
-  if (dto.shopId && c.shop?.id && c.shop.id !== dto.shopId) return { canApply: false, reason: 'Sai shop' };
+  create(dto: CreateCouponDto) {
+    const c = this.repo.create({
+      ...dto,
+      applicableTypes: dto.applicableTypes ?? [],
+      tags: dto.tags ?? [],
+      expiredAt: dto.expiredAt ? new Date(dto.expiredAt) : undefined,
+    });
+    return this.repo.save(c);
+  }
 
-  // kiểm tra phạm vi áp dụng theo danh mục/loại
-  const allowCat =
-    !dto.categoryId ||
-    c.category?.id === dto.categoryId ||
-    (c.applicableCategories?.some((x) => x.id === dto.categoryId));
+  async update(id: string, dto: UpdateCouponDto) {
+    const patch: any = { ...dto };
+    if (dto.expiredAt) patch.expiredAt = new Date(dto.expiredAt);
+    await this.repo.update({ id }, patch);
+    return this.repo.findOneBy({ id });
+  }
 
-  const allowType =
-    !dto.type ||
-    (c.applicableTypes?.includes(dto.type) && !(c.excludedTypes?.includes(dto.type)));
+  async remove(id: string) { await this.repo.delete({ id }); return { ok: true }; }
+  getById(id: string) { return this.repo.findOne({ where: { id } }); }
 
-  if (!allowCat || !allowType) return { canApply: false, reason: 'Không áp dụng cho sản phẩm này' };
+  async hot(limit = 20) {
+    return this.repo.find({
+      where: [{ tags: ILike('%hot%') }, { priority: MoreThan(79) }],
+      order: { priority: 'DESC', id: 'DESC' },
+      take: limit,
+    });
+  }
 
-  const discount = this.calcDiscount(dto.price, c);
-  const finalPrice = Math.max(dto.price - discount, 0);
+  async list(q: QueryCouponsDto) {
+    const { page = 1, pageSize = 20, categoryId, q: text, sort, shopId } = q;
+    const where: any = { isActive: true };
+    if (categoryId) where.categoryId = categoryId;
+    if (shopId) where.shopId = shopId;
+    if (text) where.title = ILike(`%${text}%`);
 
-  return {
-    canApply: true,
-    discount,
-    finalPrice,
-    meta: {
-      type: c.type, value: c.value, maxDiscount: c.maxDiscount, minOrder: c.minOrder,
-      code: c.code, expiredAt: c.expiredAt,
-      applicableTypes: c.applicableTypes ?? [],
+    const order: any = {};
+    switch (sort) {
+      case 'priorityDesc': order.priority = 'DESC'; break;
+      case 'endAtAsc': order.expiredAt = 'ASC'; break;
+      case 'hot': order.priority = 'DESC'; break;
+      default: order.id = 'DESC';
     }
-  };
+
+    const [data, total] = await this.repo.findAndCount({
+      where, order, take: pageSize, skip: (page - 1) * pageSize,
+    });
+    return { data, total, page, pageSize, hasMore: page * pageSize < total };
+  }
 }
