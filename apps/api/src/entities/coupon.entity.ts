@@ -1,47 +1,61 @@
-import { Column, Entity, Index, PrimaryColumn } from "typeorm";
+import { Column, Entity, Index, PrimaryColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+export type DiscountType = 'PERCENT' | 'FIXED';
 
-export type DiscountType = "PERCENT" | "FIXED";
-
-@Entity("coupons")
+@Entity('coupons')
 export class Coupon {
   @PrimaryColumn({ length: 64 })
-  id: string;
+  id!: string;
 
-  @Index() @Column({ length: 200 }) title: string;
-  @Index() @Column({ length: 64 }) code: string;
+  @Index()
+  @Column({ length: 200 })
+  title!: string;
 
-  @Column({ type: "varchar", length: 10 })
-  discountType: DiscountType;
+  @Index()
+  @Column({ length: 64 })
+  code!: string;
 
-  @Column("int")
-  discountValue: number;
+  @Column({ type: 'varchar', length: 10 })
+  discountType!: DiscountType;
 
-  @Column("int", { nullable: true }) minSpend?: number;
-  @Column("int", { nullable: true }) maxDiscount?: number;
+  @Column('int')
+  discountValue!: number;
 
-  @Column({ type: "timestamptz", nullable: true })
+  @Column('int', { nullable: true })
+  minSpend?: number;
+
+  @Column('int', { nullable: true })
+  maxDiscount?: number;
+
+  @Column({ type: 'timestamptz', nullable: true })
   expiredAt?: Date;
 
-  @Column("int", { nullable: true })
+  @Column('int', { nullable: true })
   categoryId?: number;
 
-  @Column({ type: "simple-array", nullable: true })
+  @Column({ type: 'simple-array', nullable: true })
   applicableTypes?: string[];
 
   @Column({ nullable: true })
-  shopId?: string;
+  sourceId?: string;
 
   @Column({ nullable: true })
   imageUrl?: string;
 
-  @Column({ type: "simple-array", nullable: true })
-  tags?: string[];
+  @Column({ type: 'json', nullable: true })
+  badges?: Array<{ key: string; label: string; color?: string; bgColor?: string; icon?: string; priority?: number }>;
 
-  @Column("int", { nullable: true })
+  @Column('int', { nullable: true })
   priority?: number;
 
-  @Column({ nullable: true }) trackingLink?: string;
-  @Column({ nullable: true }) deeplink?: string;
+  @Column({ nullable: true })
+  trackingLink?: string;
 
-  @Column({ default: true }) isActive: boolean;
+  @Column({ nullable: true })
+  deeplink?: string;
+
+  @Column({ default: true })
+  isActive: boolean = true;
+
+  @CreateDateColumn() createdAt!: Date;
+  @UpdateDateColumn() updatedAt!: Date;
 }

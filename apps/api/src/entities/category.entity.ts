@@ -1,22 +1,26 @@
-import { Column, Entity, Index, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, Index, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 
-@Entity("categories")
+@Entity('categories')
 export class Category {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Index()
   @Column({ length: 120 })
-  name: string;
+  name!: string;
 
-  // ảnh đại diện danh mục (frontend view all hiển thị)
   @Column({ nullable: true })
   imageUrl?: string;
 
-  // sắp xếp ưu tiên
-  @Column("int", { default: 0 })
-  priority: number;
+  @Column('int', { nullable: true })
+  parentId?: number;
+
+  @Column('int', { default: 0 })
+  priority: number = 0;
 
   @Column({ default: true })
-  isActive: boolean;
+  isActive: boolean = true;
+
+  @CreateDateColumn() createdAt!: Date;
+  @UpdateDateColumn() updatedAt!: Date;
 }

@@ -1,17 +1,15 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { Controller, Get, Query, Param, Post, Body, Patch, Delete } from '@nestjs/common';
 import { CouponsService } from './coupons.service';
-import { CreateCouponDto, QueryCouponsDto, UpdateCouponDto } from './dto';
+import { CreateCouponDto, ListCouponDto, UpdateCouponDto } from './dto';
 
 @Controller('coupons')
 export class CouponsController {
   constructor(private readonly svc: CouponsService) {}
 
+  @Get() list(@Query() q: ListCouponDto) { return this.svc.list(q); }
+  @Get('hot') hot(@Query('limit') limit = 10) { return this.svc.hot(+limit); }
+  @Get(':id') get(@Param('id') id: string) { return this.svc.get(id); }
   @Post() create(@Body() dto: CreateCouponDto) { return this.svc.create(dto); }
   @Patch(':id') update(@Param('id') id: string, @Body() dto: UpdateCouponDto) { return this.svc.update(id, dto); }
   @Delete(':id') remove(@Param('id') id: string) { return this.svc.remove(id); }
-
-  @Get('hot') hot() { return this.svc.hot(); }
-  @Get(':id') get(@Param('id') id: string) { return this.svc.getById(id); }
-  @Get() list(@Query() q: QueryCouponsDto) { return this.svc.list(q); }
 }
-  

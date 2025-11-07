@@ -1,89 +1,77 @@
 class Coupon {
   final String id;
-  final String code;
   final String title;
-
-  /// Loại giảm: 'PERCENT' hoặc 'FIXED'
-  final String discountType;
-
-  /// Giá trị giảm (VD: 10 = 10% hoặc 50000đ)
-  final int discountValue;
-
-  /// Giảm tối đa (dành cho loại PERCENT)
-  final int? maxDiscount;
-
-  /// Giá trị đơn hàng tối thiểu để áp dụng (nếu có)
-  final int? minSpend;
-
-  /// Danh mục áp dụng (0 = tất cả)
-  final int? categoryId;
-
-  /// Các loại sản phẩm có thể áp dụng (VD: ['Shoes', 'Gadget'])
-  final List<String>? applicableTypes;
-
-  /// Ngày hết hạn
+  final String code;
+  final String discountType; // PERCENT | FIXED
+  final double discountValue;
+  final double? minSpend;
+  final double? maxDiscount;
   final DateTime? expiredAt;
-
-  /// Độ ưu tiên / độ hot
-  final int? priority;
-
-  /// Nhãn, tag (VD: ['hot', 'exclusive'])
-  final List<String> tags;
-
-  /// Shop áp dụng (VD: 'shopee', 'tiki')
+  final int? categoryId;
   final String? shopId;
-
-  /// Hình ảnh minh họa
   final String? imageUrl;
-
-  /// Link tới sản phẩm / deeplink
-  final String? deeplink;
-
-  /// Link tracking (nếu có)
+  final List<String>? tags;
+  final int? priority;
   final String? trackingLink;
+  final String? deeplink;
+  final bool isActive;
 
-  const Coupon({
+  Coupon({
     required this.id,
-    required this.code,
     required this.title,
+    required this.code,
     required this.discountType,
     required this.discountValue,
-    this.maxDiscount,
     this.minSpend,
-    this.categoryId,
-    this.applicableTypes,
+    this.maxDiscount,
     this.expiredAt,
-    this.priority,
-    this.tags = const [],
+    this.categoryId,
     this.shopId,
     this.imageUrl,
-    this.deeplink,
+    this.tags,
+    this.priority,
     this.trackingLink,
+    this.deeplink,
+    this.isActive = true,
   });
 
-  /// Fake từ JSON nếu có dữ liệu
-  factory Coupon.fromJson(Map<String, dynamic> json) {
-    return Coupon(
-      id: json['id'].toString(),
-      code: json['code'] ?? '',
-      title: json['title'] ?? '',
-      discountType: json['discountType'] ?? 'PERCENT',
-      discountValue: json['discountValue'] ?? 0,
-      maxDiscount: json['maxDiscount'],
-      minSpend: json['minSpend'],
-      categoryId: json['categoryId'],
-      applicableTypes: json['applicableTypes'] == null
-          ? []
-          : List<String>.from(json['applicableTypes']),
-      expiredAt: json['expiredAt'] != null
-          ? DateTime.tryParse(json['expiredAt'])
-          : null,
-      priority: json['priority'],
-      tags: json['tags'] == null ? [] : List<String>.from(json['tags']),
-      shopId: json['shopId'],
-      imageUrl: json['imageUrl'],
-      deeplink: json['deeplink'],
-      trackingLink: json['trackingLink'],
-    );
-  }
+  factory Coupon.fromJson(Map<String, dynamic> json) => Coupon(
+    id: json['id'].toString(),
+    title: json['title'] ?? '',
+    code: json['code'] ?? '',
+    discountType: json['discountType'] ?? 'FIXED',
+    discountValue: (json['discountValue'] ?? 0).toDouble(),
+    minSpend: json['minSpend']?.toDouble(),
+    maxDiscount: json['maxDiscount']?.toDouble(),
+    expiredAt: json['expiredAt'] != null
+        ? DateTime.tryParse(json['expiredAt'])
+        : null,
+    categoryId: json['categoryId'],
+    shopId: json['shopId'],
+    imageUrl: json['imageUrl'],
+    tags: (json['tags'] as List?)?.map((e) => e.toString()).toList(),
+    priority: json['priority'],
+    trackingLink: json['trackingLink'],
+    deeplink: json['deeplink'],
+    isActive: json['isActive'] ?? true,
+  );
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'title': title,
+    'code': code,
+    'discountType': discountType,
+    'discountValue': discountValue,
+    'minSpend': minSpend,
+    'maxDiscount': maxDiscount,
+    'expiredAt': expiredAt?.toIso8601String(),
+    'categoryId': categoryId,
+    'shopId': shopId,
+    'imageUrl': imageUrl,
+    'tags': tags,
+    'priority': priority,
+    'trackingLink': trackingLink,
+    'deeplink': deeplink,
+    'isActive': isActive,
+  };
 }

@@ -1,77 +1,72 @@
-import 'dart:math';
 import '../models/product.dart';
 import '../models/coupon.dart';
 
-/// Kết quả tính giá sau khi áp mã
 class PricingResult {
-  final int discount; // số tiền được giảm
-  final int finalPrice; // giá cuối cùng sau giảm
-  final Coupon? coupon; // mã áp dụng (nếu có)
+  final double finalPrice;
+  final double discountAmount;
+  final Coupon? coupon;
+  const PricingResult({
+    required this.finalPrice,
+    required this.discountAmount,
+    required this.coupon,
+  });
 
-  const PricingResult(this.discount, this.finalPrice, this.coupon);
-
-  /// % giảm so với giá gốc
-  int discountPercentFor(int basePrice) {
-    if (basePrice <= 0) return 0;
-    final pct = (discount * 100) ~/ basePrice;
-    return pct.clamp(0, 99);
+  int discountPercentFor(double base) {
+    if (base <= 0) return 0;
+    final pct = (discountAmount / base) * 100.0;
+    return pct.isNaN ? 0 : pct.round().clamp(0, 100);
   }
 }
 
-/// Tính giá giảm cho một sản phẩm cụ thể và một coupon
-PricingResult pricingFor(Product product, Coupon coupon) {
-  // không áp dụng được => không giảm
-  if (!_canApply(product, coupon)) {
-    return PricingResult(0, product.basePrice, null);
-  }
-
-  final rawDiscount = _calcDiscount(product.basePrice, coupon);
-  final finalPrice = max(product.basePrice - rawDiscount, 0);
-  return PricingResult(rawDiscount, finalPrice, coupon);
-}
-
-/// Tính toán giá trị giảm (đã tính cap)
-int _calcDiscount(int price, Coupon coupon) {
-  final raw = coupon.discountType == 'PERCENT'
-      ? (price * coupon.discountValue ~/ 100)
-      : coupon.discountValue;
-
-  // Nếu có giới hạn giảm tối đa
-  final capped = (coupon.maxDiscount ?? 0) > 0
-      ? min(raw, coupon.maxDiscount!)
-      : raw;
-
-  return max(capped, 0);
-}
-
-/// Kiểm tra mã có thể áp dụng cho sản phẩm không
 bool _canApply(Product p, Coupon c) {
-  if (c.minSpend != null && p.basePrice < c.minSpend!) return false;
-  if (c.categoryId != null && c.categoryId != 0 && c.categoryId != p.categoryId)
-    return false;
-  if (c.applicableTypes != null &&
-      c.applicableTypes!.isNotEmpty &&
-      !c.applicableTypes!.contains(p.type))
-    return false;
+  if (!c.isActive) return false;
   if (c.expiredAt != null && c.expiredAt!.isBefore(DateTime.now()))
     return false;
+  if (c.categoryId != null && c.categoryId != 0 && c.categoryId != p.categoryId)
+    return false;
+  if (c.minSpend != null && p.basePrice < c.minSpend!) return false;
   return true;
 }
 
-/// Tìm mã giảm tốt nhất trong danh sách cho 1 sản phẩm
-PricingResult bestForProduct(Product product, List<Coupon> coupons) {
+double _rawDiscount(double price, Coupon c) {
+  final raw = c.discountType.toUpperCase() == 'PERCENT'
+      ? price * (c.discountValue / 100.0)
+      : c.discountValue;
+
+  // c.maxDiscount có thể null hoặc 0 -> không giới hạn
+  double capped;
+  if (c.maxDiscount == null || c.maxDiscount == 0) {
+    capped = raw;
+  } else {
+    // tránh dùng math.min (trả về num), tự so sánh để ra double
+    capped = raw < c.maxDiscount! ? raw : c.maxDiscount!;
+  }
+
+  // tránh dùng math.max (trả về num)
+  return capped < 0 ? 0.0 : capped;
+}
+
+/// Tính mã tốt nhất cho 1 sản phẩm từ danh sách coupon.
+PricingResult bestForProduct(Product p, List<Coupon> coupons) {
   Coupon? best;
-  int bestDiscount = 0;
+  double bestAmt = 0.0;
 
   for (final c in coupons) {
-    if (!_canApply(product, c)) continue;
-    final d = _calcDiscount(product.basePrice, c);
-    if (d > bestDiscount) {
-      bestDiscount = d;
+    if (!_canApply(p, c)) continue;
+    final d = _rawDiscount(p.basePrice, c);
+    if (d > bestAmt) {
+      bestAmt = d;
       best = c;
     }
   }
 
-  final finalPrice = max(product.basePrice - bestDiscount, 0);
-  return PricingResult(bestDiscount, finalPrice, best);
+  // tránh dùng math.max (num). Dùng so sánh để ra double
+  final fp = p.basePrice - bestAmt;
+  final finalPrice = fp < 0 ? 0.0 : fp;
+
+  return PricingResult(
+    finalPrice: finalPrice,
+    discountAmount: bestAmt,
+    coupon: best,
+  );
 }

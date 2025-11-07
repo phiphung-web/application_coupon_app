@@ -1,23 +1,23 @@
-import { Type } from "class-transformer";
 import {
   IsBoolean,
   IsInt,
-  IsNotEmpty,
   IsOptional,
   IsString,
   MaxLength,
+  Min,
 } from "class-validator";
+import { PaginationDto } from "../../common/dtos/pagination.dto";
 
 export class CreateCategoryDto {
-  @IsString() @MaxLength(120) @IsNotEmpty() name!: string;
-  @IsOptional() @IsString() imageUrl?: string;
-  @Type(() => Number) @IsInt() @IsOptional() priority?: number = 0;
-  @IsOptional() @IsBoolean() isActive?: boolean = true;
+  @IsString() @MaxLength(120) name!: string;
+  @IsString() @IsOptional() imageUrl?: string;
+  @IsInt() @IsOptional() parentId?: number;
+  @IsInt() @Min(0) @IsOptional() priority?: number = 0;
+  @IsBoolean() @IsOptional() isActive?: boolean = true;
 }
+
 export class UpdateCategoryDto extends CreateCategoryDto {}
 
-export class QueryCategoriesDto {
-  @Type(() => Number) @IsInt() @IsOptional() page: number = 1;
-  @Type(() => Number) @IsInt() @IsOptional() pageSize: number = 50;
-  @IsOptional() @IsString() q?: string;
+export class ListCategoryDto extends PaginationDto {
+  @IsBoolean() @IsOptional() isActive?: boolean;
 }

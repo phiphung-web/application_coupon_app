@@ -1,142 +1,137 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../models/coupon.dart';
-import '../core/money.dart';
-import 'app_image.dart';
+
+String _money(num v) {
+  final s = v.toInt().toString();
+  final buf = StringBuffer();
+  for (int i = 0; i < s.length; i++) {
+    final idx = s.length - 1 - i;
+    buf.write(s[idx]);
+    if ((i + 1) % 3 == 0 && idx != 0) buf.write('.');
+  }
+  return buf.toString().split('').reversed.join() + 'đ';
+}
 
 class CouponListItem extends StatelessWidget {
-  final Coupon c;
+  final Coupon coupon;
   final VoidCallback? onTap;
-
-  const CouponListItem({super.key, required this.c, this.onTap});
+  const CouponListItem({super.key, required this.coupon, this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    final isHot = c.tags.contains('hot') || (c.priority ?? 0) >= 80;
+    final isHot =
+        (coupon.tags?.contains('hot') ?? false) || (coupon.priority ?? 0) >= 80;
 
     return InkWell(
-      onTap: onTap,
       borderRadius: BorderRadius.circular(14),
-      child: Ink(
-        padding: const EdgeInsets.all(12),
+      onTap: onTap,
+      child: Container(
         decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(.05),
+              blurRadius: 6,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
+        padding: const EdgeInsets.all(10),
         child: Row(
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(10),
-              child: AppImage(c.imageUrl, w: 72, h: 72, fit: BoxFit.cover),
+              child: (coupon.imageUrl != null && coupon.imageUrl!.isNotEmpty)
+                  ? Image.network(
+                      coupon.imageUrl!,
+                      width: 80,
+                      height: 80,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(
+                        width: 80,
+                        height: 80,
+                        color: const Color(0xFFEDEDED),
+                      ),
+                    )
+                  : Container(
+                      width: 80,
+                      height: 80,
+                      color: const Color(0xFFEDEDED),
+                    ),
             ),
-            const SizedBox(width: 12),
-            Expanded(child: _CenterPart(c: c)),
-            if (isHot) const SizedBox(width: 8),
-            if (isHot) _pill(context, 'HOT', dark: true),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    coupon.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 4),
+                  Wrap(
+                    spacing: 6,
+                    children: [
+                      _chip(context, 'Code: ${coupon.code}', primary: true),
+                      if (coupon.maxDiscount != null)
+                        _chip(context, 'Giảm ${_money(coupon.maxDiscount!)}'),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'HSD: ${_fmtDate(coupon.expiredAt)}',
+                    style: const TextStyle(fontSize: 12, color: Colors.black54),
+                  ),
+                ],
+              ),
+            ),
+            if (isHot)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.black87,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Text(
+                  'HOT',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
           ],
         ),
       ),
     );
   }
-}
 
-class _CenterPart extends StatelessWidget {
-  final Coupon c;
-  const _CenterPart({required this.c});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Tiêu đề
-        Text(
-          c.title,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontWeight: FontWeight.w600),
+  Widget _chip(BuildContext ctx, String text, {bool primary = false}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: primary
+            ? Theme.of(ctx).colorScheme.primary.withOpacity(.1)
+            : Colors.grey.shade200,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 11,
+          color: primary ? Theme.of(ctx).colorScheme.primary : Colors.black87,
+          fontWeight: FontWeight.w500,
         ),
-        const SizedBox(height: 4),
-
-        // Chip thông tin
-        Wrap(
-          spacing: 8,
-          runSpacing: 6,
-          children: [
-            _pill(
-              context,
-              'Code: ${c.code}',
-              primary: true,
-              onTap: () {
-                Clipboard.setData(ClipboardData(text: c.code));
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(const SnackBar(content: Text('Đã copy mã')));
-              },
-            ),
-            if (c.minSpend != null) _pill(context, 'Min ${money(c.minSpend!)}'),
-            if (c.maxDiscount != null)
-              _pill(context, 'Max ${money(c.maxDiscount!)}'),
-            _pill(context, _discountLabel(c)),
-          ],
-        ),
-
-        const SizedBox(height: 6),
-        Text(
-          'HSD: ${_fmtDate(c.expiredAt)}',
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
-      ],
+      ),
     );
   }
-}
 
-// ===== helpers =====
-Widget _pill(
-  BuildContext ctx,
-  String t, {
-  bool primary = false,
-  bool dark = false,
-  VoidCallback? onTap,
-}) {
-  final bg = dark
-      ? Colors.black87
-      : primary
-      ? Theme.of(ctx).colorScheme.primary.withOpacity(.1)
-      : Theme.of(ctx).colorScheme.surfaceVariant.withOpacity(.8);
-  final fg = dark
-      ? Colors.white
-      : primary
-      ? Theme.of(ctx).colorScheme.primary
-      : Theme.of(ctx).colorScheme.onSurfaceVariant;
-  final child = Container(
-    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-    decoration: BoxDecoration(
-      color: bg,
-      borderRadius: BorderRadius.circular(8),
-    ),
-    child: Text(
-      t,
-      style: TextStyle(
-        fontSize: 12,
-        color: fg,
-        fontWeight: primary ? FontWeight.w600 : FontWeight.w400,
-      ),
-    ),
-  );
-  if (onTap == null) return child;
-  return GestureDetector(onTap: onTap, child: child);
-}
-
-String _discountLabel(Coupon c) {
-  final t = (c.discountType).toUpperCase();
-  return (t == 'PERCENT')
-      ? 'Giảm ${c.discountValue}%'
-      : 'Giảm ${money(c.discountValue)}';
-}
-
-String _fmtDate(DateTime? d) {
-  if (d == null) return '-';
-  String two(int x) => x < 10 ? '0$x' : '$x';
-  return '${two(d.day)}/${two(d.month)}/${d.year}';
+  String _fmtDate(DateTime? d) {
+    if (d == null) return '-';
+    return '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
+  }
 }

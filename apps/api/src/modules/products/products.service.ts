@@ -1,37 +1,20 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ILike, Repository } from 'typeorm';
+import { Repository, FindOptionsWhere } from 'typeorm';
 import { Product } from '../../entities/product.entity';
-import { CreateProductDto, QueryProductsDto, UpdateProductDto } from './dto';
+import { CreateProductDto, ListProductDto, UpdateProductDto } from './dto';
 
 @Injectable()
 export class ProductsService {
   constructor(@InjectRepository(Product) private repo: Repository<Product>) {}
 
-  async create(dto: CreateProductDto) {
-    const p = this.repo.create(dto);
-    if (!p.discountPercent && p.originalPrice && p.originalPrice > p.basePrice) {
-      p.discountPercent = Math.round(100 - (p.basePrice * 100) / p.originalPrice);
-    }
-    return this.repo.save(p);
-  }
-
-  async update(id: number, dto: UpdateProductDto) {
-    await this.repo.update(id, dto);
-    return this.repo.findOneBy({ id });
-  }
-
-  async remove(id: number) { await this.repo.delete(id); return { ok: true }; }
-  findById(id: number) { return this.repo.findOne({ where: { id } }); }
-
-  hot(limit = 20) { return this.repo.find({ where: { isHot: true }, order: { id: 'DESC' }, take: limit }); }
-
-  async list(q: QueryProductsDto) {
-    const { page = 1, pageSize = 20, categoryId, q: text, sort, shopId } = q;
-    const where: any = {};
-    if (categoryId) where.categoryId = categoryId;
-    if (shopId) where.shopId = shopId;
-    if (text) where.name = ILike(`%${text}%`);
+  async list(q: ListProductDto) {
+    const { page=1, pageSize=20, q: keyword, categoryId, sourceId, isHot, sort } = q;
+    const where: FindOptionsWhere<Product> = {};
+    if (categoryId) (where as any).categoryId = categoryId;
+    if (sourceId) (where as any).sourceId = sourceId;
+    if (isHot !== undefined) (where as any).isHot = isHot;
+    if (keyword) (where as any).name = () => `ILIKE '%${keyword}%'`;
 
     const order: any = {};
     switch (sort) {
@@ -39,12 +22,36 @@ export class ProductsService {
       case 'priceDesc': order.basePrice = 'DESC'; break;
       case 'discountDesc': order.discountPercent = 'DESC'; break;
       case 'hot': order.isHot = 'DESC'; order.id = 'DESC'; break;
-      default: order.id = 'DESC';
+      case 'new': default: order.id = 'DESC';
     }
 
-    const [data, total] = await this.repo.findAndCount({
-      where, order, take: pageSize, skip: (page - 1) * pageSize,
+    const [items, total] = await this.repo.findAndCount({
+      where, order, skip: (page-1)*pageSize, take: pageSize,
     });
-    return { data, total, page, pageSize, hasMore: page * pageSize < total };
+    return { items, total, page, pageSize };
   }
+
+  get(id: number) { return this.repo.findOne({ where: { id } }); }
+
+  async create(dto: CreateProductDto) {
+    if (dto.originalPrice && dto.originalPrice < dto.basePrice) {
+      throw new BadRequestException('originalPrice must be >= basePrice');
+    }
+    if (!dto.discountPercent && dto.originalPrice && dto.originalPrice > dto.basePrice) {
+      dto.discountPercent = Math.round(100 - (dto.basePrice * 100 / dto.originalPrice));
+    }
+    return this.repo.save(this.repo.create(dto));
+  }
+
+  async update(id: number, dto: UpdateProductDto) {
+    if (dto.originalPrice && dto.basePrice && dto.originalPrice < dto.basePrice) {
+      throw new BadRequestException('originalPrice must be >= basePrice');
+    }
+    if ((!dto.discountPercent) && dto.originalPrice && dto.basePrice && dto.originalPrice > dto.basePrice) {
+      dto.discountPercent = Math.round(100 - (dto.basePrice * 100 / dto.originalPrice));
+    }
+    await this.repo.update({ id }, dto); return this.get(id);
+  }
+
+  async remove(id: number) { await this.repo.delete({ id }); return { ok: true }; }
 }

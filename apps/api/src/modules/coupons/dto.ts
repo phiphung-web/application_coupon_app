@@ -1,41 +1,44 @@
 import { Type } from 'class-transformer';
-import { IsArray, IsDateString, IsEnum, IsInt, IsNotEmpty, IsOptional, IsPositive, IsString, MaxLength } from 'class-validator';
-import { DiscountType } from '../../entities/coupon.entity';
+import { IsArray, IsBoolean, IsDateString, IsEnum, IsInt, IsOptional, IsString, MaxLength, Min, ValidateIf } from 'class-validator';
+import { PaginationDto } from '../../common/dtos/pagination.dto';
+
+export type DiscountType = 'PERCENT' | 'FIXED';
 
 export class CreateCouponDto {
-  @IsString() @MaxLength(64) @IsNotEmpty() id!: string;
-  @IsString() @MaxLength(200) @IsNotEmpty() title!: string;
-  @IsString() @MaxLength(64)  @IsNotEmpty() code!: string;
+  @IsString() @MaxLength(64) id!: string;
+  @IsString() @MaxLength(200) title!: string;
+  @IsString() @MaxLength(64) code!: string;
 
   @IsEnum(['PERCENT','FIXED']) discountType!: DiscountType;
-  @Type(() => Number) @IsInt() @IsPositive() discountValue!: number;
+  @Type(() => Number) @IsInt() @Min(1) discountValue!: number;
 
-  @Type(() => Number) @IsInt() @IsOptional() minSpend?: number;
-  @Type(() => Number) @IsInt() @IsOptional() maxDiscount?: number;
+  @Type(() => Number) @IsInt() @Min(0) @IsOptional() minSpend?: number;
+  @Type(() => Number) @IsInt() @Min(0) @IsOptional() maxDiscount?: number;
 
-  @IsOptional() @IsDateString() expiredAt?: string;
+  @IsDateString() @IsOptional() expiredAt?: string;
 
   @Type(() => Number) @IsInt() @IsOptional() categoryId?: number;
-  @IsOptional() @IsArray() applicableTypes?: string[];
+  @IsArray() @IsOptional() applicableTypes?: string[];
 
-  @IsOptional() @IsString() shopId?: string;
-  @IsOptional() @IsString() imageUrl?: string;
+  @IsString() @IsOptional() sourceId?: string;
+  @IsString() @IsOptional() imageUrl?: string;
 
-  @IsOptional() @IsArray() tags?: string[];
+  @ValidateIf(v => v.badges !== undefined)
+  @IsArray() @IsOptional() badges?: any[];
+
   @Type(() => Number) @IsInt() @IsOptional() priority?: number;
 
-  @IsOptional() @IsString() trackingLink?: string;
-  @IsOptional() @IsString() deeplink?: string;
+  @IsString() @IsOptional() trackingLink?: string;
+  @IsString() @IsOptional() deeplink?: string;
 
-  @IsOptional() isActive?: boolean = true;
+  @IsBoolean() @IsOptional() isActive?: boolean = true;
 }
+
 export class UpdateCouponDto extends CreateCouponDto {}
 
-export class QueryCouponsDto {
-  @Type(() => Number) @IsInt() @IsOptional() page: number = 1;
-  @Type(() => Number) @IsInt() @IsOptional() pageSize: number = 20;
+export class ListCouponDto extends PaginationDto {
   @Type(() => Number) @IsInt() @IsOptional() categoryId?: number;
-  @IsOptional() @IsString() q?: string;
-  @IsOptional() @IsString() sort?: 'new'|'priorityDesc'|'endAtAsc'|'hot';
-  @IsOptional() @IsString() shopId?: string;
+  @IsString() @IsOptional() sourceId?: string;
+  @IsString() @IsOptional() sort?: 'priorityDesc' | 'endAtAsc' | 'hot' | 'new';
+  @IsBoolean() @IsOptional() isActive?: boolean;
 }

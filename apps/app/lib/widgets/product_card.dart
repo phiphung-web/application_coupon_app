@@ -1,23 +1,30 @@
 import 'package:flutter/material.dart';
-import '../../models/product.dart';
-import '../../core/money.dart';
-import '../screens/detail/product_detail_screen.dart';
-import '../widgets/app_image.dart';
+import '../models/product.dart';
+
+String _money(num v) {
+  final s = v.toInt().toString();
+  final buf = StringBuffer();
+  for (int i = 0; i < s.length; i++) {
+    final idx = s.length - 1 - i;
+    buf.write(s[idx]);
+    if ((i + 1) % 3 == 0 && idx != 0) buf.write('.');
+  }
+  return buf.toString().split('').reversed.join() + 'đ';
+}
 
 class ProductCard extends StatelessWidget {
   final Product product;
-  const ProductCard({super.key, required this.product});
+  final VoidCallback? onTap;
+  const ProductCard({super.key, required this.product, this.onTap});
 
   @override
   Widget build(BuildContext context) {
+    final old = product.originalPrice ?? product.basePrice;
+    final pct = old > 0 ? (((old - product.basePrice) / old) * 100).round() : 0;
+
     return InkWell(
       borderRadius: BorderRadius.circular(14),
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => ProductDetailScreen(productId: product.id),
-        ),
-      ),
+      onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
@@ -31,63 +38,68 @@ class ProductCard extends StatelessWidget {
           ],
         ),
         padding: const EdgeInsets.all(8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
-            // Ảnh
             ClipRRect(
               borderRadius: BorderRadius.circular(10),
-              child: AppImage(product.imageUrl, h: 120, w: double.infinity),
-            ),
-            const SizedBox(height: 8),
-
-            // Tên
-            Text(
-              product.name,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-            ),
-            const SizedBox(height: 4),
-
-            // Giá
-            Row(
-              children: [
-                Text(
-                  money(product.basePrice),
-                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
-                ),
-                if (product.oldPrice != null) ...[
-                  const SizedBox(width: 6),
-                  Text(
-                    money(product.oldPrice!),
-                    style: const TextStyle(
-                      decoration: TextDecoration.lineThrough,
-                      fontSize: 12,
-                      color: Colors.black54,
+              child: (product.imageUrl != null && product.imageUrl!.isNotEmpty)
+                  ? Image.network(
+                      product.imageUrl!,
+                      width: 110,
+                      height: 110,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(
+                        width: 110,
+                        height: 110,
+                        color: const Color(0xFFEDEDED),
+                      ),
+                    )
+                  : Container(
+                      width: 110,
+                      height: 110,
+                      color: const Color(0xFFEDEDED),
                     ),
-                  ),
-                ],
-              ],
             ),
-            const SizedBox(height: 2),
-
-            // Tag nhỏ
-            Row(
-              children: [
-                if (product.discountPercent != null)
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Text(
-                    '${product.discountPercent}% OFF',
-                    style: const TextStyle(color: Colors.red, fontSize: 12, fontWeight: FontWeight.w600),
+                    product.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
-                const SizedBox(width: 6),
-                const Text(
-                  'PROMO CODE',
-                  style: TextStyle(color: Colors.green, fontSize: 12, fontWeight: FontWeight.w500),
-                ),
-              ],
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Text(
+                        _money(product.basePrice),
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(width: 6),
+                      if (old > product.basePrice)
+                        Text(
+                          _money(old),
+                          style: const TextStyle(
+                            decoration: TextDecoration.lineThrough,
+                            color: Colors.black54,
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  if (pct > 0)
+                    Text(
+                      '$pct% OFF',
+                      style: const TextStyle(
+                        color: Colors.red,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                ],
+              ),
             ),
           ],
         ),

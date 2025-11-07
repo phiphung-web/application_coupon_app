@@ -1,0 +1,43 @@
+[
+  {
+    "id": "c001",
+    "title": "Giảm 20% đơn công nghệ",
+    "code": "TECH20",
+    "discountType": "PERCENT",
+    "discountValue": 20,
+    "maxDiscount": 100000,
+    "minSpend": 500000,
+    "categoryId": 1,
+    "sourceId": "shopee",
+    "priority": 90,
+    "tags": ["hot"],
+    "imageUrl": "https://picsum.photos/seed/c1/600/400"
+  },
+  {
+    "id": "c002",
+    "title": "Giảm 50k mọi đơn",
+    "code": "ALL50K",
+    "discountType": "FIXED",
+    "discountValue": 50000,
+    "sourceId": "lazada",
+    "priority": 70
+  },
+  {
+    "id": "c003",
+    "title": "Giảm 15% gói Spotify",
+    "code": "SPOTI15",
+    "discountType": "PERCENT",
+    "discountValue": 15,
+    "sourceId": "spotify",
+    "priority": 80,
+    "expiredAt": "2099-12-31T00:00:00.000Z",
+    "badges": [
+      {
+        "key": "limited",
+        "label": "Giới hạn",
+        "bgColor": "#ffe8e6",
+        "color": "#ff3b30"
+      }
+    ]
+  }
+]

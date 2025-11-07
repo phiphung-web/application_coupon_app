@@ -1,18 +1,22 @@
-import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { ProductsModule } from './products/products.module';
-import { CouponsModule } from './coupons/coupons.module';
-import { CategoriesModule } from './categories/categories.module';
-import { ShopsModule } from './shops/shops.module';
-import { AppDataSource } from '../typeorm.config';
+import { Module } from "@nestjs/common";
+import { ConfigModule } from "@nestjs/config";
+import { TypeOrmModule } from "@nestjs/typeorm";
+import { typeormConfig } from "../config/typeorm.config";
+import { CategoriesModule } from "../modules/categories/categories.module";
+import { SourcesModule } from "../modules/sources/sources.module.ts";
+import { ProductsModule } from "../modules/products/products.module";
+import { CouponsModule } from "../modules/coupons/coupons.module";
+import { PricingModule } from "../modules/pricing/pricing.module";
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot(AppDataSource.options),
+    ConfigModule.forRoot({ isGlobal: true }),
+    TypeOrmModule.forRootAsync({ useFactory: typeormConfig }),
     CategoriesModule,
-    ShopsModule,
+    SourcesModule,
     ProductsModule,
     CouponsModule,
+    PricingModule,
   ],
 })
 export class AppModule {}

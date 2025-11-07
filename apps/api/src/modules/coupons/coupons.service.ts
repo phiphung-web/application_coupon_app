@@ -1,59 +1,55 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ILike, MoreThan, Repository } from 'typeorm';
+import { Repository, FindOptionsWhere } from 'typeorm';
 import { Coupon } from '../../entities/coupon.entity';
-import { CreateCouponDto, QueryCouponsDto, UpdateCouponDto } from './dto';
+import { CreateCouponDto, ListCouponDto, UpdateCouponDto } from './dto';
 
 @Injectable()
 export class CouponsService {
   constructor(@InjectRepository(Coupon) private repo: Repository<Coupon>) {}
 
-  create(dto: CreateCouponDto) {
-    const c = this.repo.create({
-      ...dto,
-      applicableTypes: dto.applicableTypes ?? [],
-      tags: dto.tags ?? [],
-      expiredAt: dto.expiredAt ? new Date(dto.expiredAt) : undefined,
-    });
-    return this.repo.save(c);
-  }
-
-  async update(id: string, dto: UpdateCouponDto) {
-    const patch: any = { ...dto };
-    if (dto.expiredAt) patch.expiredAt = new Date(dto.expiredAt);
-    await this.repo.update({ id }, patch);
-    return this.repo.findOneBy({ id });
-  }
-
-  async remove(id: string) { await this.repo.delete({ id }); return { ok: true }; }
-  getById(id: string) { return this.repo.findOne({ where: { id } }); }
-
-  async hot(limit = 20) {
-    return this.repo.find({
-      where: [{ tags: ILike('%hot%') }, { priority: MoreThan(79) }],
-      order: { priority: 'DESC', id: 'DESC' },
-      take: limit,
-    });
-  }
-
-  async list(q: QueryCouponsDto) {
-    const { page = 1, pageSize = 20, categoryId, q: text, sort, shopId } = q;
-    const where: any = { isActive: true };
-    if (categoryId) where.categoryId = categoryId;
-    if (shopId) where.shopId = shopId;
-    if (text) where.title = ILike(`%${text}%`);
+  async list(q: ListCouponDto) {
+    const { page=1, pageSize=20, q: keyword, categoryId, sourceId, isActive, sort } = q;
+    const where: FindOptionsWhere<Coupon> = {};
+    if (categoryId) (where as any).categoryId = categoryId;
+    if (sourceId) (where as any).sourceId = sourceId;
+    if (isActive !== undefined) (where as any).isActive = isActive;
+    if (keyword) (where as any).title = () => `ILIKE '%${keyword}%'`;
 
     const order: any = {};
     switch (sort) {
       case 'priorityDesc': order.priority = 'DESC'; break;
       case 'endAtAsc': order.expiredAt = 'ASC'; break;
       case 'hot': order.priority = 'DESC'; break;
-      default: order.id = 'DESC';
+      case 'new': default: order.createdAt = 'DESC';
     }
 
-    const [data, total] = await this.repo.findAndCount({
-      where, order, take: pageSize, skip: (page - 1) * pageSize,
+    const [items, total] = await this.repo.findAndCount({
+      where, order, skip: (page-1)*pageSize, take: pageSize,
     });
-    return { data, total, page, pageSize, hasMore: page * pageSize < total };
+    return { items, total, page, pageSize };
+  }
+
+  get(id: string) { return this.repo.findOne({ where: { id } }); }
+  create(dto: CreateCouponDto) {
+    const entity = this.repo.create({
+      ...dto,
+      expiredAt: dto.expiredAt ? new Date(dto.expiredAt) : undefined,
+    });
+    return this.repo.save(entity);
+  }
+  async update(id: string, dto: UpdateCouponDto) {
+    await this.repo.update({ id }, { ...dto, expiredAt: dto.expiredAt ? new Date(dto.expiredAt) : undefined });
+    return this.get(id);
+  }
+  async remove(id: string) { await this.repo.delete({ id }); return { ok: true }; }
+
+  async hot(limit = 10) {
+    const list = await this.repo.find({
+      where: { isActive: true },
+      order: { priority: 'DESC', expiredAt: 'ASC' },
+      take: limit,
+    });
+    return list;
   }
 }

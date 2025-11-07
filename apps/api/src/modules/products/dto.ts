@@ -1,28 +1,47 @@
-import { Type } from 'class-transformer';
-import { IsBoolean, IsInt, IsNotEmpty, IsOptional, IsPositive, IsString, MaxLength } from 'class-validator';
+import { Type } from "class-transformer";
+import {
+  IsArray,
+  IsBoolean,
+  IsInt,
+  IsJSON,
+  IsOptional,
+  IsString,
+  MaxLength,
+  Min,
+  ValidateIf,
+} from "class-validator";
+import { PaginationDto } from "../../common/dtos/pagination.dto";
 
 export class CreateProductDto {
-  @IsString() @MaxLength(200) @IsNotEmpty() name!: string;
-  @IsOptional() @IsString() imageUrl?: string;
+  @IsString() @MaxLength(200) name!: string;
+  @IsString() @IsOptional() imageUrl?: string;
 
-  @Type(() => Number) @IsInt() @IsPositive() basePrice!: number;
-  @Type(() => Number) @IsInt() @IsOptional() originalPrice?: number;
-  @Type(() => Number) @IsInt() @IsOptional() discountPercent?: number;
+  @Type(() => Number) @IsInt() @Min(0) basePrice!: number;
+  @Type(() => Number) @IsInt() @Min(0) @IsOptional() originalPrice?: number;
+  @Type(() => Number) @IsInt() @Min(0) @IsOptional() discountPercent?: number;
 
-  @Type(() => Number) @IsInt() @IsPositive() categoryId!: number;
+  @Type(() => Number) @IsInt() categoryId!: number;
+  @IsString() @IsOptional() sourceId?: string;
 
-  @IsOptional() @IsString() shopId?: string;
-  @IsOptional() @IsString() description?: string;
+  @IsString() @IsOptional() description?: string;
+  @IsBoolean() @IsOptional() isHot?: boolean = false;
 
-  @IsOptional() @IsBoolean() isHot?: boolean = false;
+  @ValidateIf((v) => v.badges !== undefined)
+  @IsArray()
+  @IsOptional()
+  badges?: any[];
 }
+
 export class UpdateProductDto extends CreateProductDto {}
 
-export class QueryProductsDto {
-  @Type(() => Number) @IsInt() @IsOptional() page: number = 1;
-  @Type(() => Number) @IsInt() @IsOptional() pageSize: number = 20;
+export class ListProductDto extends PaginationDto {
   @Type(() => Number) @IsInt() @IsOptional() categoryId?: number;
-  @IsOptional() @IsString() q?: string;
-  @IsOptional() @IsString() sort?: 'new'|'hot'|'priceAsc'|'priceDesc'|'discountDesc';
-  @IsOptional() @IsString() shopId?: string;
+  @IsString() @IsOptional() sourceId?: string;
+  @IsBoolean() @IsOptional() isHot?: boolean;
+  @IsString() @IsOptional() sort?:
+    | "new"
+    | "hot"
+    | "priceAsc"
+    | "priceDesc"
+    | "discountDesc";
 }
