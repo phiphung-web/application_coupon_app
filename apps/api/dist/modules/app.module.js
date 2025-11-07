@@ -7,30 +7,44 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AppModule = void 0;
+// apps/api/src/app.module.ts
 const common_1 = require("@nestjs/common");
+const config_1 = require("@nestjs/config");
 const typeorm_1 = require("@nestjs/typeorm");
-const typeorm_config_1 = require("../config/typeorm.config");
-const products_module_1 = require("./products/products.module");
-const coupons_module_1 = require("./coupons/coupons.module");
-const pricing_module_1 = require("./pricing/pricing.module");
-const categories_module_1 = require("./categories/categories.module");
-const sources_module_ts_1 = require("./sources/sources.module.ts");
-const coupon_categories_module_1 = require("./coupon-categories/coupon-categories.module");
-const badges_module_1 = require("./badges/badges.module");
+const path_1 = require("path");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            typeorm_1.TypeOrmModule.forRootAsync({ useFactory: () => typeorm_config_1.typeormConfig }),
-            products_module_1.ProductsModule,
-            coupons_module_1.CouponsModule,
-            categories_module_1.CategoriesModule,
-            coupon_categories_module_1.CouponCategoriesModule,
-            badges_module_1.BadgesModule,
-            sources_module_ts_1.SourcesModule,
-            pricing_module_1.PricingModule,
+            config_1.ConfigModule.forRoot({
+                isGlobal: true,
+                envFilePath: [
+                    (0, path_1.join)(process.cwd(), ".env"), // apps/api/.env
+                    (0, path_1.join)(process.cwd(), "../../.env"), // nếu để ở root
+                ],
+            }),
+            typeorm_1.TypeOrmModule.forRootAsync({
+                inject: [config_1.ConfigService],
+                useFactory: (cfg) => {
+                    var _a;
+                    const url = String((_a = cfg.get("DATABASE_URL")) !== null && _a !== void 0 ? _a : "");
+                    console.log("DB_URL?", url.replace(/:\/\/.*@/, "://***@")); // log ẩn pass
+                    if (!url)
+                        throw new Error("Missing DATABASE_URL");
+                    return {
+                        type: "postgres",
+                        url, // chỉ dùng url, không set host/user/password riêng
+                        autoLoadEntities: true,
+                        synchronize: false,
+                        logging: cfg.get("TYPEORM_LOGGING") === "true"
+                            ? ["error", "query"]
+                            : ["error"],
+                        ssl: false,
+                    };
+                },
+            }),
         ],
     })
 ], AppModule);

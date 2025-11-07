@@ -1,24 +1,37 @@
+// apps/api/src/app.module.ts
 import { Module } from "@nestjs/common";
+import { ConfigModule, ConfigService } from "@nestjs/config";
 import { TypeOrmModule } from "@nestjs/typeorm";
-import { typeormConfig } from "../config/typeorm.config";
-import { ProductsModule } from "./products/products.module";
-import { CouponsModule } from "./coupons/coupons.module";
-import { PricingModule } from "./pricing/pricing.module";
-import { CategoriesModule } from "./categories/categories.module";
-import { SourcesModule } from "./sources/sources.module.ts";
-import { CouponCategoriesModule } from "./coupon-categories/coupon-categories.module";
-import { BadgesModule } from "./badges/badges.module";
+import { join } from "path";
 
 @Module({
   imports: [
-    TypeOrmModule.forRootAsync({ useFactory: () => typeormConfig }),
-    ProductsModule,
-    CouponsModule,
-    CategoriesModule,
-    CouponCategoriesModule,
-    BadgesModule,
-    SourcesModule,
-    PricingModule,
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: [
+        join(process.cwd(), ".env"), // apps/api/.env
+        join(process.cwd(), "../../.env"), // nếu để ở root
+      ],
+    }),
+    TypeOrmModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (cfg: ConfigService) => {
+        const url = String(cfg.get("DATABASE_URL") ?? "");
+        console.log("DB_URL?", url.replace(/:\/\/.*@/, "://***@")); // log ẩn pass
+        if (!url) throw new Error("Missing DATABASE_URL");
+        return {
+          type: "postgres",
+          url, // chỉ dùng url, không set host/user/password riêng
+          autoLoadEntities: true,
+          synchronize: false,
+          logging:
+            cfg.get("TYPEORM_LOGGING") === "true"
+              ? ["error", "query"]
+              : ["error"],
+          ssl: false,
+        };
+      },
+    }),
   ],
 })
 export class AppModule {}
