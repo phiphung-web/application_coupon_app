@@ -51,8 +51,8 @@ class Product {
     double? percent = json['discountPercent'] != null
         ? (json['discountPercent'] as num).toDouble()
         : (original != null && original > 0
-            ? (100 - (base * 100 / original))
-            : null);
+              ? (100 - (base * 100 / original))
+              : null);
 
     return Product(
       id: json['id'],
@@ -91,16 +91,16 @@ class Product {
 
   /// Convert ra JSON (nếu cần POST)
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'imageUrl': imageUrl,
-        'basePrice': basePrice,
-        'originalPrice': originalPrice,
-        'discountPercent': discountPercent,
-        'categoryId': categoryId,
-        'shopId': shopId,
-        'description': description,
-        'isHot': isHot,
-        if (bestCoupon != null) 'bestCoupon': bestCoupon!.toJson(),
-      };
+    'id': id,
+    'name': name,
+    'imageUrl': imageUrl,
+    'basePrice': basePrice,
+    'originalPrice': originalPrice,
+    'discountPercent': discountPercent,
+    'categoryId': categoryId,
+    'shopId': shopId,
+    'description': description,
+    'isHot': isHot,
+    if (bestCoupon != null) 'bestCoupon': bestCoupon!.toJson(),
+  };
 }

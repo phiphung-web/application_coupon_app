@@ -1,6 +1,13 @@
-import { Column, Entity, Index, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Index,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from "typeorm";
 
-@Entity('categories')
+@Entity("categories")
 export class Category {
   @PrimaryGeneratedColumn()
   id!: number;
@@ -12,10 +19,10 @@ export class Category {
   @Column({ nullable: true })
   imageUrl?: string;
 
-  @Column('int', { nullable: true })
+  @Column("int", { nullable: true })
   parentId?: number;
 
-  @Column('int', { default: 0 })
+  @Column("int", { default: 0 })
   priority: number = 0;
 
   @Column({ default: true })
