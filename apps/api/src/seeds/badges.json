@@ -1,0 +1,4 @@
+[
+  { "key": "HOT", "label": "Hot", "priority": 100 },
+  { "key": "TOP_SELL", "label": "Top sell", "priority": 90 }
+]

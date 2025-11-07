@@ -1,61 +1,52 @@
-import { Column, Entity, Index, PrimaryColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-export type DiscountType = 'PERCENT' | 'FIXED';
+import {
+  Column,
+  Entity,
+  Index,
+  ManyToMany,
+  JoinTable,
+  PrimaryColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  DeleteDateColumn,
+} from "typeorm";
+import { Badge } from "./badge.entity";
+import { CouponCategory } from "./coupon_category.entity";
 
-@Entity('coupons')
+export type DiscountType = "PERCENT" | "FIXED";
+
+@Entity("coupons")
 export class Coupon {
-  @PrimaryColumn({ length: 64 })
-  id!: string;
+  @PrimaryColumn({ length: 64 }) id!: string;
 
-  @Index()
-  @Column({ length: 200 })
-  title!: string;
+  @Index() @Column({ length: 200 }) title!: string;
+  @Index() @Column({ length: 64 }) code!: string;
 
-  @Index()
-  @Column({ length: 64 })
-  code!: string;
-
-  @Column({ type: 'varchar', length: 10 })
+  @Column({ type: "enum", enum: ["PERCENT", "FIXED"] })
   discountType!: DiscountType;
+  @Column("int") discountValue!: number; // cent nếu FIXED, % nếu PERCENT
+  @Column("int", { nullable: true }) minSpend?: number;
+  @Column("int", { nullable: true }) maxDiscount?: number;
 
-  @Column('int')
-  discountValue!: number;
+  @Column({ type: "timestamptz", nullable: true }) endAt?: Date;
 
-  @Column('int', { nullable: true })
-  minSpend?: number;
+  @Index() @Column({ nullable: true }) sourceId?: string;
+  @Column({ nullable: true }) imageUrl?: string;
 
-  @Column('int', { nullable: true })
-  maxDiscount?: number;
+  @ManyToMany(() => CouponCategory, { eager: true })
+  @JoinTable({ name: "coupon_categories_map" })
+  categories!: CouponCategory[];
 
-  @Column({ type: 'timestamptz', nullable: true })
-  expiredAt?: Date;
+  @ManyToMany(() => Badge, { eager: true })
+  @JoinTable({ name: "coupon_badges" })
+  badges!: Badge[];
 
-  @Column('int', { nullable: true })
-  categoryId?: number;
+  @Column("int", { nullable: true }) priority?: number;
+  @Column({ nullable: true }) trackingLink?: string;
+  @Column({ nullable: true }) deeplink?: string;
 
-  @Column({ type: 'simple-array', nullable: true })
-  applicableTypes?: string[];
-
-  @Column({ nullable: true })
-  sourceId?: string;
-
-  @Column({ nullable: true })
-  imageUrl?: string;
-
-  @Column({ type: 'json', nullable: true })
-  badges?: Array<{ key: string; label: string; color?: string; bgColor?: string; icon?: string; priority?: number }>;
-
-  @Column('int', { nullable: true })
-  priority?: number;
-
-  @Column({ nullable: true })
-  trackingLink?: string;
-
-  @Column({ nullable: true })
-  deeplink?: string;
-
-  @Column({ default: true })
-  isActive: boolean = true;
+  @Index() @Column({ default: true }) isActive!: boolean;
 
   @CreateDateColumn() createdAt!: Date;
   @UpdateDateColumn() updatedAt!: Date;
+  @DeleteDateColumn() deletedAt?: Date;
 }

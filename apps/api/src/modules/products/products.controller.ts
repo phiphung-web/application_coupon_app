@@ -3,34 +3,54 @@ import {
   Get,
   Query,
   Param,
+  DefaultValuePipe,
+  ParseIntPipe,
   Post,
   Body,
   Patch,
   Delete,
 } from "@nestjs/common";
 import { ProductsService } from "./products.service";
-import { CreateProductDto, ListProductDto, UpdateProductDto } from "./dto";
+import { PaginationDto } from "../../common/dtos/pagination.dto";
+import { CreateProductDto, LinkCouponDto, UpdateProductDto } from "./dto";
 
 @Controller("products")
 export class ProductsController {
   constructor(private readonly svc: ProductsService) {}
 
-  @Get() list(@Query() q: ListProductDto) {
-    return this.svc.list(q);
+  @Get()
+  list(@Query() q: PaginationDto, @Query("withDeal") withDeal?: string) {
+    return this.svc.paginate({ ...q, withDeal: withDeal === "true" });
   }
-  @Get("hot") hot(@Query("limit") limit = 8) {
-    return this.svc.list({ page: 1, pageSize: +limit, sort: "discountDesc" });
+
+  @Get(":id")
+  get(
+    @Param("id", ParseIntPipe) id: number,
+    @Query("withDeal") withDeal?: string
+  ) {
+    return this.svc.findOne(id, withDeal !== "false");
   }
-  @Get(":id") get(@Param("id") id: number) {
-    return this.svc.get(+id);
-  }
-  @Post() create(@Body() dto: CreateProductDto) {
+
+  @Post()
+  create(@Body() dto: CreateProductDto) {
     return this.svc.create(dto);
   }
-  @Patch(":id") update(@Param("id") id: number, @Body() dto: UpdateProductDto) {
-    return this.svc.update(+id, dto);
+
+  @Patch(":id")
+  update(@Param("id", ParseIntPipe) id: number, @Body() dto: UpdateProductDto) {
+    return this.svc.update(id, dto);
   }
-  @Delete(":id") remove(@Param("id") id: number) {
-    return this.svc.remove(+id);
+
+  @Post(":id/coupons/link")
+  link(@Param("id", ParseIntPipe) id: number, @Body() dto: LinkCouponDto) {
+    return this.svc.linkCoupon(id, dto);
+  }
+
+  @Delete(":id/coupons/:couponId")
+  unlink(
+    @Param("id", ParseIntPipe) id: number,
+    @Param("couponId") couponId: string
+  ) {
+    return this.svc.unlinkCoupon(id, couponId);
   }
 }

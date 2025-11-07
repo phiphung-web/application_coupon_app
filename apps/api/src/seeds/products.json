@@ -1,40 +1,22 @@
 [
   {
-    "id": "shopee",
-    "name": "Shopee",
-    "type": "ECOM",
-    "logoUrl": "https://...",
-    "domain": "shopee.vn",
-    "priority": 10
+    "name": "Tai nghe TWS XYZ",
+    "imageUrl": "",
+    "priceOriginal": 4999,
+    "priceCurrent": 3999,
+    "currency": "USD",
+    "sourceId": "shopee",
+    "categoryNames": ["Công nghệ"],
+    "badgeKeys": ["HOT"]
   },
   {
-    "id": "lazada",
-    "name": "Lazada",
-    "type": "ECOM",
-    "logoUrl": "https://...",
-    "domain": "lazada.vn",
-    "priority": 9
-  },
-  {
-    "id": "tiki",
-    "name": "Tiki",
-    "type": "ECOM",
-    "logoUrl": "https://...",
-    "domain": "tiki.vn",
-    "priority": 8
-  },
-  {
-    "id": "genshin",
-    "name": "Genshin Impact",
-    "type": "GAME",
-    "publisher": "miHoYo",
-    "priority": 7
-  },
-  {
-    "id": "spotify",
-    "name": "Spotify",
-    "type": "APP",
-    "packageId": "com.spotify.music",
-    "priority": 7
+    "name": "Nồi chiên 4L",
+    "imageUrl": "",
+    "priceOriginal": 18999,
+    "priceCurrent": 15999,
+    "currency": "USD",
+    "sourceId": "lazada",
+    "categoryNames": ["Gia dụng"],
+    "badgeKeys": []
   }
 ]

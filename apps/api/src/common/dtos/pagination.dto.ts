@@ -1,20 +1,12 @@
-import { Type } from "class-transformer";
-import { IsInt, IsOptional, IsString, Min } from "class-validator";
+import { IsInt, IsOptional, IsString, Min } from 'class-validator';
 
 export class PaginationDto {
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  @IsOptional()
-  page?: number = 1;
+  @IsInt() @Min(1) page = 1;
+  @IsInt() @Min(1) limit = 20;
 
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  @IsOptional()
-  pageSize?: number = 20;
-
-  @IsString()
-  @IsOptional()
-  q?: string;
+  @IsOptional() @IsString() q?: string;
+  @IsOptional() @IsString() sort?: string;
+  @IsOptional() @IsString() source?: string;
+  @IsOptional() cat?: number;
+  @IsOptional() badge?: string; // lọc theo badge key
 }

@@ -1,21 +1,23 @@
 import { Module } from "@nestjs/common";
-import { ConfigModule } from "@nestjs/config";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { typeormConfig } from "../config/typeorm.config";
-import { CategoriesModule } from "../modules/categories/categories.module";
-import { SourcesModule } from "../modules/sources/sources.module.ts";
-import { ProductsModule } from "../modules/products/products.module";
-import { CouponsModule } from "../modules/coupons/coupons.module";
-import { PricingModule } from "../modules/pricing/pricing.module";
+import { ProductsModule } from "./products/products.module";
+import { CouponsModule } from "./coupons/coupons.module";
+import { PricingModule } from "./pricing/pricing.module";
+import { CategoriesModule } from "./categories/categories.module";
+import { SourcesModule } from "./sources/sources.module.ts";
+import { CouponCategoriesModule } from "./coupon-categories/coupon-categories.module";
+import { BadgesModule } from "./badges/badges.module";
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
-    TypeOrmModule.forRootAsync({ useFactory: typeormConfig }),
-    CategoriesModule,
-    SourcesModule,
+    TypeOrmModule.forRootAsync({ useFactory: () => typeormConfig }),
     ProductsModule,
     CouponsModule,
+    CategoriesModule,
+    CouponCategoriesModule,
+    BadgesModule,
+    SourcesModule,
     PricingModule,
   ],
 })

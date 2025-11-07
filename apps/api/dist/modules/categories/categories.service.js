@@ -1,0 +1,110 @@
+"use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.CategoriesService = void 0;
+const common_1 = require("@nestjs/common");
+const typeorm_1 = require("@nestjs/typeorm");
+const typeorm_2 = require("typeorm");
+const category_entity_1 = require("../../entities/category.entity");
+let CategoriesService = class CategoriesService {
+    constructor(repo) {
+        this.repo = repo;
+    }
+    async paginate(q) {
+        var _a, _b;
+        const qb = this.repo.createQueryBuilder("c");
+        if (q.q)
+            qb.andWhere("c.name ILIKE :q", { q: `%${q.q}%` });
+        if (q.active !== undefined)
+            qb.andWhere("c.isActive = :a", { a: q.active });
+        if (q.parentId !== undefined) {
+            if (q.parentId === 0)
+                qb.andWhere("c.parentId IS NULL");
+            else
+                qb.andWhere("c.parentId = :pid", { pid: q.parentId });
+        }
+        // sort: priority desc, name asc
+        qb.orderBy("c.priority", "DESC").addOrderBy("c.name", "ASC");
+        const page = (_a = q.page) !== null && _a !== void 0 ? _a : 1, limit = (_b = q.limit) !== null && _b !== void 0 ? _b : 20;
+        qb.skip((page - 1) * limit).take(limit);
+        const [items, total] = await qb.getManyAndCount();
+        return { items, meta: { page, limit, total } };
+    }
+    async listAll(activeOnly = false) {
+        return this.repo.find({
+            where: activeOnly ? { isActive: true } : {},
+            order: { priority: "DESC", name: "ASC" },
+        });
+    }
+    async get(id) {
+        const c = await this.repo.findOne({ where: { id } });
+        if (!c)
+            throw new common_1.NotFoundException("Category not found");
+        return c;
+    }
+    async create(dto) {
+        var _a, _b;
+        const c = this.repo.create({
+            name: dto.name,
+            imageUrl: dto.imageUrl,
+            parentId: dto.parentId,
+            priority: (_a = dto.priority) !== null && _a !== void 0 ? _a : 0,
+            isActive: (_b = dto.isActive) !== null && _b !== void 0 ? _b : true,
+        });
+        return this.repo.save(c);
+    }
+    async update(id, dto) {
+        const c = await this.get(id);
+        Object.assign(c, dto);
+        return this.repo.save(c);
+    }
+    async remove(id) {
+        const c = await this.get(id);
+        await this.repo.remove(c);
+        return { ok: true };
+    }
+    async tree(activeOnly = false) {
+        var _a;
+        const rows = await this.listAll(activeOnly);
+        const byParent = new Map();
+        for (const r of rows) {
+            const k = (_a = r.parentId) !== null && _a !== void 0 ? _a : null;
+            if (!byParent.has(k))
+                byParent.set(k, []);
+            byParent.get(k).push(r);
+        }
+        const build = (pid) => {
+            var _a;
+            return ((_a = byParent.get(pid)) !== null && _a !== void 0 ? _a : []).map((n) => (Object.assign(Object.assign({}, n), { children: build(n.id) })));
+        };
+        return build(null);
+    }
+    async breadcrumbs(id) {
+        const path = [];
+        let cur = await this.repo.findOne({ where: { id } });
+        while (cur) {
+            path.unshift(cur);
+            cur = cur.parentId
+                ? await this.repo.findOne({ where: { id: cur.parentId } })
+                : null;
+        }
+        return path;
+    }
+};
+exports.CategoriesService = CategoriesService;
+exports.CategoriesService = CategoriesService = __decorate([
+    (0, common_1.Injectable)(),
+    __param(0, (0, typeorm_1.InjectRepository)(category_entity_1.Category)),
+    __metadata("design:paramtypes", [typeorm_2.Repository])
+], CategoriesService);

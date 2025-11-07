@@ -1,43 +1,38 @@
 [
   {
-    "id": "c001",
-    "title": "Giảm 20% đơn công nghệ",
-    "code": "TECH20",
+    "id": "C_SP10",
+    "title": "Shopee 10%",
+    "code": "SP10",
     "discountType": "PERCENT",
-    "discountValue": 20,
-    "maxDiscount": 100000,
-    "minSpend": 500000,
-    "categoryId": 1,
+    "discountValue": 10,
+    "minSpend": 2000,
+    "maxDiscount": 500,
+    "endAt": "2026-12-31T23:59:59Z",
     "sourceId": "shopee",
-    "priority": 90,
-    "tags": ["hot"],
-    "imageUrl": "https://picsum.photos/seed/c1/600/400"
+    "isActive": true
   },
   {
-    "id": "c002",
-    "title": "Giảm 50k mọi đơn",
-    "code": "ALL50K",
+    "id": "C_LZ5",
+    "title": "Lazada $5",
+    "code": "LZ5",
     "discountType": "FIXED",
-    "discountValue": 50000,
+    "discountValue": 500,
+    "endAt": "2026-12-31T23:59:59Z",
     "sourceId": "lazada",
-    "priority": 70
+    "isActive": true
   },
   {
-    "id": "c003",
-    "title": "Giảm 15% gói Spotify",
-    "code": "SPOTI15",
+    "id": "C_SHOPEE10",
+    "title": "Shopee 10% toàn sàn",
+    "code": "SP10",
     "discountType": "PERCENT",
-    "discountValue": 15,
-    "sourceId": "spotify",
-    "priority": 80,
-    "expiredAt": "2099-12-31T00:00:00.000Z",
-    "badges": [
-      {
-        "key": "limited",
-        "label": "Giới hạn",
-        "bgColor": "#ffe8e6",
-        "color": "#ff3b30"
-      }
-    ]
+    "discountValue": 10,
+    "minSpend": 2000,
+    "maxDiscount": 500,
+    "endAt": "2026-12-31T23:59:59Z",
+    "sourceId": "shopee",
+    "imageUrl": "https://cdn.example.com/images/shopee10.png",
+    "priority": 100,
+    "isActive": true
   }
 ]

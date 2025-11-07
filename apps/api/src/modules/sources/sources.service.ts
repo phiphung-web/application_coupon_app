@@ -1,31 +1,43 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, FindOptionsWhere } from 'typeorm';
-import { Source } from '../../entities/source.entity';
-import { CreateSourceDto, ListSourceDto, UpdateSourceDto } from './dto';
+import { Injectable, NotFoundException } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { Source } from "../../entities/source.entity";
+import { CreateSourceDto, UpdateSourceDto } from "./dto";
 
 @Injectable()
 export class SourcesService {
-  constructor(@InjectRepository(Source) private repo: Repository<Source>) {}
+  constructor(
+    @InjectRepository(Source) private readonly repo: Repository<Source>
+  ) {}
 
-  async list(q: ListSourceDto) {
-    const { page=1, pageSize=20, q: keyword, type, isActive } = q;
-    const where: FindOptionsWhere<Source> = {};
-    if (type) (where as any).type = type;
-    if (isActive !== undefined) where.isActive = isActive;
-    if (keyword) (where as any).name = () => `ILIKE '%${keyword}%'`;
-
-    const [items, total] = await this.repo.findAndCount({
-      where, order: { priority: 'DESC', id: 'ASC' },
-      skip: (page-1)*pageSize, take: pageSize,
-    });
-    return { items, total, page, pageSize };
+  async list() {
+    return this.repo.find({ order: { priority: "DESC", name: "ASC" } });
   }
 
-  get(id: string) { return this.repo.findOne({ where: { id } }); }
-  create(dto: CreateSourceDto) { return this.repo.save(this.repo.create(dto)); }
+  async get(id: string) {
+    const s = await this.repo.findOne({ where: { id } });
+    if (!s) throw new NotFoundException("Source not found");
+    return s;
+  }
+
+  async create(dto: CreateSourceDto) {
+    const exists = await this.repo.findOne({ where: { id: dto.id } });
+    if (exists) throw new Error("Source ID already exists");
+    const s = this.repo.create(dto);
+    return this.repo.save(s);
+  }
+
   async update(id: string, dto: UpdateSourceDto) {
-    await this.repo.update({ id }, dto); return this.get(id);
+    const s = await this.repo.findOne({ where: { id } });
+    if (!s) throw new NotFoundException("Source not found");
+    Object.assign(s, dto);
+    return this.repo.save(s);
   }
-  async remove(id: string) { await this.repo.delete({ id }); return { ok: true }; }
+
+  async remove(id: string) {
+    const s = await this.repo.findOne({ where: { id } });
+    if (!s) throw new NotFoundException("Source not found");
+    await this.repo.softDelete({ id });
+    return { ok: true };
+  }
 }

@@ -1,23 +1,32 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { PricingService } from './pricing.service';
-import { Product } from '../../entities/product.entity';
-import { Coupon } from '../../entities/coupon.entity';
+import { Controller, Get, Param, ParseIntPipe } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { Product } from "../../entities/product.entity";
+import { ProductCoupon } from "../../entities/product_coupon.entity";
+import { Coupon } from "../../entities/coupon.entity";
+import { PricingService } from "./pricing.service";
 
-@Controller('pricing')
+@Controller("pricing")
 export class PricingController {
   constructor(
-    private readonly pricing: PricingService,
-    @InjectRepository(Product) private products: Repository<Product>,
-    @InjectRepository(Coupon) private coupons: Repository<Coupon>,
+    @InjectRepository(Product) private readonly prodRepo: Repository<Product>,
+    @InjectRepository(ProductCoupon)
+    private readonly pcRepo: Repository<ProductCoupon>,
+    @InjectRepository(Coupon) private readonly couponRepo: Repository<Coupon>,
+    private readonly pricing: PricingService
   ) {}
 
-  @Get('product/:id')
-  async best(@Param('id') id: number, @Query('limit') limit = 200) {
-    const p = await this.products.findOne({ where: { id: +id } });
-    if (!p) return { error: 'Product not found' };
-    const cs = await this.coupons.find({ where: { isActive: true }, take: +limit });
-    return this.pricing.bestForProduct(p, cs);
+  @Get("best-deal/:productId")
+  async bestDeal(@Param("productId", ParseIntPipe) productId: number) {
+    const p = await this.prodRepo.findOne({ where: { id: productId } });
+    if (!p) return { bestDeal: null };
+
+    const pcs = await this.pcRepo.find({ where: { productId } });
+    const ids = pcs.map((x) => x.couponId);
+    if (!ids.length) return { bestDeal: null };
+
+    const coupons = await this.couponRepo.findByIds(ids);
+    const deal = this.pricing.bestDealForProduct(p, coupons);
+    return { bestDeal: deal };
   }
 }

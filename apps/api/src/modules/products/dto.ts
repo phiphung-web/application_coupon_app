@@ -1,47 +1,52 @@
-import { Type } from "class-transformer";
 import {
   IsArray,
   IsBoolean,
   IsInt,
-  IsJSON,
+  IsNotEmpty,
   IsOptional,
   IsString,
-  MaxLength,
   Min,
-  ValidateIf,
 } from "class-validator";
-import { PaginationDto } from "../../common/dtos/pagination.dto";
 
 export class CreateProductDto {
-  @IsString() @MaxLength(200) name!: string;
-  @IsString() @IsOptional() imageUrl?: string;
+  @IsString() @IsNotEmpty() name!: string;
+  @IsOptional() @IsString() imageUrl?: string;
 
-  @Type(() => Number) @IsInt() @Min(0) basePrice!: number;
-  @Type(() => Number) @IsInt() @Min(0) @IsOptional() originalPrice?: number;
-  @Type(() => Number) @IsInt() @Min(0) @IsOptional() discountPercent?: number;
+  @IsInt() @Min(0) priceOriginal!: number; // cent
+  @IsOptional() @IsInt() @Min(0) priceCurrent?: number;
 
-  @Type(() => Number) @IsInt() categoryId!: number;
-  @IsString() @IsOptional() sourceId?: string;
+  @IsOptional() @IsString() description?: string;
+  @IsOptional() @IsString() sourceId?: string;
 
-  @IsString() @IsOptional() description?: string;
-  @IsBoolean() @IsOptional() isHot?: boolean = false;
+  @IsArray() categoryIds!: number[]; // product categories
+  @IsOptional() @IsArray() badgeIds?: number[];
 
-  @ValidateIf((v) => v.badges !== undefined)
-  @IsArray()
-  @IsOptional()
-  badges?: any[];
+  // tạo coupon kèm
+  @IsOptional() createCoupon?: {
+    id?: string;
+    title: string;
+    code: string;
+    discountType: "PERCENT" | "FIXED";
+    discountValue: number; // cent hoặc %
+    minSpend?: number;
+    maxDiscount?: number;
+    endAt?: string;
+    sourceId?: string;
+  };
 }
 
-export class UpdateProductDto extends CreateProductDto {}
+export class UpdateProductDto {
+  @IsOptional() @IsString() name?: string;
+  @IsOptional() @IsString() imageUrl?: string;
+  @IsOptional() @IsInt() @Min(0) priceOriginal?: number;
+  @IsOptional() @IsInt() @Min(0) priceCurrent?: number;
+  @IsOptional() @IsString() description?: string;
+  @IsOptional() @IsString() sourceId?: string;
+  @IsOptional() categoryIds?: number[];
+  @IsOptional() badgeIds?: number[];
+}
 
-export class ListProductDto extends PaginationDto {
-  @Type(() => Number) @IsInt() @IsOptional() categoryId?: number;
-  @IsString() @IsOptional() sourceId?: string;
-  @IsBoolean() @IsOptional() isHot?: boolean;
-  @IsString() @IsOptional() sort?:
-    | "new"
-    | "hot"
-    | "priceAsc"
-    | "priceDesc"
-    | "discountDesc";
+export class LinkCouponDto {
+  @IsString() couponId!: string;
+  @IsBoolean() isPrimary = false;
 }

@@ -1,20 +1,25 @@
-import { TypeOrmModuleOptions } from '@nestjs/typeorm';
-import { Category } from '../entities/category.entity';
-import { Source } from '../entities/source.entity';
-import { Product } from '../entities/product.entity';
-import { Coupon } from '../entities/coupon.entity';
+import { DataSourceOptions } from "typeorm";
+import { Product } from "../entities/product.entity";
+import { Coupon } from "../entities/coupon.entity";
+import { Category } from "../entities/category.entity";
+import { CouponCategory } from "../entities/coupon_category.entity";
+import { Badge } from "../entities/badge.entity";
+import { Source } from "../entities/source.entity";
+import { ProductCoupon } from "../entities/product_coupon.entity";
 
-export function typeormConfig(): TypeOrmModuleOptions {
-  return {
-    type: 'postgres',
-    host: process.env.DB_HOST,
-    port: +(process.env.DB_PORT || 5432),
-    database: process.env.DB_NAME,
-    username: process.env.DB_USER,
-    password: process.env.DB_PASS,
-    synchronize: false,  // dùng migration thật khi lên prod
-    autoLoadEntities: true,
-    entities: [Category, Source, Product, Coupon],
-    logging: ['error'],
-  };
-}
+export const typeormConfig: DataSourceOptions = {
+  type: "postgres",
+  url: process.env.DATABASE_URL,
+  synchronize: false, // bật true khi dev lần đầu, sau đó false + migration
+  logging: false,
+  entities: [
+    Product,
+    Coupon,
+    Category,
+    CouponCategory,
+    Badge,
+    Source,
+    ProductCoupon,
+  ],
+  migrations: ["dist/migrations/*.js"],
+};

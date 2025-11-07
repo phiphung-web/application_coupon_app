@@ -1,80 +1,107 @@
-import "reflect-metadata";
+// src/seeds/seed.ts
+import "dotenv/config";
 import { DataSource } from "typeorm";
-import { Category } from "../entities/category.entity";
+import dataSource from "../typeorm.config";
+import { readFileSync } from "fs";
+import { join } from "path";
 import { Source } from "../entities/source.entity";
-import { Product } from "../entities/product.entity";
+import { Badge } from "../entities/badge.entity";
+import { Category } from "../entities/category.entity";
+import { CouponCategory } from "../entities/coupon_category.entity";
 import { Coupon } from "../entities/coupon.entity";
-import * as fs from "fs";
-import * as path from "path";
+import { Product } from "../entities/product.entity";
+import { ProductCoupon } from "../entities/product_coupon.entity";
 
-const ds = new DataSource({
-  type: "postgres",
-  host: process.env.DB_HOST,
-  port: +(process.env.DB_PORT || 5432),
-  database: process.env.DB_NAME,
-  username: process.env.DB_USER,
-  password: process.env.DB_PASS,
-  entities: [Category, Source, Product, Coupon],
-  synchronize: true, // chỉ dùng cho seed/dev
-  logging: false,
-});
-
-// ---- helper: đọc JSON sync (KHÔNG async) ----
-function loadJsonSync<T = any>(name: string): T {
-  const p = path.join(__dirname, name);
-  const raw = fs.readFileSync(p, "utf8");
-  return JSON.parse(raw) as T;
+function load<T>(file: string): T {
+  const p = join(__dirname, file);
+  return JSON.parse(readFileSync(p, "utf8"));
 }
 
-async function run() {
+(async () => {
+  const ds = await dataSource.initialize();
   await ds.initialize();
 
-  const catRepo = ds.getRepository(Category);
-  const srcRepo = ds.getRepository(Source);
+  const sourceRepo = ds.getRepository(Source);
+  const badgeRepo = ds.getRepository(Badge);
+  const pCatRepo = ds.getRepository(Category);
+  const cCatRepo = ds.getRepository(CouponCategory);
+  const couponRepo = ds.getRepository(Coupon);
   const prodRepo = ds.getRepository(Product);
-  const coupRepo = ds.getRepository(Coupon);
+  const pcRepo = ds.getRepository(ProductCoupon);
 
-  // Xóa dữ liệu theo thứ tự khóa ngoại
-  await coupRepo.delete({});
-  await prodRepo.delete({});
-  await srcRepo.delete({});
-  await catRepo.delete({});
+  // sources
+  for (const s of load<any[]>("./sources.json")) {
+    await sourceRepo.save(sourceRepo.create(s));
+  }
 
-  // ---- nạp JSON ----
-  const catJson = loadJsonSync<any[]>("categories.json");
-  const srcJson = loadJsonSync<any[]>("sources.json");
-  const prodJson = loadJsonSync<any[]>("products.json");
-  const coupJson = loadJsonSync<any[]>("coupons.json");
+  // badges
+  for (const b of load<any[]>("./badges.json")) {
+    await badgeRepo.save(badgeRepo.create(b));
+  }
 
-  // ---- save categories & sources ----
-  await catRepo.save(catJson);
-  await srcRepo.save(srcJson);
+  // product categories
+  for (const c of load<any[]>("./product_categories.json")) {
+    await pCatRepo.save(pCatRepo.create(c));
+  }
 
-  // ---- chuẩn hóa products (tính discountPercent nếu thiếu) ----
-  const products = prodJson.map((p) => ({
-    ...p,
-    discountPercent:
-      p.discountPercent ??
-      (p.originalPrice && p.originalPrice > p.basePrice
-        ? Math.round(100 - (p.basePrice * 100) / p.originalPrice)
-        : null),
-  }));
+  // coupon categories
+  for (const c of load<any[]>("./coupon_categories.json")) {
+    await cCatRepo.save(cCatRepo.create(c));
+  }
 
-  await prodRepo.save(products);
+  // coupons
+  for (const c of load<any[]>("./coupons.json")) {
+    await couponRepo.save(
+      couponRepo.create({
+        ...c,
+        endAt: c.endAt ? new Date(c.endAt) : null,
+      })
+    );
+  }
 
-  // ---- chuẩn hóa coupons (convert expiredAt nếu có) ----
-  const coupons = coupJson.map((c) => ({
-    ...c,
-    expiredAt: c.expiredAt ? new Date(c.expiredAt) : null,
-  }));
+  // products + attach categories/badges by name/key
+  const badges = await badgeRepo.find();
+  const cats = await pCatRepo.find();
 
-  await coupRepo.save(coupons);
+  for (const p of load<any[]>("./products.json")) {
+    const attachBadges = badges.filter((b) =>
+      (p.badgeKeys ?? []).includes(b.key)
+    );
+    const attachCats = cats.filter((c) =>
+      (p.categoryNames ?? []).includes(c.name)
+    );
 
-  console.log("Seed done.");
+    const prod = prodRepo.create({
+      name: p.name,
+      imageUrl: p.imageUrl,
+      priceOriginal: p.priceOriginal,
+      priceCurrent: p.priceCurrent,
+      currency: p.currency ?? "USD",
+      sourceId: p.sourceId,
+      categories: attachCats,
+      badges: attachBadges,
+      description: p.description,
+    });
+    await prodRepo.save(prod);
+  }
+
+  // link product_coupons
+  const allProducts = await prodRepo.find();
+  for (const link of load<any[]>("./product_coupons.json")) {
+    const prod = allProducts.find((x) => x.name === link.productName);
+    if (!prod) continue;
+    await pcRepo.save(
+      pcRepo.create({
+        productId: prod.id,
+        couponId: link.couponId,
+        isPrimary: !!link.isPrimary,
+      })
+    );
+  }
+
+  console.log("Seed done");
   await ds.destroy();
-}
-
-run().catch((e) => {
+})().catch((e) => {
   console.error(e);
   process.exit(1);
 });

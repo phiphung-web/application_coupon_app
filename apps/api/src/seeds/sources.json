@@ -3,38 +3,28 @@
     "id": "shopee",
     "name": "Shopee",
     "type": "ECOM",
-    "logoUrl": "https://...",
-    "domain": "shopee.vn",
-    "priority": 10
+    "logoUrl": "https://cdn/.../shopee.png",
+    "priority": 100
   },
   {
     "id": "lazada",
     "name": "Lazada",
     "type": "ECOM",
-    "logoUrl": "https://...",
-    "domain": "lazada.vn",
-    "priority": 9
+    "logoUrl": "https://cdn/.../lazada.png",
+    "priority": 90
   },
   {
     "id": "tiki",
     "name": "Tiki",
     "type": "ECOM",
-    "logoUrl": "https://...",
-    "domain": "tiki.vn",
-    "priority": 8
+    "logoUrl": "https://cdn/.../tiki.png",
+    "priority": 80
   },
   {
     "id": "genshin",
     "name": "Genshin Impact",
     "type": "GAME",
-    "publisher": "miHoYo",
-    "priority": 7
-  },
-  {
-    "id": "spotify",
-    "name": "Spotify",
-    "type": "APP",
-    "packageId": "com.spotify.music",
-    "priority": 7
+    "logoUrl": "https://cdn/.../genshin.png",
+    "priority": 50
   }
 ]

@@ -1,44 +1,41 @@
-import { Type } from 'class-transformer';
-import { IsArray, IsBoolean, IsDateString, IsEnum, IsInt, IsOptional, IsString, MaxLength, Min, ValidateIf } from 'class-validator';
-import { PaginationDto } from '../../common/dtos/pagination.dto';
+import {
+  IsArray,
+  IsBoolean,
+  IsDateString,
+  IsEnum,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Min,
+} from "class-validator";
 
-export type DiscountType = 'PERCENT' | 'FIXED';
-
-export class CreateCouponDto {
-  @IsString() @MaxLength(64) id!: string;
-  @IsString() @MaxLength(200) title!: string;
-  @IsString() @MaxLength(64) code!: string;
-
-  @IsEnum(['PERCENT','FIXED']) discountType!: DiscountType;
-  @Type(() => Number) @IsInt() @Min(1) discountValue!: number;
-
-  @Type(() => Number) @IsInt() @Min(0) @IsOptional() minSpend?: number;
-  @Type(() => Number) @IsInt() @Min(0) @IsOptional() maxDiscount?: number;
-
-  @IsDateString() @IsOptional() expiredAt?: string;
-
-  @Type(() => Number) @IsInt() @IsOptional() categoryId?: number;
-  @IsArray() @IsOptional() applicableTypes?: string[];
-
-  @IsString() @IsOptional() sourceId?: string;
-  @IsString() @IsOptional() imageUrl?: string;
-
-  @ValidateIf(v => v.badges !== undefined)
-  @IsArray() @IsOptional() badges?: any[];
-
-  @Type(() => Number) @IsInt() @IsOptional() priority?: number;
-
-  @IsString() @IsOptional() trackingLink?: string;
-  @IsString() @IsOptional() deeplink?: string;
-
-  @IsBoolean() @IsOptional() isActive?: boolean = true;
+export enum DiscountTypeDto {
+  PERCENT = "PERCENT",
+  FIXED = "FIXED",
 }
 
-export class UpdateCouponDto extends CreateCouponDto {}
+export class UpsertCouponDto {
+  @IsOptional() @IsString() id?: string;
+  @IsString() @IsNotEmpty() title!: string;
+  @IsString() @IsNotEmpty() code!: string;
 
-export class ListCouponDto extends PaginationDto {
-  @Type(() => Number) @IsInt() @IsOptional() categoryId?: number;
-  @IsString() @IsOptional() sourceId?: string;
-  @IsString() @IsOptional() sort?: 'priorityDesc' | 'endAtAsc' | 'hot' | 'new';
-  @IsBoolean() @IsOptional() isActive?: boolean;
+  @IsEnum(DiscountTypeDto) discountType!: DiscountTypeDto;
+  @IsInt() @Min(0) discountValue!: number; // % hoặc cent
+
+  @IsOptional() @IsInt() @Min(0) minSpend?: number;
+  @IsOptional() @IsInt() @Min(0) maxDiscount?: number;
+
+  @IsOptional() @IsDateString() endAt?: string;
+
+  @IsOptional() @IsString() sourceId?: string;
+  @IsOptional() @IsString() imageUrl?: string;
+
+  @IsOptional() @IsArray() categoryIds?: number[]; // coupon categories
+  @IsOptional() @IsArray() badgeIds?: number[];
+
+  @IsOptional() @IsInt() priority?: number;
+  @IsOptional() @IsString() trackingLink?: string;
+  @IsOptional() @IsString() deeplink?: string;
+  @IsOptional() @IsBoolean() isActive?: boolean;
 }
