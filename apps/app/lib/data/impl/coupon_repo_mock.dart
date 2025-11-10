@@ -1,33 +1,55 @@
-import '../repo/coupon_repo.dart';
-import '../../models/coupon.dart';
 import 'dart:math';
+import '../../core/result.dart';
+import '../../models/badge.dart';
+import '../../models/coupon.dart';
+import '../../models/coupon_category.dart';
+import '../repo/coupon_repo.dart';
 
 class CouponRepoMock implements CouponRepo {
-  static final List<Coupon> _data = List.generate(60, (i) {
-    final isPercent = i % 2 == 0;
-    final percent = 10 + (i % 5) * 5; // 10/15/20/25/30
-    final fixed = 20000 + (i % 5) * 30000; // 20k..140k
+  static final _categories = List<CouponCategory>.generate(
+    6,
+    (i) => CouponCategory(
+      id: i + 1,
+      name: 'Coupon cat ${i + 1}',
+      imageUrl: 'https://picsum.photos/seed/cc${i + 1}/200/200',
+    ),
+  );
+
+  static final _hotBadge =
+      const Badge(id: 10, key: 'HOT', label: 'Hot', priority: 90);
+
+  static final List<Coupon> _data = List.generate(70, (index) {
+    final isPercent = index % 2 == 0;
+    final percent = 10 + (index % 5) * 5;
+    final fixed = 20000 + (index % 6) * 15000;
+    final cat = _categories[index % _categories.length];
+    final badgeList = <Badge>[];
+    if (index % 4 == 0) badgeList.add(_hotBadge);
+
     return Coupon(
-      id: 'c${i + 1}',
-      title: isPercent ? 'Giảm $percent% toàn sàn' : 'Giảm ${fixed ~/ 1000}k',
-      code: 'CODE${1000 + i}',
+      id: 'C${index + 1}',
+      title: isPercent
+          ? 'Giảm $percent% toàn sàn'
+          : 'Giảm ${fixed ~/ 1000}k đơn hàng',
+      code: 'CODE${1000 + index}',
       discountType: isPercent ? 'PERCENT' : 'FIXED',
-      discountValue: isPercent ? percent.toDouble() : fixed.toDouble(),
-      minSpend: (i % 3 == 0) ? 150000 : null,
-      maxDiscount: isPercent ? 100000 : null,
-      expiredAt: DateTime.now().add(Duration(days: 7 + i)),
-      categoryId: (i % 6) + 1,
-      shopId: ['shopee', 'lazada', 'tiki'][i % 3],
-      imageUrl: 'https://picsum.photos/seed/c${i + 1}/600/400',
-      tags: i % 4 == 0 ? ['hot'] : [],
-      priority: i % 4 == 0 ? 90 : 50,
-      trackingLink: 'https://example.com/track/${i + 1}',
-      deeplink: 'https://example.com/deeplink/${i + 1}',
+      discountValue: isPercent ? percent : fixed,
+      minSpend: index % 3 == 0 ? 150000 : null,
+      maxDiscount: isPercent ? 120000 : null,
+      endAt: DateTime.now().add(Duration(days: 5 + index)),
+      sourceId: ['shopee', 'lazada', 'tiki'][index % 3],
+      imageUrl: 'https://picsum.photos/seed/c${index + 1}/600/400',
+      categories: [cat],
+      badges: badgeList,
+      priority: badgeList.isNotEmpty ? 90 : 50,
+      trackingLink: 'https://example.com/track/${index + 1}',
+      deeplink: 'https://example.com/deeplink/${index + 1}',
       isActive: true,
     );
   });
 
-  Future<List<Coupon>> list({
+  @override
+  Future<PageResult<Coupon>> list({
     int page = 1,
     int pageSize = 20,
     int? categoryId,
@@ -35,19 +57,28 @@ class CouponRepoMock implements CouponRepo {
     String? sort,
     String? shopId,
   }) async {
-    var list = _data.where((e) => e.isActive).toList();
-    if (categoryId != null)
-      list = list.where((e) => e.categoryId == categoryId).toList();
-    if (shopId != null) list = list.where((e) => e.shopId == shopId).toList();
-    if (q != null && q.isNotEmpty) {
+    var list = _data.where((c) => c.isActive).toList();
+    if (categoryId != null) {
       list = list
           .where(
-            (e) =>
-                e.title.toLowerCase().contains(q.toLowerCase()) ||
-                e.code.toLowerCase().contains(q.toLowerCase()),
+            (c) => c.categories.any((cat) => cat.id == categoryId),
           )
           .toList();
     }
+    if (shopId != null && shopId.isNotEmpty) {
+      list = list.where((c) => c.sourceId == shopId).toList();
+    }
+    if (q != null && q.isNotEmpty) {
+      final query = q.toLowerCase();
+      list = list
+          .where(
+            (c) =>
+                c.title.toLowerCase().contains(query) ||
+                c.code.toLowerCase().contains(query),
+          )
+          .toList();
+    }
+
     switch (sort) {
       case 'priorityDesc':
       case 'hot':
@@ -55,32 +86,45 @@ class CouponRepoMock implements CouponRepo {
         break;
       case 'endAtAsc':
         list.sort(
-          (a, b) => (a.expiredAt ?? DateTime(2100)).compareTo(
-            b.expiredAt ?? DateTime(2100),
-          ),
+          (a, b) => (a.endAt ?? DateTime(2100))
+              .compareTo(b.endAt ?? DateTime(2100)),
         );
         break;
       default:
         list.sort((a, b) => a.id.compareTo(b.id));
     }
+
     final start = (page - 1) * pageSize;
     final end = min(start + pageSize, list.length);
-    return start >= list.length ? [] : list.sublist(start, end);
+    final slice = (start >= list.length)
+        ? <Coupon>[]
+        : list.sublist(start, min(end, list.length));
+    final hasMore = end < list.length;
+
+    return PageResult<Coupon>(
+      data: slice,
+      hasMore: hasMore,
+      nextPage: hasMore ? page + 1 : page,
+    );
   }
 
+  @override
   Future<List<Coupon>> hot({int limit = 10}) async {
     final list = _data
         .where(
-          (c) => (c.tags?.contains('hot') ?? false) || (c.priority ?? 0) >= 80,
+          (c) =>
+              c.badges.any((b) => b.key.toUpperCase() == 'HOT') ||
+              (c.priority ?? 0) >= 80,
         )
         .toList();
     list.sort((a, b) => (b.priority ?? 0).compareTo(a.priority ?? 0));
     return list.take(limit).toList();
   }
 
+  @override
   Future<Coupon?> getById(String id) async {
     try {
-      return _data.firstWhere((e) => e.id == id);
+      return _data.firstWhere((c) => c.id == id);
     } catch (_) {
       return null;
     }

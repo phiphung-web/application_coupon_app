@@ -1,25 +1,45 @@
 import 'dart:math';
+import '../../models/badge.dart';
+import '../../models/category.dart';
 import '../../models/product.dart';
 
 class ProductRepoMock {
-  static final _rnd = Random();
+  static final _rnd = Random(42);
 
-  static final List<Product> _data = List.generate(48, (i) {
-    final base = 99000 + _rnd.nextInt(400000);
-    final original = base + (base * (10 + _rnd.nextInt(26)) ~/ 100);
-    final pct = (100 - (base * 100 / original)).round();
-    return Product(
+  static final _categories = List<Category>.generate(
+    8,
+    (i) => Category(
       id: i + 1,
-      name: 'Sản phẩm #${i + 1}',
-      imageUrl: 'https://picsum.photos/seed/p${i + 1}/600/400',
-      basePrice: base.toDouble(),
-      originalPrice: original.toDouble(),
-      discountPercent: pct.toDouble(),
-      categoryId: (i % 6) + 1,
-      shopId: ['shopee', 'lazada', 'tiki'][i % 3],
-      description: 'Mô tả demo sản phẩm #${i + 1}',
-      isHot: i % 4 == 0,
-      bestCoupon: null, // detail sẽ tự tính từ CouponRepoMock
+      name: 'Danh mục ${i + 1}',
+      imageUrl: 'https://picsum.photos/seed/cat${i + 1}/200/200',
+    ),
+  );
+
+  static final _badges = <Badge>[
+    const Badge(id: 1, key: 'HOT', label: 'Hot', priority: 90),
+    const Badge(id: 2, key: 'FLASH', label: 'Flash Sale', priority: 70),
+  ];
+
+  static final List<Product> _data = List.generate(60, (index) {
+    final cat = _categories[index % _categories.length];
+    final badgeList = <Badge>[];
+    if (index % 4 == 0) badgeList.add(_badges.first);
+    if (index % 6 == 0) badgeList.add(_badges.last);
+
+    final original = 500000 + _rnd.nextInt(500000);
+    final current = original - (original * (_rnd.nextInt(30) + 5) ~/ 100);
+
+    return Product(
+      id: index + 1,
+      name: 'Sản phẩm #${index + 1}',
+      imageUrl: 'https://picsum.photos/seed/p${index + 1}/600/400',
+      priceOriginal: original,
+      priceCurrent: current,
+      currency: 'VND',
+      description: 'Mô tả demo cho sản phẩm #${index + 1}',
+      sourceId: ['shopee', 'lazada', 'tiki'][index % 3],
+      categories: [cat],
+      badges: badgeList,
     );
   });
 
@@ -32,22 +52,33 @@ class ProductRepoMock {
     String? shopId,
   }) async {
     var list = [..._data];
-    if (categoryId != null) list = list.where((e) => e.categoryId == categoryId).toList();
-    if (shopId != null) list = list.where((e) => e.shopId == shopId).toList();
-    if (q != null && q.isNotEmpty) list = list.where((e) => e.name.toLowerCase().contains(q.toLowerCase())).toList();
+    if (categoryId != null) {
+      list = list
+          .where((p) =>
+              p.categories.any((cat) => cat.id == categoryId))
+          .toList();
+    }
+    if (shopId != null && shopId.isNotEmpty) {
+      list = list.where((p) => p.sourceId == shopId).toList();
+    }
+    if (q != null && q.isNotEmpty) {
+      list = list
+          .where((p) => p.name.toLowerCase().contains(q.toLowerCase()))
+          .toList();
+    }
 
     switch (sort) {
       case 'priceAsc':
-        list.sort((a, b) => a.basePrice.compareTo(b.basePrice));
+        list.sort((a, b) => a.priceEffective.compareTo(b.priceEffective));
         break;
       case 'priceDesc':
-        list.sort((a, b) => b.basePrice.compareTo(a.basePrice));
+        list.sort((a, b) => b.priceEffective.compareTo(a.priceEffective));
         break;
       case 'discountDesc':
-        list.sort((a, b) => (b.discountPercent ?? 0).compareTo(a.discountPercent ?? 0));
+        list.sort((a, b) => b.discountPercent.compareTo(a.discountPercent));
         break;
       case 'hot':
-        list.sort((a, b) => (b.isHot ? 1 : 0).compareTo(a.isHot ? 1 : 0));
+        list.sort((a, b) => (b.isHot ? 1 : 0) - (a.isHot ? 1 : 0));
         break;
       default:
         list.sort((a, b) => b.id.compareTo(a.id));
@@ -55,18 +86,19 @@ class ProductRepoMock {
 
     final start = (page - 1) * pageSize;
     final end = min(start + pageSize, list.length);
-    return start >= list.length ? [] : list.sublist(start, end);
+    if (start >= list.length) return [];
+    return list.sublist(start, end);
   }
 
   Future<List<Product>> hot({int limit = 8}) async {
-    final list = _data.where((e) => e.isHot).toList();
-    list.sort((a, b) => (b.discountPercent ?? 0).compareTo(a.discountPercent ?? 0));
+    final list = _data.where((p) => p.isHot).toList();
+    list.sort((a, b) => b.discountPercent.compareTo(a.discountPercent));
     return list.take(limit).toList();
   }
 
   Future<Product?> getById(int id) async {
     try {
-      return _data.firstWhere((e) => e.id == id);
+      return _data.firstWhere((p) => p.id == id);
     } catch (_) {
       return null;
     }

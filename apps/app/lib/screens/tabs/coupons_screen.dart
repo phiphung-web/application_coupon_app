@@ -136,7 +136,7 @@ class _CouponsScreenState extends State<CouponsScreen> {
                 itemBuilder: (_, i) => SizedBox(
                   width: 320, // item ngang cố định
                   child: CouponListItem(
-                    c: _hot[i],
+                    coupon: _hot[i],
                     onTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -223,7 +223,7 @@ class _CouponsScreenState extends State<CouponsScreen> {
               physics: const NeverScrollableScrollPhysics(),
               padding: const EdgeInsets.all(16),
               itemBuilder: (_, i) => CouponListItem(
-                c: _items[i],
+                coupon: _items[i],
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(

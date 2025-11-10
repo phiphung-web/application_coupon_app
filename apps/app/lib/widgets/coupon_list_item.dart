@@ -1,16 +1,6 @@
 import 'package:flutter/material.dart';
+import '../core/money.dart';
 import '../models/coupon.dart';
-
-String _money(num v) {
-  final s = v.toInt().toString();
-  final buf = StringBuffer();
-  for (int i = 0; i < s.length; i++) {
-    final idx = s.length - 1 - i;
-    buf.write(s[idx]);
-    if ((i + 1) % 3 == 0 && idx != 0) buf.write('.');
-  }
-  return buf.toString().split('').reversed.join() + 'đ';
-}
 
 class CouponListItem extends StatelessWidget {
   final Coupon coupon;
@@ -19,8 +9,10 @@ class CouponListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isHot =
-        (coupon.tags?.contains('hot') ?? false) || (coupon.priority ?? 0) >= 80;
+    final isHot = coupon.badges.any(
+          (b) => b.key.toUpperCase() == 'HOT',
+        ) ||
+        (coupon.priority ?? 0) >= 80;
 
     return InkWell(
       borderRadius: BorderRadius.circular(14),
@@ -77,12 +69,15 @@ class CouponListItem extends StatelessWidget {
                     children: [
                       _chip(context, 'Code: ${coupon.code}', primary: true),
                       if (coupon.maxDiscount != null)
-                        _chip(context, 'Giảm ${_money(coupon.maxDiscount!)}'),
+                        _chip(
+                          context,
+                          'Giảm ${money(coupon.maxDiscount!)}',
+                        ),
                     ],
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'HSD: ${_fmtDate(coupon.expiredAt)}',
+                    'HSD: ${_fmtDate(coupon.endAt)}',
                     style: const TextStyle(fontSize: 12, color: Colors.black54),
                   ),
                 ],
@@ -90,7 +85,8 @@ class CouponListItem extends StatelessWidget {
             ),
             if (isHot)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
                 decoration: BoxDecoration(
                   color: Colors.black87,
                   borderRadius: BorderRadius.circular(8),

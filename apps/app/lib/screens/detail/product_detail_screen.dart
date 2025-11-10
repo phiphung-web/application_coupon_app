@@ -2,22 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
-import '../../models/product.dart';
-import '../../models/coupon.dart';
+import '../../core/money.dart';
 import '../../core/pricing.dart';
 import '../../data/impl/coupon_repo_mock.dart';
 import '../../data/impl/product_repo_mock.dart';
-
-String _money(num v) {
-  final s = v.toInt().toString();
-  final buf = StringBuffer();
-  for (int i = 0; i < s.length; i++) {
-    final idx = s.length - 1 - i;
-    buf.write(s[idx]);
-    if ((i + 1) % 3 == 0 && idx != 0) buf.write('.');
-  }
-  return buf.toString().split('').reversed.join() + 'đ';
-}
+import '../../models/coupon.dart';
+import '../../models/product.dart';
+import 'voucher_detail_screen.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final int productId;
@@ -31,7 +22,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   final _pRepo = ProductRepoMock();
   final _cRepo = CouponRepoMock();
 
-  Product? _p;
+  Product? _product;
   PricingResult? _best;
   bool _loading = true;
 
@@ -43,15 +34,24 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   Future<void> _load() async {
     final p = await _pRepo.getById(widget.productId);
-    PricingResult? pr;
+    PricingResult? best;
     if (p != null) {
-      final coupons = await _cRepo.list(pageSize: 999);
-      pr = bestForProduct(p, coupons);
+      if (p.bestDeal != null) {
+        best = PricingResult(
+          finalPrice: p.bestDeal!.after,
+          discountAmount: p.bestDeal!.saved,
+          coupon: p.bestDeal!.coupon,
+        );
+      } else {
+        final coupons = (await _cRepo.list(pageSize: 200)).data;
+        best = bestForProduct(p, coupons);
+      }
     }
+
     if (!mounted) return;
     setState(() {
-      _p = p;
-      _best = pr;
+      _product = p;
+      _best = best;
       _loading = false;
     });
   }
@@ -59,27 +59,31 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   @override
   Widget build(BuildContext context) {
     if (_loading) return const Center(child: CircularProgressIndicator());
-    if (_p == null) return const Center(child: Text('Không tìm thấy sản phẩm'));
+    if (_product == null) {
+      return const Center(child: Text('Không tìm thấy sản phẩm'));
+    }
 
-    final p = _p!;
-    final best = _best;
-    final old = p.originalPrice ?? p.basePrice;
-    final finalPrice = best?.finalPrice ?? p.basePrice;
-    final pct = old > 0 ? (((old - finalPrice) / old) * 100).round() : 0;
+    final p = _product!;
+    final appliedPrice = _best?.finalPrice ?? p.priceEffective;
+    final old = p.priceOriginal;
+    final pct = old > 0 ? ((old - appliedPrice) * 100 ~/ old) : 0;
+    final Coupon? coupon = _best?.coupon;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
       children: [
         ClipRRect(
           borderRadius: BorderRadius.circular(12),
-          child: Image.network(
-            p.imageUrl ?? '',
-            height: 220,
-            width: double.infinity,
-            fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) =>
-                Container(height: 220, color: const Color(0xFFEDEDED)),
-          ),
+          child: (p.imageUrl != null && p.imageUrl!.isNotEmpty)
+              ? Image.network(
+                  p.imageUrl!,
+                  height: 220,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) =>
+                      Container(height: 220, color: const Color(0xFFEDEDED)),
+                )
+              : Container(height: 220, color: const Color(0xFFEDEDED)),
         ),
         const SizedBox(height: 10),
         Text(
@@ -90,19 +94,19 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         Row(
           children: [
             Text(
-              _money(finalPrice),
+              money(appliedPrice),
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
             ),
             const SizedBox(width: 8),
-            if (old > finalPrice)
+            if (old > appliedPrice)
               Text(
-                _money(old),
+                money(old),
                 style: const TextStyle(
                   decoration: TextDecoration.lineThrough,
                   color: Colors.black45,
                 ),
               ),
-            if (old > finalPrice) ...[
+            if (pct > 0) ...[
               const SizedBox(width: 8),
               Text(
                 '$pct% OFF',
@@ -115,72 +119,99 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           ],
         ),
         const SizedBox(height: 12),
-        if (best?.coupon != null) _CouponInline(c: best!.coupon!),
+        if (coupon != null) _CouponInline(coupon: coupon),
         const SizedBox(height: 16),
         const Text('Mô tả', style: TextStyle(fontWeight: FontWeight.w700)),
         const SizedBox(height: 6),
         Text(p.description ?? 'Mô tả demo sản phẩm.'),
+        if (p.categories.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          const Text('Danh mục',
+              style: TextStyle(fontWeight: FontWeight.w700)),
+          Wrap(
+            spacing: 8,
+            children: p.categories
+                .map(
+                  (c) => Chip(
+                    label: Text(c.name),
+                    backgroundColor: Colors.grey.shade200,
+                  ),
+                )
+                .toList(),
+          ),
+        ],
+        if (p.badges.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          const Text('Badges', style: TextStyle(fontWeight: FontWeight.w700)),
+          Wrap(
+            spacing: 8,
+            children: p.badges
+                .map(
+                  (b) => Chip(
+                    label: Text(b.label),
+                  ),
+                )
+                .toList(),
+          ),
+        ],
       ],
     );
   }
 }
 
 class _CouponInline extends StatelessWidget {
-  final Coupon c;
-  const _CouponInline({required this.c});
-
-  Future<void> _openLink(BuildContext context) async {
-    final link = c.deeplink ?? c.trackingLink;
-    if (link == null || link.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Chưa có liên kết dùng mã')));
-      return;
-    }
-    if (await canLaunchUrlString(link)) {
-      await launchUrlString(link, mode: LaunchMode.externalApplication);
-    } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Không mở được: $link')));
-    }
-  }
+  final Coupon coupon;
+  const _CouponInline({required this.coupon});
 
   @override
   Widget build(BuildContext context) {
-    final isHot = (c.tags?.contains('hot') ?? false) || (c.priority ?? 0) >= 80;
+    final isHot = coupon.badges.any(
+          (b) => b.key.toUpperCase() == 'HOT',
+        ) ||
+        (coupon.priority ?? 0) >= 80;
 
     return Container(
-      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Theme.of(context).dividerColor),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(.04),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
+            color: Colors.black.withOpacity(.05),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: Text(
-                  c.title,
-                  style: const TextStyle(fontWeight: FontWeight.w700),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      coupon.title,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      coupon.sourceId ?? 'Toàn sàn',
+                      style: const TextStyle(color: Colors.black54),
+                    ),
+                  ],
                 ),
               ),
               if (isHot)
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: Colors.black87,
                     borderRadius: BorderRadius.circular(8),
@@ -203,30 +234,30 @@ class _CouponInline extends StatelessWidget {
             children: [
               _chip(
                 context,
-                'Code: ${c.code}',
+                'Code: ${coupon.code}',
                 primary: true,
                 onTap: () {
-                  Clipboard.setData(ClipboardData(text: c.code));
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(const SnackBar(content: Text('Đã copy mã')));
+                  Clipboard.setData(ClipboardData(text: coupon.code));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Đã copy mã')),
+                  );
                 },
               ),
-              if (c.minSpend != null)
-                _chip(context, 'Min ${_money(c.minSpend!)}'),
-              if (c.maxDiscount != null)
-                _chip(context, 'Max ${_money(c.maxDiscount!)}'),
+              if (coupon.minSpend != null)
+                _chip(context, 'Min ${money(coupon.minSpend!)}'),
+              if (coupon.maxDiscount != null)
+                _chip(context, 'Max ${money(coupon.maxDiscount!)}'),
               _chip(
                 context,
-                c.discountType.toUpperCase() == 'PERCENT'
-                    ? 'Giảm ${c.discountValue.toInt()}%'
-                    : 'Giảm ${_money(c.discountValue)}',
+                coupon.isPercent
+                    ? 'Giảm ${coupon.discountValue}%'
+                    : 'Giảm ${money(coupon.discountValue)}',
               ),
             ],
           ),
           const SizedBox(height: 8),
           Text(
-            'HSD: ${_fmtDate(c.expiredAt)}',
+            'HSD: ${_fmtDate(coupon.endAt)}',
             style: Theme.of(context).textTheme.bodySmall,
           ),
           const Divider(height: 20),
@@ -235,10 +266,10 @@ class _CouponInline extends StatelessWidget {
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: () {
-                    Clipboard.setData(ClipboardData(text: c.code));
-                    ScaffoldMessenger.of(
-                      context,
-                    ).showSnackBar(const SnackBar(content: Text('Đã copy mã')));
+                    Clipboard.setData(ClipboardData(text: coupon.code));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Đã copy mã')),
+                    );
                   },
                   icon: const Icon(Icons.copy, size: 18),
                   label: const Text('Copy mã'),
@@ -258,11 +289,9 @@ class _CouponInline extends StatelessWidget {
           Center(
             child: TextButton(
               onPressed: () {
-                // Nếu bạn có AppRoutes.coupon thì dùng pushNamed
-                // Navigator.of(context).pushNamed(AppRoutes.coupon, arguments: c.id);
                 Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (_) => VoucherDetailScreen(couponId: c.id),
+                    builder: (_) => VoucherDetailScreen(couponId: coupon.id),
                   ),
                 );
               },
@@ -303,22 +332,26 @@ class _CouponInline extends StatelessWidget {
     return GestureDetector(onTap: onTap, child: child);
   }
 
+  Future<void> _openLink(BuildContext context) async {
+    final link = coupon.deeplink ?? coupon.trackingLink;
+    if (link == null || link.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Chưa có liên kết dùng mã')),
+      );
+      return;
+    }
+    if (await canLaunchUrlString(link)) {
+      await launchUrlString(link, mode: LaunchMode.externalApplication);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Không mở được: $link')),
+      );
+    }
+  }
+
   String _fmtDate(DateTime? d) {
     if (d == null) return '-';
     String two(int x) => x < 10 ? '0$x' : '$x';
     return '${two(d.day)}/${two(d.month)}/${d.year}';
-  }
-}
-
-class VoucherDetailScreen extends StatelessWidget {
-  final String couponId;
-  const VoucherDetailScreen({super.key, required this.couponId});
-  @override
-  Widget build(BuildContext context) {
-    // Placeholder (file chi tiết voucher thật ở phần dưới)
-    return Scaffold(
-      appBar: AppBar(title: const Text('Chi tiết mã')),
-      body: Center(child: Text('Mã: $couponId')),
-    );
   }
 }

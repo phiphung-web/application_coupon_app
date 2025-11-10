@@ -1,16 +1,6 @@
 import 'package:flutter/material.dart';
+import '../core/money.dart';
 import '../models/product.dart';
-
-String _money(num v) {
-  final s = v.toInt().toString();
-  final buf = StringBuffer();
-  for (int i = 0; i < s.length; i++) {
-    final idx = s.length - 1 - i;
-    buf.write(s[idx]);
-    if ((i + 1) % 3 == 0 && idx != 0) buf.write('.');
-  }
-  return buf.toString().split('').reversed.join() + 'đ';
-}
 
 class ProductCard extends StatelessWidget {
   final Product product;
@@ -19,8 +9,9 @@ class ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final old = product.originalPrice ?? product.basePrice;
-    final pct = old > 0 ? (((old - product.basePrice) / old) * 100).round() : 0;
+    final current = product.priceEffective;
+    final original = product.priceOriginal;
+    final pct = product.discountPercent;
 
     return InkWell(
       borderRadius: BorderRadius.circular(14),
@@ -75,13 +66,13 @@ class ProductCard extends StatelessWidget {
                   Row(
                     children: [
                       Text(
-                        _money(product.basePrice),
+                        money(current),
                         style: const TextStyle(fontWeight: FontWeight.w700),
                       ),
                       const SizedBox(width: 6),
-                      if (old > product.basePrice)
+                      if (original > current)
                         Text(
-                          _money(old),
+                          money(original),
                           style: const TextStyle(
                             decoration: TextDecoration.lineThrough,
                             color: Colors.black54,

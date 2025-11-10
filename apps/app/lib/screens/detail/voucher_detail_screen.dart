@@ -2,19 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
-import '../../models/coupon.dart';
+import '../../core/money.dart';
 import '../../data/impl/coupon_repo_mock.dart';
-
-String _money(num v) {
-  final s = v.toInt().toString();
-  final buf = StringBuffer();
-  for (int i = 0; i < s.length; i++) {
-    final idx = s.length - 1 - i;
-    buf.write(s[idx]);
-    if ((i + 1) % 3 == 0 && idx != 0) buf.write('.');
-  }
-  return buf.toString().split('').reversed.join() + 'đ';
-}
+import '../../models/coupon.dart';
 
 class VoucherDetailScreen extends StatefulWidget {
   final String couponId;
@@ -26,7 +16,7 @@ class VoucherDetailScreen extends StatefulWidget {
 
 class _VoucherDetailScreenState extends State<VoucherDetailScreen> {
   final _repo = CouponRepoMock();
-  Coupon? _c;
+  Coupon? _coupon;
   bool _loading = true;
 
   @override
@@ -39,7 +29,7 @@ class _VoucherDetailScreenState extends State<VoucherDetailScreen> {
     final c = await _repo.getById(widget.couponId);
     if (!mounted) return;
     setState(() {
-      _c = c;
+      _coupon = c;
       _loading = false;
     });
   }
@@ -47,10 +37,12 @@ class _VoucherDetailScreenState extends State<VoucherDetailScreen> {
   @override
   Widget build(BuildContext context) {
     if (_loading) return const Center(child: CircularProgressIndicator());
-    if (_c == null) return const Center(child: Text('Không tìm thấy mã'));
+    if (_coupon == null) return const Center(child: Text('Không tìm thấy mã'));
 
-    final c = _c!;
-    final isHot = (c.tags?.contains('hot') ?? false) || (c.priority ?? 0) >= 80;
+    final c = _coupon!;
+    final isHot =
+        c.badges.any((b) => b.key.toUpperCase() == 'HOT') ||
+        (c.priority ?? 0) >= 80;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
@@ -107,26 +99,26 @@ class _VoucherDetailScreenState extends State<VoucherDetailScreen> {
               primary: true,
               onTap: () {
                 Clipboard.setData(ClipboardData(text: c.code));
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(const SnackBar(content: Text('Đã copy mã')));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Đã copy mã')),
+                );
               },
             ),
             if (c.minSpend != null)
-              _chip(context, 'Min ${_money(c.minSpend!)}'),
+              _chip(context, 'Min ${money(c.minSpend!)}'),
             if (c.maxDiscount != null)
-              _chip(context, 'Max ${_money(c.maxDiscount!)}'),
+              _chip(context, 'Max ${money(c.maxDiscount!)}'),
             _chip(
               context,
-              c.discountType.toUpperCase() == 'PERCENT'
-                  ? 'Giảm ${c.discountValue.toInt()}%'
-                  : 'Giảm ${_money(c.discountValue)}',
+              c.isPercent
+                  ? 'Giảm ${c.discountValue}%'
+                  : 'Giảm ${money(c.discountValue)}',
             ),
           ],
         ),
         const SizedBox(height: 6),
         Text(
-          'Hạn dùng: ${_fmtDate(c.expiredAt)}',
+          'Hạn dùng: ${_fmtDate(c.endAt)}',
           style: Theme.of(context).textTheme.bodySmall,
         ),
         const Divider(height: 24),
@@ -136,9 +128,9 @@ class _VoucherDetailScreenState extends State<VoucherDetailScreen> {
               child: OutlinedButton.icon(
                 onPressed: () {
                   Clipboard.setData(ClipboardData(text: c.code));
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(const SnackBar(content: Text('Đã copy mã')));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Đã copy mã')),
+                  );
                 },
                 icon: const Icon(Icons.copy, size: 18),
                 label: const Text('Copy mã'),
@@ -174,9 +166,14 @@ class _VoucherDetailScreenState extends State<VoucherDetailScreen> {
         ),
         const SizedBox(height: 8),
         Text(
-          c.shopId != null ? 'Áp dụng tại: ${c.shopId}' : 'Áp dụng: Toàn sàn',
+          c.sourceId != null
+              ? 'Áp dụng tại: ${c.sourceId}'
+              : 'Áp dụng: Toàn sàn',
         ),
-        if (c.categoryId != null) Text('Danh mục áp dụng: #${c.categoryId}'),
+        if (c.categories.isNotEmpty)
+          Text(
+            'Danh mục áp dụng: ${c.categories.map((cat) => cat.name).join(', ')}',
+          ),
         const SizedBox(height: 16),
         const Text(
           'Điều kiện & điều khoản',
@@ -184,8 +181,8 @@ class _VoucherDetailScreenState extends State<VoucherDetailScreen> {
         ),
         const SizedBox(height: 4),
         Text(
-          'Đơn demo: có thể yêu cầu tối thiểu ${c.minSpend != null ? _money(c.minSpend!) : 'không'}. '
-          'Mức giảm tối đa ${c.maxDiscount != null ? _money(c.maxDiscount!) : 'không giới hạn'}.',
+          'Demo: Có thể yêu cầu tối thiểu ${c.minSpend != null ? money(c.minSpend!) : 'không'}.'
+          ' Mức giảm tối đa ${c.maxDiscount != null ? money(c.maxDiscount!) : 'không giới hạn'}.',
         ),
       ],
     );

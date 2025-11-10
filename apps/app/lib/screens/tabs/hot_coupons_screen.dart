@@ -40,7 +40,7 @@ class _HotCouponsScreenState extends State<HotCouponsScreen> {
           : ListView.separated(
               padding: const EdgeInsets.all(16),
               itemBuilder: (_, i) => CouponListItem(
-                c: _items[i],
+                coupon: _items[i],
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(

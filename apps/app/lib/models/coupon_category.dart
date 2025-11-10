@@ -1,4 +1,4 @@
-class Category {
+class CouponCategory {
   final int id;
   final String name;
   final String? imageUrl;
@@ -6,7 +6,7 @@ class Category {
   final int priority;
   final bool isActive;
 
-  const Category({
+  const CouponCategory({
     required this.id,
     required this.name,
     this.imageUrl,
@@ -15,7 +15,8 @@ class Category {
     this.isActive = true,
   });
 
-  factory Category.fromJson(Map<String, dynamic> json) => Category(
+  factory CouponCategory.fromJson(Map<String, dynamic> json) =>
+      CouponCategory(
         id: json['id'] as int,
         name: json['name'] ?? '',
         imageUrl: json['imageUrl'],

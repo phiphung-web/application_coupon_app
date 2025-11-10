@@ -29,7 +29,7 @@ class _SearchScreenState extends State<SearchScreen> {
     final cs = await _cRepo.list(page: 1, pageSize: 50, q: q);
     setState(() {
       _products = ps;
-      _coupons = cs;
+      _coupons = cs.data;
       _loading = false;
     });
   }
