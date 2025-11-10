@@ -22,7 +22,7 @@ let CouponsController = class CouponsController {
         this.svc = svc;
     }
     list(q, active) {
-        return this.svc.paginate(Object.assign(Object.assign({}, q), { active }));
+        return this.svc.paginate({ ...q, active });
     }
     get(id) {
         return this.svc.get(id);

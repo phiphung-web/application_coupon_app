@@ -13,7 +13,7 @@ import { CouponsModule } from "./modules/coupons/coupons.module";
 import { CategoriesModule } from "./modules/categories/categories.module";
 import { CouponCategoriesModule } from "./modules/coupon-categories/coupon-categories.module";
 import { BadgesModule } from "./modules/badges/badges.module";
-import { SourcesModule } from "./modules/sources/sources.module.ts";
+import { SourcesModule } from "./modules/sources/sources.module";
 import { PricingModule } from "./modules/pricing/pricing.module";
 
 @Module({

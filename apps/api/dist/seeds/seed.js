@@ -20,7 +20,6 @@ function load(file) {
     return JSON.parse((0, fs_1.readFileSync)(p, "utf8"));
 }
 (async () => {
-    var _a;
     const ds = await typeorm_config_1.default.initialize();
     await ds.initialize();
     const sourceRepo = ds.getRepository(source_entity_1.Source);
@@ -48,20 +47,23 @@ function load(file) {
     }
     // coupons
     for (const c of load("./coupons.json")) {
-        await couponRepo.save(couponRepo.create(Object.assign(Object.assign({}, c), { endAt: c.endAt ? new Date(c.endAt) : null })));
+        await couponRepo.save(couponRepo.create({
+            ...c,
+            endAt: c.endAt ? new Date(c.endAt) : null,
+        }));
     }
     // products + attach categories/badges by name/key
     const badges = await badgeRepo.find();
     const cats = await pCatRepo.find();
     for (const p of load("./products.json")) {
-        const attachBadges = badges.filter((b) => { var _a; return ((_a = p.badgeKeys) !== null && _a !== void 0 ? _a : []).includes(b.key); });
-        const attachCats = cats.filter((c) => { var _a; return ((_a = p.categoryNames) !== null && _a !== void 0 ? _a : []).includes(c.name); });
+        const attachBadges = badges.filter((b) => (p.badgeKeys ?? []).includes(b.key));
+        const attachCats = cats.filter((c) => (p.categoryNames ?? []).includes(c.name));
         const prod = prodRepo.create({
             name: p.name,
             imageUrl: p.imageUrl,
             priceOriginal: p.priceOriginal,
             priceCurrent: p.priceCurrent,
-            currency: (_a = p.currency) !== null && _a !== void 0 ? _a : "USD",
+            currency: p.currency ?? "USD",
             sourceId: p.sourceId,
             categories: attachCats,
             badges: attachBadges,

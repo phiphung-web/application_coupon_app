@@ -1,4 +1,4 @@
-import { IsInt, IsOptional, IsString, Min } from 'class-validator';
+import { IsInt, IsOptional, IsString, Min } from "class-validator";
 
 export class PaginationDto {
   @IsInt() @Min(1) page = 1;

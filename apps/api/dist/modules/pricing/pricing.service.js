@@ -10,8 +10,7 @@ exports.PricingService = void 0;
 const common_1 = require("@nestjs/common");
 let PricingService = class PricingService {
     bestDealForProduct(p, coupons) {
-        var _a, _b;
-        const base = (_a = p.priceCurrent) !== null && _a !== void 0 ? _a : p.priceOriginal;
+        const base = p.priceCurrent ?? p.priceOriginal;
         let pick = null;
         let bestAfter = base;
         const now = new Date();
@@ -28,7 +27,7 @@ let PricingService = class PricingService {
             }
             else {
                 const raw = Math.floor((base * c.discountValue) / 100);
-                cut = Math.min(raw, (_b = c.maxDiscount) !== null && _b !== void 0 ? _b : raw);
+                cut = Math.min(raw, c.maxDiscount ?? raw);
             }
             const after = Math.max(base - cut, 0);
             if (after < bestAfter) {

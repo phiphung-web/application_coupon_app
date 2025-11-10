@@ -22,7 +22,7 @@ let ProductsController = class ProductsController {
         this.svc = svc;
     }
     list(q, withDeal) {
-        return this.svc.paginate(Object.assign(Object.assign({}, q), { withDeal: withDeal === "true" }));
+        return this.svc.paginate({ ...q, withDeal: withDeal === "true" });
     }
     get(id, withDeal) {
         return this.svc.findOne(id, withDeal !== "false");

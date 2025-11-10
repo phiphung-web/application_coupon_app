@@ -67,12 +67,24 @@ exports.AdminCmsModule = AdminCmsModule;
 exports.AdminCmsModule = AdminCmsModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            typeorm_1.TypeOrmModule.forFeature([product_entity_1.Product, coupon_entity_1.Coupon, category_entity_1.Category, coupon_category_entity_1.CouponCategory, badge_entity_1.Badge, source_entity_1.Source, product_coupon_entity_1.ProductCoupon]),
+            typeorm_1.TypeOrmModule.forFeature([
+                product_entity_1.Product,
+                coupon_entity_1.Coupon,
+                category_entity_1.Category,
+                coupon_category_entity_1.CouponCategory,
+                badge_entity_1.Badge,
+                source_entity_1.Source,
+                product_coupon_entity_1.ProductCoupon,
+            ]),
             nestjs_1.AdminModule.createAdminAsync({
                 useFactory: async () => ({
                     adminJsOptions: (0, admin_options_1.buildAdminOptions)(),
                     auth: (0, admin_auth_1.buildAuth)(), // basic auth
-                    sessionOptions: { resave: false, saveUninitialized: true, secret: 'change_me' },
+                    sessionOptions: {
+                        resave: false,
+                        saveUninitialized: true,
+                        secret: "change_me",
+                    },
                     // mặc định mountPath '/admin'
                 }),
             }),

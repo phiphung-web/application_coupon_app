@@ -22,7 +22,6 @@ let CategoriesService = class CategoriesService {
         this.repo = repo;
     }
     async paginate(q) {
-        var _a, _b;
         const qb = this.repo.createQueryBuilder("c");
         if (q.q)
             qb.andWhere("c.name ILIKE :q", { q: `%${q.q}%` });
@@ -36,7 +35,7 @@ let CategoriesService = class CategoriesService {
         }
         // sort: priority desc, name asc
         qb.orderBy("c.priority", "DESC").addOrderBy("c.name", "ASC");
-        const page = (_a = q.page) !== null && _a !== void 0 ? _a : 1, limit = (_b = q.limit) !== null && _b !== void 0 ? _b : 20;
+        const page = q.page ?? 1, limit = q.limit ?? 20;
         qb.skip((page - 1) * limit).take(limit);
         const [items, total] = await qb.getManyAndCount();
         return { items, meta: { page, limit, total } };
@@ -54,13 +53,12 @@ let CategoriesService = class CategoriesService {
         return c;
     }
     async create(dto) {
-        var _a, _b;
         const c = this.repo.create({
             name: dto.name,
             imageUrl: dto.imageUrl,
             parentId: dto.parentId,
-            priority: (_a = dto.priority) !== null && _a !== void 0 ? _a : 0,
-            isActive: (_b = dto.isActive) !== null && _b !== void 0 ? _b : true,
+            priority: dto.priority ?? 0,
+            isActive: dto.isActive ?? true,
         });
         return this.repo.save(c);
     }
@@ -75,19 +73,18 @@ let CategoriesService = class CategoriesService {
         return { ok: true };
     }
     async tree(activeOnly = false) {
-        var _a;
         const rows = await this.listAll(activeOnly);
         const byParent = new Map();
         for (const r of rows) {
-            const k = (_a = r.parentId) !== null && _a !== void 0 ? _a : null;
+            const k = r.parentId ?? null;
             if (!byParent.has(k))
                 byParent.set(k, []);
             byParent.get(k).push(r);
         }
-        const build = (pid) => {
-            var _a;
-            return ((_a = byParent.get(pid)) !== null && _a !== void 0 ? _a : []).map((n) => (Object.assign(Object.assign({}, n), { children: build(n.id) })));
-        };
+        const build = (pid) => (byParent.get(pid) ?? []).map((n) => ({
+            ...n,
+            children: build(n.id),
+        }));
         return build(null);
     }
     async breadcrumbs(id) {

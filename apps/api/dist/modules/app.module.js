@@ -28,8 +28,7 @@ exports.AppModule = AppModule = __decorate([
             typeorm_1.TypeOrmModule.forRootAsync({
                 inject: [config_1.ConfigService],
                 useFactory: (cfg) => {
-                    var _a;
-                    const url = String((_a = cfg.get("DATABASE_URL")) !== null && _a !== void 0 ? _a : "");
+                    const url = String(cfg.get("DATABASE_URL") ?? "");
                     console.log("DB_URL?", url.replace(/:\/\/.*@/, "://***@")); // log ẩn pass
                     if (!url)
                         throw new Error("Missing DATABASE_URL");

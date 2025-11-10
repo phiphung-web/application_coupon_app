@@ -20,7 +20,7 @@ const coupons_module_1 = require("./modules/coupons/coupons.module");
 const categories_module_1 = require("./modules/categories/categories.module");
 const coupon_categories_module_1 = require("./modules/coupon-categories/coupon-categories.module");
 const badges_module_1 = require("./modules/badges/badges.module");
-const sources_module_ts_1 = require("./modules/sources/sources.module.ts");
+const sources_module_1 = require("./modules/sources/sources.module");
 const pricing_module_1 = require("./modules/pricing/pricing.module");
 let AppModule = class AppModule {
 };
@@ -37,8 +37,7 @@ exports.AppModule = AppModule = __decorate([
             typeorm_1.TypeOrmModule.forRootAsync({
                 inject: [config_1.ConfigService],
                 useFactory: (cfg) => {
-                    var _a;
-                    const url = String((_a = cfg.get("DATABASE_URL")) !== null && _a !== void 0 ? _a : "");
+                    const url = String(cfg.get("DATABASE_URL") ?? "");
                     if (!url)
                         throw new Error("Missing DATABASE_URL");
                     return {
@@ -61,7 +60,7 @@ exports.AppModule = AppModule = __decorate([
             categories_module_1.CategoriesModule,
             coupon_categories_module_1.CouponCategoriesModule,
             badges_module_1.BadgesModule,
-            sources_module_ts_1.SourcesModule,
+            sources_module_1.SourcesModule,
             pricing_module_1.PricingModule,
         ],
         providers: [

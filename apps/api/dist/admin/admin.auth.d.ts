@@ -1,2 +1,7 @@
-import { AdminAuthOptions } from "@adminjs/nestjs";
-export declare function buildAuth(): AdminAuthOptions;
+export declare function buildAuth(): {
+    authenticate: (email: string, password: string) => Promise<{
+        email: string;
+    } | null>;
+    cookieName: string;
+    cookiePassword: string;
+};

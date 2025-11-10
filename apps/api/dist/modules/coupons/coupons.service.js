@@ -26,7 +26,6 @@ let CouponsService = class CouponsService {
         this.catRepo = catRepo;
     }
     async paginate(q) {
-        var _a, _b;
         const qb = this.repo.createQueryBuilder('c')
             .leftJoinAndSelect('c.badges', 'b')
             .leftJoinAndSelect('c.categories', 'k');
@@ -41,7 +40,7 @@ let CouponsService = class CouponsService {
         if (q.active === 'true')
             qb.andWhere('c.isActive = true').andWhere('(c.endAt IS NULL OR c.endAt >= NOW())');
         qb.orderBy('c.priority', 'DESC').addOrderBy('c.createdAt', 'DESC');
-        const page = (_a = q.page) !== null && _a !== void 0 ? _a : 1, limit = (_b = q.limit) !== null && _b !== void 0 ? _b : 20;
+        const page = q.page ?? 1, limit = q.limit ?? 20;
         qb.skip((page - 1) * limit).take(limit);
         const [items, total] = await qb.getManyAndCount();
         return { items, meta: { page, limit, total } };
@@ -53,18 +52,17 @@ let CouponsService = class CouponsService {
         return c;
     }
     async upsert(dto) {
-        var _a, _b, _c, _d;
-        const badges = ((_a = dto.badgeIds) === null || _a === void 0 ? void 0 : _a.length) ? await this.badgeRepo.findBy({ id: (0, typeorm_2.In)(dto.badgeIds) }) : [];
-        const cats = ((_b = dto.categoryIds) === null || _b === void 0 ? void 0 : _b.length) ? await this.catRepo.findBy({ id: (0, typeorm_2.In)(dto.categoryIds) }) : [];
+        const badges = dto.badgeIds?.length ? await this.badgeRepo.findBy({ id: (0, typeorm_2.In)(dto.badgeIds) }) : [];
+        const cats = dto.categoryIds?.length ? await this.catRepo.findBy({ id: (0, typeorm_2.In)(dto.categoryIds) }) : [];
         const entity = this.repo.create({
-            id: (_c = dto.id) !== null && _c !== void 0 ? _c : `C_${Date.now()}`,
+            id: dto.id ?? `C_${Date.now()}`,
             title: dto.title, code: dto.code,
             discountType: dto.discountType, discountValue: dto.discountValue,
             minSpend: dto.minSpend, maxDiscount: dto.maxDiscount,
             endAt: dto.endAt ? new Date(dto.endAt) : undefined,
             sourceId: dto.sourceId, imageUrl: dto.imageUrl,
             priority: dto.priority, trackingLink: dto.trackingLink, deeplink: dto.deeplink,
-            isActive: (_d = dto.isActive) !== null && _d !== void 0 ? _d : true,
+            isActive: dto.isActive ?? true,
             badges, categories: cats,
         });
         await this.repo.save(entity);

@@ -32,7 +32,6 @@ let ProductsService = class ProductsService {
         this.pricing = pricing;
     }
     async paginate(q) {
-        var _a, _b;
         const qb = this.repo
             .createQueryBuilder("p")
             .leftJoinAndSelect("p.categories", "c")
@@ -56,30 +55,28 @@ let ProductsService = class ProductsService {
             default:
                 qb.orderBy("p.id", "DESC");
         }
-        const page = (_a = q.page) !== null && _a !== void 0 ? _a : 1, limit = (_b = q.limit) !== null && _b !== void 0 ? _b : 20;
+        const page = q.page ?? 1, limit = q.limit ?? 20;
         qb.skip((page - 1) * limit).take(limit);
         const [items, total] = await qb.getManyAndCount();
         // attach bestDeal nếu cần
         let result = items;
         if (q.withDeal) {
             result = await Promise.all(items.map(async (p) => {
-                var _a, _b;
                 const pcs = await this.pcRepo.find({ where: { productId: p.id } });
                 const couponIds = pcs.map((x) => x.couponId);
                 if (couponIds.length === 0)
-                    return Object.assign(Object.assign({}, p), { bestDeal: null, primaryCouponId: null });
+                    return { ...p, bestDeal: null, primaryCouponId: null };
                 const coupons = await this.couponRepo.find({
                     where: { id: (0, typeorm_2.In)(couponIds), isActive: true },
                 });
-                const primary = (_b = (_a = pcs.find((x) => x.isPrimary)) === null || _a === void 0 ? void 0 : _a.couponId) !== null && _b !== void 0 ? _b : null;
+                const primary = pcs.find((x) => x.isPrimary)?.couponId ?? null;
                 const best = this.pricing.bestDealForProduct(p, coupons);
-                return Object.assign(Object.assign({}, p), { bestDeal: best, primaryCouponId: primary });
+                return { ...p, bestDeal: best, primaryCouponId: primary };
             }));
         }
         return { items: result, meta: { page, limit, total } };
     }
     async findOne(id, withDeal = true) {
-        var _a, _b;
         const p = await this.repo.findOne({
             where: { id },
             relations: ["categories", "badges"],
@@ -95,16 +92,15 @@ let ProductsService = class ProductsService {
                 where: { id: (0, typeorm_2.In)(couponIds), isActive: true },
             })
             : [];
-        const primary = (_b = (_a = pcs.find((x) => x.isPrimary)) === null || _a === void 0 ? void 0 : _a.couponId) !== null && _b !== void 0 ? _b : null;
+        const primary = pcs.find((x) => x.isPrimary)?.couponId ?? null;
         const best = coupons.length
             ? this.pricing.bestDealForProduct(p, coupons)
             : null;
-        return Object.assign(Object.assign({}, p), { bestDeal: best, primaryCouponId: primary });
+        return { ...p, bestDeal: best, primaryCouponId: primary };
     }
     async create(dto) {
-        var _a, _b, _c;
         const cats = await this.catRepo.findBy({ id: (0, typeorm_2.In)(dto.categoryIds) });
-        const badges = ((_a = dto.badgeIds) === null || _a === void 0 ? void 0 : _a.length)
+        const badges = dto.badgeIds?.length
             ? await this.badgeRepo.findBy({ id: (0, typeorm_2.In)(dto.badgeIds) })
             : [];
         const p = await this.repo.save(this.repo.create({
@@ -121,7 +117,7 @@ let ProductsService = class ProductsService {
         // tạo coupon kèm nếu có
         if (dto.createCoupon) {
             const c = await this.couponRepo.save(this.couponRepo.create({
-                id: (_b = dto.createCoupon.id) !== null && _b !== void 0 ? _b : `C_${Date.now()}`,
+                id: dto.createCoupon.id ?? `C_${Date.now()}`,
                 title: dto.createCoupon.title,
                 code: dto.createCoupon.code,
                 discountType: dto.createCoupon.discountType,
@@ -131,7 +127,7 @@ let ProductsService = class ProductsService {
                 endAt: dto.createCoupon.endAt
                     ? new Date(dto.createCoupon.endAt)
                     : undefined,
-                sourceId: (_c = dto.createCoupon.sourceId) !== null && _c !== void 0 ? _c : dto.sourceId,
+                sourceId: dto.createCoupon.sourceId ?? dto.sourceId,
                 isActive: true,
             }));
             await this.pcRepo.save(this.pcRepo.create({ productId: p.id, couponId: c.id, isPrimary: true }));
@@ -139,7 +135,6 @@ let ProductsService = class ProductsService {
         return this.findOne(p.id);
     }
     async update(id, dto) {
-        var _a, _b, _c, _d, _e, _f;
         const p = await this.repo.findOne({ where: { id } });
         if (!p)
             throw new common_1.NotFoundException("Product not found");
@@ -152,12 +147,12 @@ let ProductsService = class ProductsService {
             p.badges = badges;
         }
         Object.assign(p, {
-            name: (_a = dto.name) !== null && _a !== void 0 ? _a : p.name,
-            imageUrl: (_b = dto.imageUrl) !== null && _b !== void 0 ? _b : p.imageUrl,
-            priceOriginal: (_c = dto.priceOriginal) !== null && _c !== void 0 ? _c : p.priceOriginal,
-            priceCurrent: (_d = dto.priceCurrent) !== null && _d !== void 0 ? _d : p.priceCurrent,
-            description: (_e = dto.description) !== null && _e !== void 0 ? _e : p.description,
-            sourceId: (_f = dto.sourceId) !== null && _f !== void 0 ? _f : p.sourceId,
+            name: dto.name ?? p.name,
+            imageUrl: dto.imageUrl ?? p.imageUrl,
+            priceOriginal: dto.priceOriginal ?? p.priceOriginal,
+            priceCurrent: dto.priceCurrent ?? p.priceCurrent,
+            description: dto.description ?? p.description,
+            sourceId: dto.sourceId ?? p.sourceId,
         });
         await this.repo.save(p);
         return this.findOne(id);
