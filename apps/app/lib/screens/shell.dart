@@ -33,19 +33,21 @@ class _AppShellState extends State<AppShell> {
     GlobalKey<NavigatorState>(),
   ];
 
-  Future<bool> _onWillPop() async {
-    final nav = _navKeys[_index].currentState!;
-    if (nav.canPop()) {
-      nav.pop();
-      return false;
-    }
-    return true;
-  }
-
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: _onWillPop,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) {
+          return;
+        }
+        final nav = _navKeys[_index].currentState!;
+        if (nav.canPop()) {
+          nav.pop();
+        } else {
+          Navigator.of(context).maybePop();
+        }
+      },
       child: Scaffold(
         appBar: const AppHeader(),
         body: Center(

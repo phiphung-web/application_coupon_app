@@ -1,11 +1,13 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 import '../../core/money.dart';
 import '../../core/pricing.dart';
-import '../../data/impl/coupon_repo_mock.dart';
-import '../../data/impl/product_repo_mock.dart';
+import '../../data/impl/coupon_repo_remote.dart';
+import '../../data/impl/product_repo_remote.dart';
+import '../../data/repo/coupon_repo.dart';
+import '../../data/repo/product_repo.dart';
 import '../../models/coupon.dart';
 import '../../models/product.dart';
 import 'voucher_detail_screen.dart';
@@ -19,8 +21,8 @@ class ProductDetailScreen extends StatefulWidget {
 }
 
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
-  final _pRepo = ProductRepoMock();
-  final _cRepo = CouponRepoMock();
+  final ProductRepo _pRepo = ProductRepoRemote();
+  final CouponRepo _cRepo = CouponRepoRemote();
 
   Product? _product;
   PricingResult? _best;
@@ -60,7 +62,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   Widget build(BuildContext context) {
     if (_loading) return const Center(child: CircularProgressIndicator());
     if (_product == null) {
-      return const Center(child: Text('Không tìm thấy sản phẩm'));
+      return const Center(child: Text('KhÃ´ng tÃ¬m tháº¥y sáº£n pháº©m'));
     }
 
     final p = _product!;
@@ -121,12 +123,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         const SizedBox(height: 12),
         if (coupon != null) _CouponInline(coupon: coupon),
         const SizedBox(height: 16),
-        const Text('Mô tả', style: TextStyle(fontWeight: FontWeight.w700)),
+        const Text('MÃ´ táº£', style: TextStyle(fontWeight: FontWeight.w700)),
         const SizedBox(height: 6),
-        Text(p.description ?? 'Mô tả demo sản phẩm.'),
+        Text(p.description ?? 'MÃ´ táº£ demo sáº£n pháº©m.'),
         if (p.categories.isNotEmpty) ...[
           const SizedBox(height: 16),
-          const Text('Danh mục',
+          const Text('Danh má»¥c',
               style: TextStyle(fontWeight: FontWeight.w700)),
           Wrap(
             spacing: 8,
@@ -175,11 +177,11 @@ class _CouponInline extends StatelessWidget {
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(.05),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          ),
+            BoxShadow(
+              color: Colors.black.withValues(alpha: .05),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
+            ),
         ],
       ),
       padding: const EdgeInsets.all(16),
@@ -202,7 +204,7 @@ class _CouponInline extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      coupon.sourceId ?? 'Toàn sàn',
+                      coupon.sourceId ?? 'ToÃ n sÃ n',
                       style: const TextStyle(color: Colors.black54),
                     ),
                   ],
@@ -239,7 +241,7 @@ class _CouponInline extends StatelessWidget {
                 onTap: () {
                   Clipboard.setData(ClipboardData(text: coupon.code));
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Đã copy mã')),
+                    const SnackBar(content: Text('ÄÃ£ copy mÃ£')),
                   );
                 },
               ),
@@ -250,8 +252,8 @@ class _CouponInline extends StatelessWidget {
               _chip(
                 context,
                 coupon.isPercent
-                    ? 'Giảm ${coupon.discountValue}%'
-                    : 'Giảm ${money(coupon.discountValue)}',
+                    ? 'Giáº£m ${coupon.discountValue}%'
+                    : 'Giáº£m ${money(coupon.discountValue)}',
               ),
             ],
           ),
@@ -268,11 +270,11 @@ class _CouponInline extends StatelessWidget {
                   onPressed: () {
                     Clipboard.setData(ClipboardData(text: coupon.code));
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Đã copy mã')),
+                      const SnackBar(content: Text('ÄÃ£ copy mÃ£')),
                     );
                   },
                   icon: const Icon(Icons.copy, size: 18),
-                  label: const Text('Copy mã'),
+                  label: const Text('Copy mÃ£'),
                 ),
               ),
               const SizedBox(width: 8),
@@ -280,7 +282,7 @@ class _CouponInline extends StatelessWidget {
                 child: ElevatedButton.icon(
                   onPressed: () => _openLink(context),
                   icon: const Icon(Icons.launch, size: 18),
-                  label: const Text('Dùng mã'),
+                  label: const Text('DÃ¹ng mÃ£'),
                 ),
               ),
             ],
@@ -295,7 +297,7 @@ class _CouponInline extends StatelessWidget {
                   ),
                 );
               },
-              child: const Text('Xem chi tiết mã'),
+              child: const Text('Xem chi tiáº¿t mÃ£'),
             ),
           ),
         ],
@@ -310,7 +312,7 @@ class _CouponInline extends StatelessWidget {
     VoidCallback? onTap,
   }) {
     final bg = primary
-        ? Theme.of(ctx).colorScheme.primary.withOpacity(.1)
+        ? Theme.of(ctx).colorScheme.primary.withValues(alpha: .1)
         : Colors.grey.shade200;
     final fg = primary ? Theme.of(ctx).colorScheme.primary : Colors.black87;
     final child = Container(
@@ -333,20 +335,22 @@ class _CouponInline extends StatelessWidget {
   }
 
   Future<void> _openLink(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
     final link = coupon.deeplink ?? coupon.trackingLink;
     if (link == null || link.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         const SnackBar(content: Text('Chưa có liên kết dùng mã')),
       );
       return;
     }
-    if (await canLaunchUrlString(link)) {
-      await launchUrlString(link, mode: LaunchMode.externalApplication);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Không mở được: $link')),
+    final canLaunchLink = await canLaunchUrlString(link);
+    if (!canLaunchLink) {
+      messenger.showSnackBar(
+        SnackBar(content: Text('Không mở được: ')),
       );
+      return;
     }
+    await launchUrlString(link, mode: LaunchMode.externalApplication);
   }
 
   String _fmtDate(DateTime? d) {

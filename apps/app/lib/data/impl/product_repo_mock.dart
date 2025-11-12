@@ -1,9 +1,13 @@
 import 'dart:math';
+import 'package:flutter/foundation.dart' show debugPrint;
+
+import '../../core/result.dart';
 import '../../models/badge.dart';
 import '../../models/category.dart';
 import '../../models/product.dart';
+import '../repo/product_repo.dart';
 
-class ProductRepoMock {
+class ProductRepoMock implements ProductRepo {
   static final _rnd = Random(42);
 
   static final _categories = List<Category>.generate(
@@ -43,7 +47,8 @@ class ProductRepoMock {
     );
   });
 
-  Future<List<Product>> list({
+  @override
+  Future<PageResult<Product>> list({
     int page = 1,
     int pageSize = 20,
     int? categoryId,
@@ -86,20 +91,38 @@ class ProductRepoMock {
 
     final start = (page - 1) * pageSize;
     final end = min(start + pageSize, list.length);
-    if (start >= list.length) return [];
-    return list.sublist(start, end);
+    final meta = {'page': page, 'limit': pageSize, 'total': list.length};
+    if (start >= list.length) {
+      return PageResult(
+        data: const [],
+        hasMore: false,
+        nextPage: page,
+        meta: meta,
+      );
+    }
+    final slice = list.sublist(start, end);
+    final hasMore = end < list.length;
+    return PageResult(
+      data: slice,
+      hasMore: hasMore,
+      nextPage: hasMore ? page + 1 : page,
+      meta: meta,
+    );
   }
 
+  @override
   Future<List<Product>> hot({int limit = 8}) async {
     final list = _data.where((p) => p.isHot).toList();
     list.sort((a, b) => b.discountPercent.compareTo(a.discountPercent));
     return list.take(limit).toList();
   }
 
+  @override
   Future<Product?> getById(int id) async {
     try {
       return _data.firstWhere((p) => p.id == id);
     } catch (_) {
+      debugPrint('ProductRepoMock.getById missing id=$id');
       return null;
     }
   }

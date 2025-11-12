@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/coupon.dart';
 import '../../data/repo/coupon_repo.dart';
-import '../../data/impl/coupon_repo_mock.dart';
+import '../../data/impl/coupon_repo_remote.dart';
 import '../../widgets/coupon_list_item.dart';
 import '../detail/voucher_detail_screen.dart';
 
@@ -12,7 +12,7 @@ class HotCouponsScreen extends StatefulWidget {
 }
 
 class _HotCouponsScreenState extends State<HotCouponsScreen> {
-  final CouponRepo _repo = CouponRepoMock();
+  final CouponRepo _repo = CouponRepoRemote();
   List<Coupon> _items = [];
   bool _loading = true;
 

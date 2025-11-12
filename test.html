@@ -1,0 +1,163 @@
+<!-- ====== LADIPAGE: HTML + CSS + JS (cố định ngày 02/11/2025) ====== -->
+<div id="lucky-app" class="lucky-wrap">
+    <h2 class="title">👥 Danh sách người đủ điều kiện</h2>
+
+    <div class="table-card">
+        <div class="table-scroll">
+            <table id="mainTable" class="tbl">
+                <thead>
+                    <tr>
+                        <th>UserID</th>
+                        <th>AGBet</th>
+                        <th>TotalIn</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="3" class="muted">Đang tải dữ liệu…</td>
+                    </tr>
+                </tbody>
+
+            </table>
+        </div>
+    </div>
+
+    <p id="statusText" class="status"></p>
+</div>
+
+<style>
+    .lucky-wrap {
+        font-family: Arial, sans-serif;
+        text-align: center;
+    }
+
+    .title {
+        margin: 6px 0 10px;
+        font-size: clamp(18px, 2.8vw, 24px);
+    }
+
+    .table-card {
+        margin: 0 auto;
+        width: min(100%, 1000px);
+        background: #fff;
+        border: 1px solid #eee;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .table-scroll {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .tbl {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+    }
+
+    .tbl thead th {
+        position: sticky;
+        top: 0;
+        background: #ffd000;
+        z-index: 1;
+        padding: 10px 8px;
+        border-bottom: 1px solid #eee;
+    }
+
+    .tbl td {
+        padding: 8px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .tbl tfoot td {
+        background: #fcfcfc;
+        padding: 10px 8px;
+    }
+
+    .right {
+        text-align: right;
+    }
+
+    .bold {
+        font-weight: 700;
+    }
+
+    .muted {
+        color: #666;
+        text-align: center;
+        padding: 14px;
+    }
+
+    .status {
+        font-size: 12px;
+        color: #666;
+        margin-top: 8px;
+    }
+
+    @media (max-width: 480px) {
+        .tbl {
+            font-size: 13px;
+        }
+    }
+</style>
+
+<script>
+    /* ====== CẤU HÌNH ====== */
+    const PROXY_URL = "https://api-proxy-1.steve-pepito-ph.workers.dev/"; // <-- THAY bằng URL proxy Cloudflare / Vercel / Apps Script
+    const FIXED_DATE = "02/11/2025"; // <-- ngày cố định cần lấy dữ liệu
+
+    /* ====== UTIL ====== */
+    const fmt = (n) => Number(n || 0).toLocaleString('vi-VN');
+
+    /* ====== RENDER ====== */
+    function renderTable(list) {
+        const tbody = document.querySelector("#mainTable tbody");
+        const sumBetEl = document.getElementById("sumBet");
+        const sumInEl = document.getElementById("sumIn");
+
+        tbody.innerHTML = "";
+        if (!list || !list.length) {
+            tbody.innerHTML = `<tr><td colspan="3" class="muted">Không có dữ liệu</td></tr>`;
+        } else {
+            list.forEach(it => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+        <td style="text-align:center;">${it.UserID}</td>
+        <td class="right">${fmt(it.AGBet)}</td>
+        <td class="right">${fmt(it.TotalIn)}</td>
+      `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        const sumBet = list.reduce((s, x) => s + Number(x.AGBet || 0), 0);
+        const sumIn = list.reduce((s, x) => s + Number(x.TotalIn || 0), 0);
+        sumBetEl.textContent = fmt(sumBet);
+        sumInEl.textContent = fmt(sumIn);
+
+        document.getElementById("statusText").textContent = `Ngày: ${FIXED_DATE} • Tổng ${list.length} dòng`;
+    }
+
+    /* ====== API ====== */
+    async function callApi() {
+        try {
+            const resp = await fetch(PROXY_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ date: FIXED_DATE })
+            });
+            const text = await resp.text();
+            let json; try { json = JSON.parse(text); } catch { json = []; }
+            const data = Array.isArray(json) ? json : (Array.isArray(json.data) ? json.data : []);
+            renderTable(data);
+        } catch (e) {
+            console.error(e);
+            document.querySelector("#mainTable tbody").innerHTML =
+                `<tr><td colspan="3" class="muted" style="color:#b00;">Không tải được dữ liệu.</td></tr>`;
+            document.getElementById("statusText").textContent = "Vui lòng kiểm tra PROXY_URL hoặc mạng.";
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", callApi);
+</script>

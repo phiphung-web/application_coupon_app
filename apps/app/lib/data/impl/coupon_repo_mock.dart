@@ -56,6 +56,7 @@ class CouponRepoMock implements CouponRepo {
     String? q,
     String? sort,
     String? shopId,
+    String? badgeKey,
   }) async {
     var list = _data.where((c) => c.isActive).toList();
     if (categoryId != null) {
@@ -67,6 +68,14 @@ class CouponRepoMock implements CouponRepo {
     }
     if (shopId != null && shopId.isNotEmpty) {
       list = list.where((c) => c.sourceId == shopId).toList();
+    }
+    if (badgeKey != null && badgeKey.isNotEmpty) {
+      final key = badgeKey.toUpperCase();
+      list = list
+          .where(
+            (c) => c.badges.any((b) => b.key.toUpperCase() == key),
+          )
+          .toList();
     }
     if (q != null && q.isNotEmpty) {
       final query = q.toLowerCase();
@@ -96,6 +105,7 @@ class CouponRepoMock implements CouponRepo {
 
     final start = (page - 1) * pageSize;
     final end = min(start + pageSize, list.length);
+    final meta = {'page': page, 'limit': pageSize, 'total': list.length};
     final slice = (start >= list.length)
         ? <Coupon>[]
         : list.sublist(start, min(end, list.length));
@@ -105,6 +115,7 @@ class CouponRepoMock implements CouponRepo {
       data: slice,
       hasMore: hasMore,
       nextPage: hasMore ? page + 1 : page,
+      meta: meta,
     );
   }
 

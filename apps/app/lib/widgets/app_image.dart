@@ -17,8 +17,6 @@ class AppImage extends StatelessWidget {
   bool get _isHttp =>
       src != null &&
       (src!.startsWith('http://') || src!.startsWith('https://'));
-  bool get _isAsset => src != null && src!.startsWith('assets');
-
   @override
   Widget build(BuildContext context) {
     if (_isHttp) {

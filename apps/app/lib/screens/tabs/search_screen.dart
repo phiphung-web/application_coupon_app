@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../data/impl/product_repo_mock.dart';
-import '../../data/impl/coupon_repo_mock.dart';
+import '../../core/result.dart';
+import '../../data/impl/product_repo_remote.dart';
+import '../../data/impl/coupon_repo_remote.dart';
+import '../../data/repo/product_repo.dart';
+import '../../data/repo/coupon_repo.dart';
 import '../../models/product.dart';
 import '../../models/coupon.dart';
 import '../detail/product_detail_screen.dart';
@@ -15,22 +18,37 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
-  final _pRepo = ProductRepoMock();
-  final _cRepo = CouponRepoMock();
+  final ProductRepo _pRepo = ProductRepoRemote();
+  final CouponRepo _cRepo = CouponRepoRemote();
   final _ctrl = TextEditingController();
 
   List<Product> _products = [];
   List<Coupon> _coupons = [];
   bool _loading = false;
+  bool _fallbackNotified = false;
 
   Future<void> _doSearch(String q) async {
     setState(() => _loading = true);
-    final ps = await _pRepo.list(page: 1, pageSize: 50, q: q);
-    final cs = await _cRepo.list(page: 1, pageSize: 50, q: q);
+    final PageResult<Product> ps = await _pRepo.list(page: 1, pageSize: 50, q: q);
+    final PageResult<Coupon> cs = await _cRepo.list(page: 1, pageSize: 50, q: q);
     setState(() {
-      _products = ps;
+      _products = ps.data;
       _coupons = cs.data;
       _loading = false;
+    });
+    _maybeNotifyFallback(ps.fromFallback || cs.fromFallback);
+  }
+
+  void _maybeNotifyFallback(bool fromFallback) {
+    if (!fromFallback || _fallbackNotified) return;
+    _fallbackNotified = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Không kết nối được server, đang tạm hiển thị dữ liệu demo.'),
+        ),
+      );
     });
   }
 

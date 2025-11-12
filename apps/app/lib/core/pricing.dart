@@ -30,9 +30,13 @@ bool _canApply(Product p, Coupon c) {
   if (c.endAt != null && c.endAt!.isBefore(DateTime.now())) return false;
   if (c.sourceId != null &&
       c.sourceId!.isNotEmpty &&
-      c.sourceId != p.sourceId) return false;
+      c.sourceId != p.sourceId) {
+    return false;
+  }
   if (!_categoryMatch(p, c)) return false;
-  if (c.minSpend != null && p.priceEffective < c.minSpend!) return false;
+  if (c.minSpend != null && p.priceEffective < c.minSpend!) {
+    return false;
+  }
   return true;
 }
 

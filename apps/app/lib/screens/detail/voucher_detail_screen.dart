@@ -1,9 +1,10 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 import '../../core/money.dart';
-import '../../data/impl/coupon_repo_mock.dart';
+import '../../data/impl/coupon_repo_remote.dart';
+import '../../data/repo/coupon_repo.dart';
 import '../../models/coupon.dart';
 
 class VoucherDetailScreen extends StatefulWidget {
@@ -15,7 +16,7 @@ class VoucherDetailScreen extends StatefulWidget {
 }
 
 class _VoucherDetailScreenState extends State<VoucherDetailScreen> {
-  final _repo = CouponRepoMock();
+  final CouponRepo _repo = CouponRepoRemote();
   Coupon? _coupon;
   bool _loading = true;
 
@@ -37,7 +38,7 @@ class _VoucherDetailScreenState extends State<VoucherDetailScreen> {
   @override
   Widget build(BuildContext context) {
     if (_loading) return const Center(child: CircularProgressIndicator());
-    if (_coupon == null) return const Center(child: Text('Không tìm thấy mã'));
+    if (_coupon == null) return const Center(child: Text('KhÃ´ng tÃ¬m tháº¥y mÃ£'));
 
     final c = _coupon!;
     final isHot =
@@ -100,7 +101,7 @@ class _VoucherDetailScreenState extends State<VoucherDetailScreen> {
               onTap: () {
                 Clipboard.setData(ClipboardData(text: c.code));
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Đã copy mã')),
+                  const SnackBar(content: Text('ÄÃ£ copy mÃ£')),
                 );
               },
             ),
@@ -111,14 +112,14 @@ class _VoucherDetailScreenState extends State<VoucherDetailScreen> {
             _chip(
               context,
               c.isPercent
-                  ? 'Giảm ${c.discountValue}%'
-                  : 'Giảm ${money(c.discountValue)}',
+                  ? 'Giáº£m ${c.discountValue}%'
+                  : 'Giáº£m ${money(c.discountValue)}',
             ),
           ],
         ),
         const SizedBox(height: 6),
         Text(
-          'Hạn dùng: ${_fmtDate(c.endAt)}',
+          'Háº¡n dÃ¹ng: ${_fmtDate(c.endAt)}',
           style: Theme.of(context).textTheme.bodySmall,
         ),
         const Divider(height: 24),
@@ -129,37 +130,39 @@ class _VoucherDetailScreenState extends State<VoucherDetailScreen> {
                 onPressed: () {
                   Clipboard.setData(ClipboardData(text: c.code));
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Đã copy mã')),
+                    const SnackBar(content: Text('ÄÃ£ copy mÃ£')),
                   );
                 },
                 icon: const Icon(Icons.copy, size: 18),
-                label: const Text('Copy mã'),
+                label: const Text('Copy mÃ£'),
               ),
             ),
             const SizedBox(width: 8),
             Expanded(
               child: ElevatedButton.icon(
                 onPressed: () async {
+                  final messenger = ScaffoldMessenger.of(context);
                   final link = c.deeplink ?? c.trackingLink;
                   if (link == null || link.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    messenger.showSnackBar(
                       const SnackBar(content: Text('Chưa có liên kết dùng mã')),
                     );
                     return;
                   }
-                  if (await canLaunchUrlString(link)) {
-                    await launchUrlString(
-                      link,
-                      mode: LaunchMode.externalApplication,
+                  final canLaunchLink = await canLaunchUrlString(link);
+                  if (!canLaunchLink) {
+                    messenger.showSnackBar(
+                      SnackBar(content: Text('Không mở được: ')),
                     );
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Không mở được: $link')),
-                    );
+                    return;
                   }
+                  await launchUrlString(
+                    link,
+                    mode: LaunchMode.externalApplication,
+                  );
                 },
                 icon: const Icon(Icons.launch, size: 18),
-                label: const Text('Dùng mã'),
+                label: const Text('DÃ¹ng mÃ£'),
               ),
             ),
           ],
@@ -167,22 +170,22 @@ class _VoucherDetailScreenState extends State<VoucherDetailScreen> {
         const SizedBox(height: 8),
         Text(
           c.sourceId != null
-              ? 'Áp dụng tại: ${c.sourceId}'
-              : 'Áp dụng: Toàn sàn',
+              ? 'Ãp dá»¥ng táº¡i: ${c.sourceId}'
+              : 'Ãp dá»¥ng: ToÃ n sÃ n',
         ),
         if (c.categories.isNotEmpty)
           Text(
-            'Danh mục áp dụng: ${c.categories.map((cat) => cat.name).join(', ')}',
+            'Danh má»¥c Ã¡p dá»¥ng: ${c.categories.map((cat) => cat.name).join(', ')}',
           ),
         const SizedBox(height: 16),
         const Text(
-          'Điều kiện & điều khoản',
+          'Äiá»u kiá»‡n & Ä‘iá»u khoáº£n',
           style: TextStyle(fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 4),
         Text(
-          'Demo: Có thể yêu cầu tối thiểu ${c.minSpend != null ? money(c.minSpend!) : 'không'}.'
-          ' Mức giảm tối đa ${c.maxDiscount != null ? money(c.maxDiscount!) : 'không giới hạn'}.',
+          'Demo: CÃ³ thá»ƒ yÃªu cáº§u tá»‘i thiá»ƒu ${c.minSpend != null ? money(c.minSpend!) : 'khÃ´ng'}.'
+          ' Má»©c giáº£m tá»‘i Ä‘a ${c.maxDiscount != null ? money(c.maxDiscount!) : 'khÃ´ng giá»›i háº¡n'}.',
         ),
       ],
     );
@@ -195,7 +198,7 @@ class _VoucherDetailScreenState extends State<VoucherDetailScreen> {
     VoidCallback? onTap,
   }) {
     final bg = primary
-        ? Theme.of(ctx).colorScheme.primary.withOpacity(.1)
+        ? Theme.of(ctx).colorScheme.primary.withValues(alpha: .1)
         : Colors.grey.shade200;
     final fg = primary ? Theme.of(ctx).colorScheme.primary : Colors.black87;
     final child = Container(

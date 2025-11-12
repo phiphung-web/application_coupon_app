@@ -138,8 +138,9 @@ bool _canApply(Product p, Coupon c) {
 
   final pType = _productType(p);
   final types = _couponApplicableTypes(c);
-  if (types.isNotEmpty && (pType == null || !types.contains(pType)))
+  if (types.isNotEmpty && (pType == null || !types.contains(pType))) {
     return false;
+  }
 
   final pCat = _productCategoryId(p);
   final mainCat = _couponCategoryId(c);
@@ -147,8 +148,9 @@ bool _canApply(Product p, Coupon c) {
   if (mainCat != null &&
       mainCat != 0 &&
       mainCat != pCat &&
-      !extraCats.contains(pCat))
+      !extraCats.contains(pCat)) {
     return false;
+  }
 
   final endAt = _couponEndAt(c);
   if (endAt != null && endAt.isBefore(DateTime.now())) return false;

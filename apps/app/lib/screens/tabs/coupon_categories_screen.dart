@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/category.dart';
 import '../../data/repo/category_repo.dart';
-import '../../data/impl/category_repo_mock.dart';
+import '../../data/impl/category_repo_remote.dart';
 import '../../widgets/app_image.dart';
 
 class CouponCategoriesScreen extends StatefulWidget {
@@ -11,7 +11,7 @@ class CouponCategoriesScreen extends StatefulWidget {
 }
 
 class _CouponCategoriesScreenState extends State<CouponCategoriesScreen> {
-  final CategoryRepo _repo = CategoryRepoMock();
+  final CategoryRepo _repo = CategoryRepoRemote();
   List<Category> _cats = [];
   bool _loading = true;
 

@@ -23,7 +23,7 @@ class CouponListItem extends StatelessWidget {
           borderRadius: BorderRadius.circular(14),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(.05),
+              color: Colors.black.withValues(alpha: .05),
               blurRadius: 6,
               offset: const Offset(0, 3),
             ),
@@ -111,7 +111,7 @@ class CouponListItem extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
         color: primary
-            ? Theme.of(ctx).colorScheme.primary.withOpacity(.1)
+            ? Theme.of(ctx).colorScheme.primary.withValues(alpha: .1)
             : Colors.grey.shade200,
         borderRadius: BorderRadius.circular(8),
       ),

@@ -1,11 +1,11 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'app_image.dart';
 
 class ProductDealCard extends StatelessWidget {
   final String title;
   final String imageUrl;
   final int priceOriginal;
-  final int? priceAfter; // null nếu không có mã phù hợp
+  final int? priceAfter; // null náº¿u khÃ´ng cÃ³ mÃ£ phÃ¹ há»£p
   final String? couponCode;
   final VoidCallback? onTap;
 
@@ -49,7 +49,7 @@ class ProductDealCard extends StatelessWidget {
                   Row(
                     children: [
                       if (hasDeal) ...[
-                        Text('${_fmt(priceAfter!)}',
+                        Text(_fmt(priceAfter!),
                             style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
                         const SizedBox(width: 8),
                         Text(_fmt(priceOriginal),
@@ -81,7 +81,7 @@ class ProductDealCard extends StatelessWidget {
                         color: const Color(0xFFEEF2FF),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Text('Áp dụng mã $couponCode'),
+                      child: Text('Ãp dá»¥ng mÃ£ $couponCode'),
                     ),
                   ],
                 ],
@@ -93,15 +93,17 @@ class ProductDealCard extends StatelessWidget {
     );
   }
 
-  String _fmt(int v) {
-    // VND đơn giản, không locale để tránh phụ thuộc
-    final s = v.toString();
-    final buf = StringBuffer();
-    for (int i = 0; i < s.length; i++) {
-      final idx = s.length - i;
-      buf.write(s[i]);
-      if (idx > 1 && idx % 3 == 1) buf.write('.');
+  String _fmt(int value) {
+    final digits = value.toString();
+    final buffer = StringBuffer();
+    for (int i = 0; i < digits.length; i++) {
+      final reversedIndex = digits.length - i;
+      buffer.write(digits[i]);
+      if (reversedIndex > 1 && reversedIndex % 3 == 1) {
+        buffer.write('.');
+      }
     }
-    return '$buf₫';
+    final formatted = buffer.toString();
+    return '$formatted₫';
   }
 }

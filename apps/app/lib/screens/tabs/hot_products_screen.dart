@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/product.dart';
-import '../../data/impl/product_repo_mock.dart';
+import '../../data/impl/product_repo_remote.dart';
+import '../../data/repo/product_repo.dart';
 import '../../widgets/product_card.dart';
 import '../detail/product_detail_screen.dart';
 
@@ -11,7 +12,7 @@ class HotProductsScreen extends StatefulWidget {
 }
 
 class _HotProductsScreenState extends State<HotProductsScreen> {
-  final ProductRepoMock _repo = ProductRepoMock();
+  final ProductRepo _repo = ProductRepoRemote();
   List<Product> _items = [];
   bool _loading = true;
 
