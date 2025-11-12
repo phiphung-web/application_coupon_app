@@ -18,8 +18,13 @@ function load<T>(file: string): T {
 }
 
 (async () => {
-  const ds = await dataSource.initialize();
-  await ds.initialize();
+  // --- SỬA LỖI TẠI ĐÂY ---
+  // Kiểm tra: Nếu chưa kết nối thì mới khởi tạo, ngược lại dùng luôn cái đã có.
+  if (!dataSource.isInitialized) {
+    await dataSource.initialize();
+  }
+  const ds = dataSource;
+  // -----------------------
 
   const sourceRepo = ds.getRepository(Source);
   const badgeRepo = ds.getRepository(Badge);
@@ -28,6 +33,8 @@ function load<T>(file: string): T {
   const couponRepo = ds.getRepository(Coupon);
   const prodRepo = ds.getRepository(Product);
   const pcRepo = ds.getRepository(ProductCoupon);
+
+  console.log("🌱 Starting seed...");
 
   // sources
   for (const s of load<any[]>("./sources.json")) {
@@ -99,9 +106,13 @@ function load<T>(file: string): T {
     );
   }
 
-  console.log("Seed done");
-  await ds.destroy();
+  console.log("✅ Seed done");
+  
+  // Ngắt kết nối an toàn
+  if (ds.isInitialized) {
+    await ds.destroy();
+  }
 })().catch((e) => {
-  console.error(e);
+  console.error("❌ Seed failed:", e);
   process.exit(1);
 });

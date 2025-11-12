@@ -20,8 +20,13 @@ function load(file) {
     return JSON.parse((0, fs_1.readFileSync)(p, "utf8"));
 }
 (async () => {
-    const ds = await typeorm_config_1.default.initialize();
-    await ds.initialize();
+    // --- SỬA LỖI TẠI ĐÂY ---
+    // Kiểm tra: Nếu chưa kết nối thì mới khởi tạo, ngược lại dùng luôn cái đã có.
+    if (!typeorm_config_1.default.isInitialized) {
+        await typeorm_config_1.default.initialize();
+    }
+    const ds = typeorm_config_1.default;
+    // -----------------------
     const sourceRepo = ds.getRepository(source_entity_1.Source);
     const badgeRepo = ds.getRepository(badge_entity_1.Badge);
     const pCatRepo = ds.getRepository(category_entity_1.Category);
@@ -29,6 +34,7 @@ function load(file) {
     const couponRepo = ds.getRepository(coupon_entity_1.Coupon);
     const prodRepo = ds.getRepository(product_entity_1.Product);
     const pcRepo = ds.getRepository(product_coupon_entity_1.ProductCoupon);
+    console.log("🌱 Starting seed...");
     // sources
     for (const s of load("./sources.json")) {
         await sourceRepo.save(sourceRepo.create(s));
@@ -83,9 +89,12 @@ function load(file) {
             isPrimary: !!link.isPrimary,
         }));
     }
-    console.log("Seed done");
-    await ds.destroy();
+    console.log("✅ Seed done");
+    // Ngắt kết nối an toàn
+    if (ds.isInitialized) {
+        await ds.destroy();
+    }
 })().catch((e) => {
-    console.error(e);
+    console.error("❌ Seed failed:", e);
     process.exit(1);
 });
