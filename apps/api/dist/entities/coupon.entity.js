@@ -13,7 +13,7 @@ exports.Coupon = void 0;
 const typeorm_1 = require("typeorm");
 const badge_entity_1 = require("./badge.entity");
 const coupon_category_entity_1 = require("./coupon_category.entity");
-let Coupon = class Coupon {
+let Coupon = class Coupon extends typeorm_1.BaseEntity {
 };
 exports.Coupon = Coupon;
 __decorate([

@@ -1,4 +1,5 @@
 import {
+  BaseEntity,
   Column,
   Entity,
   Index,
@@ -9,7 +10,7 @@ import {
 
 @Entity("product_coupons")
 @Unique(["productId", "couponId"])
-export class ProductCoupon {
+export class ProductCoupon extends BaseEntity {
   @PrimaryGeneratedColumn() id!: number;
 
   @Index() @Column() productId!: number;

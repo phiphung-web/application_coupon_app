@@ -1,4 +1,5 @@
-export declare class Category {
+import { BaseEntity } from "typeorm";
+export declare class Category extends BaseEntity {
     id: number;
     name: string;
     imageUrl?: string;

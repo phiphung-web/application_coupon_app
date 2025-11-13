@@ -1,4 +1,5 @@
 import {
+  BaseEntity,
   Column,
   Entity,
   Index,
@@ -15,7 +16,7 @@ import { CouponCategory } from "./coupon_category.entity";
 export type DiscountType = "PERCENT" | "FIXED";
 
 @Entity("coupons")
-export class Coupon {
+export class Coupon extends BaseEntity {
   @PrimaryColumn({ length: 64 }) id!: string;
 
   @Index() @Column({ length: 200 }) title!: string;

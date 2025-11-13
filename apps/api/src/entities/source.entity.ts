@@ -1,4 +1,5 @@
 import {
+  BaseEntity,
   Column,
   Entity,
   Index,
@@ -11,7 +12,7 @@ import {
 export type SourceType = "ECOM" | "APP" | "GAME" | "SERVICE" | "OTHER";
 
 @Entity("sources")
-export class Source {
+export class Source extends BaseEntity {
   @PrimaryColumn({ length: 50 })
   id!: string; // ví dụ: 'shopee', 'lazada', 'genshin'
 

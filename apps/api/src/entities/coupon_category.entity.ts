@@ -1,4 +1,5 @@
 import {
+  BaseEntity,
   Column,
   Entity,
   Index,
@@ -9,7 +10,7 @@ import {
 } from "typeorm";
 
 @Entity("coupon_categories")
-export class CouponCategory {
+export class CouponCategory extends BaseEntity {
   @PrimaryGeneratedColumn() id!: number;
 
   @Index() @Column({ length: 120 }) name!: string;

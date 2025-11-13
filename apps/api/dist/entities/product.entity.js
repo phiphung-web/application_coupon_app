@@ -14,7 +14,7 @@ const typeorm_1 = require("typeorm");
 const category_entity_1 = require("./category.entity");
 const source_entity_1 = require("./source.entity");
 const badge_entity_1 = require("./badge.entity");
-let Product = class Product {
+let Product = class Product extends typeorm_1.BaseEntity {
 };
 exports.Product = Product;
 __decorate([

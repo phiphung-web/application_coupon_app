@@ -1,7 +1,8 @@
+import { BaseEntity } from "typeorm";
 import { Category } from "./category.entity";
 import { Source } from "./source.entity";
 import { Badge } from "./badge.entity";
-export declare class Product {
+export declare class Product extends BaseEntity {
     id: number;
     name: string;
     imageUrl?: string;

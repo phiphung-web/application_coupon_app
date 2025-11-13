@@ -1,4 +1,5 @@
-export declare class Badge {
+import { BaseEntity } from "typeorm";
+export declare class Badge extends BaseEntity {
     id: number;
     key: string;
     label: string;

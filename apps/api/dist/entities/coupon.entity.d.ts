@@ -1,7 +1,8 @@
+import { BaseEntity } from "typeorm";
 import { Badge } from "./badge.entity";
 import { CouponCategory } from "./coupon_category.entity";
 export type DiscountType = "PERCENT" | "FIXED";
-export declare class Coupon {
+export declare class Coupon extends BaseEntity {
     id: string;
     title: string;
     code: string;

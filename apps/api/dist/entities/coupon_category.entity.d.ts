@@ -1,4 +1,5 @@
-export declare class CouponCategory {
+import { BaseEntity } from "typeorm";
+export declare class CouponCategory extends BaseEntity {
     id: number;
     name: string;
     imageUrl?: string;

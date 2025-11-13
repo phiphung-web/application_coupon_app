@@ -11,8 +11,9 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Category = void 0;
 const typeorm_1 = require("typeorm");
-let Category = class Category {
+let Category = class Category extends typeorm_1.BaseEntity {
     constructor() {
+        super(...arguments);
         this.priority = 0;
         this.isActive = true;
     }

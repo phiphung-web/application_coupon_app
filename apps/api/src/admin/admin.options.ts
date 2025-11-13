@@ -6,8 +6,9 @@ import { CouponCategory } from "../entities/coupon_category.entity";
 import { Badge } from "../entities/badge.entity";
 import { Source } from "../entities/source.entity";
 import { ProductCoupon } from "../entities/product_coupon.entity";
+import { DataSource } from "typeorm";
 
-export function buildAdminOptions(): any {
+export function buildAdminOptions(ds: DataSource) {
   const resources: { resource: any; options?: ResourceOptions }[] = [
     {
       resource: Product,
@@ -113,6 +114,7 @@ export function buildAdminOptions(): any {
   return {
     rootPath: "/admin",
     resources,
+    databases: [ds],
     branding: {
       companyName: "Coupon App Admin",
       softwareBrothers: false,

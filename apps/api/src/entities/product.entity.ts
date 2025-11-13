@@ -1,4 +1,5 @@
 import {
+  BaseEntity,
   Column,
   Entity,
   Index,
@@ -15,7 +16,7 @@ import { Source } from "./source.entity";
 import { Badge } from "./badge.entity";
 
 @Entity("products")
-export class Product {
+export class Product extends BaseEntity {
   @PrimaryGeneratedColumn() id!: number;
 
   @Index() @Column({ length: 200 }) name!: string;

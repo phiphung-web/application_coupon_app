@@ -1,4 +1,5 @@
 import {
+  BaseEntity,
   Column,
   Entity,
   Index,
@@ -9,7 +10,7 @@ import {
 } from "typeorm";
 
 @Entity("badges")
-export class Badge {
+export class Badge extends BaseEntity {
   @PrimaryGeneratedColumn() id!: number;
 
   @Index() @Column({ length: 50 }) key!: string; // 'HOT', 'TOP_SELL'

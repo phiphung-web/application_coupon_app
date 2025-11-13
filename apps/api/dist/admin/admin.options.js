@@ -8,7 +8,7 @@ const coupon_category_entity_1 = require("../entities/coupon_category.entity");
 const badge_entity_1 = require("../entities/badge.entity");
 const source_entity_1 = require("../entities/source.entity");
 const product_coupon_entity_1 = require("../entities/product_coupon.entity");
-function buildAdminOptions() {
+function buildAdminOptions(ds) {
     const resources = [
         {
             resource: product_entity_1.Product,
@@ -113,6 +113,7 @@ function buildAdminOptions() {
     return {
         rootPath: "/admin",
         resources,
+        databases: [ds],
         branding: {
             companyName: "Coupon App Admin",
             softwareBrothers: false,
