@@ -2,50 +2,40 @@ import {
   BaseEntity,
   Column,
   Entity,
-  Index,
-  PrimaryColumn,
+  OneToMany,
+  PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
-  DeleteDateColumn,
 } from "typeorm";
-
-export type SourceType = "ECOM" | "APP" | "GAME" | "SERVICE" | "OTHER";
+import { Item } from "./item.entity";
+import { Coupon } from "./coupon.entity";
 
 @Entity("sources")
 export class Source extends BaseEntity {
-  @PrimaryColumn({ length: 50 })
-  id!: string; // ví dụ: 'shopee', 'lazada', 'genshin'
+  @PrimaryGeneratedColumn()
+  id!: number;
 
-  @Index()
-  @Column({ length: 120 })
+  @Column({ length: 255 })
   name!: string;
 
-  @Column({ type: "varchar", length: 10, default: "ECOM" })
-  type!: SourceType;
+  @Column("text", { nullable: true })
+  description?: string;
 
-  @Column({ nullable: true })
-  logoUrl?: string;
+  @Column({ name: "image_url", length: 255, nullable: true })
+  imageUrl?: string;
 
-  @Column({ nullable: true })
-  domain?: string;
+  @Column({ name: "website_url", length: 255, nullable: true })
+  websiteUrl?: string;
 
-  @Column({ nullable: true })
-  packageId?: string; // Android app id
+  @OneToMany(() => Item, (item) => item.source)
+  items!: Item[];
 
-  @Column({ nullable: true })
-  bundleId?: string; // iOS bundle id
+  @OneToMany(() => Coupon, (coupon) => coupon.source)
+  coupons!: Coupon[];
 
-  @Column({ nullable: true })
-  publisher?: string; // Publisher name
+  @CreateDateColumn({ name: "created_at" })
+  createdAt!: Date;
 
-  @Column("int", { default: 0 })
-  priority!: number;
-
-  @Index()
-  @Column({ default: true })
-  isActive!: boolean;
-
-  @CreateDateColumn() createdAt!: Date;
-  @UpdateDateColumn() updatedAt!: Date;
-  @DeleteDateColumn() deletedAt?: Date;
+  @UpdateDateColumn({ name: "updated_at" })
+  updatedAt!: Date;
 }

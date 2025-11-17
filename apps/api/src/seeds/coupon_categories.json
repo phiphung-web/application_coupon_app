@@ -1,4 +1,14 @@
 [
-  { "name": "Mã sàn TMĐT", "priority": 90 },
-  { "name": "Mã freeship", "priority": 80 }
+  {
+    "name": "Mã sàn TMĐT",
+    "description": "Mã giảm giá áp dụng cho các sàn thương mại điện tử."
+  },
+  {
+    "name": "Mã freeship",
+    "description": "Mã miễn phí vận chuyển."
+  },
+  {
+    "name": "Mã ứng dụng",
+    "description": "Ưu đãi dành riêng cho ứng dụng di động."
+  }
 ]

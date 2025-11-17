@@ -5,7 +5,6 @@ import {
   Delete,
   Get,
   Param,
-  ParseBoolPipe,
   ParseIntPipe,
   Patch,
   Post,
@@ -24,13 +23,13 @@ export class CategoriesController {
   }
 
   @Get("all")
-  listAll(@Query("active", new DefaultValuePipe("false")) active: string) {
-    return this.svc.listAll(active === "true");
+  listAll() {
+    return this.svc.listAll();
   }
 
   @Get("tree")
-  tree(@Query("active", new DefaultValuePipe("false")) active: string) {
-    return this.svc.tree(active === "true");
+  tree() {
+    return this.svc.tree();
   }
 
   @Get(":id")

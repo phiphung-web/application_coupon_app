@@ -1,37 +1,48 @@
 import { Injectable } from "@nestjs/common";
-import { Product } from "../../entities/product.entity";
-import { Coupon } from "../../entities/coupon.entity";
+import { Item } from "../../entities/item.entity";
+import { Coupon, DiscountType } from "../../entities/coupon.entity";
 
 @Injectable()
 export class PricingService {
-  bestDealForProduct(p: Product, coupons: Coupon[]) {
-    const base = p.priceCurrent ?? p.priceOriginal;
-    let pick: Coupon | null = null;
-    let bestAfter = base;
+  bestDealForProduct(item: Item, coupons: Coupon[]) {
+    const base = item.price ? Number(item.price) : 0;
+    if (!base) return null;
 
     const now = new Date();
+    let bestAfter = base;
+    let picked: Coupon | null = null;
 
-    for (const c of coupons) {
-      if (!c.isActive) continue;
-      if (c.endAt && c.endAt < now) continue;
-      if (c.minSpend && base < c.minSpend) continue;
+    for (const coupon of coupons) {
+      if (coupon.startDate && coupon.startDate > now) continue;
+      if (coupon.endDate && coupon.endDate < now) continue;
+
+      const value = coupon.discountValue
+        ? Number(coupon.discountValue)
+        : undefined;
 
       let cut = 0;
-      if (c.discountType === "FIXED") {
-        cut = Math.min(c.discountValue, base);
+      if (
+        coupon.discountType === DiscountType.FIXED_AMOUNT &&
+        value != null
+      ) {
+        cut = Math.min(value, base);
+      } else if (
+        coupon.discountType === DiscountType.PERCENT &&
+        value != null
+      ) {
+        cut = Math.min((base * value) / 100, base);
       } else {
-        const raw = Math.floor((base * c.discountValue) / 100);
-        cut = Math.min(raw, c.maxDiscount ?? raw);
+        cut = value ?? 0;
       }
 
       const after = Math.max(base - cut, 0);
       if (after < bestAfter) {
         bestAfter = after;
-        pick = c;
+        picked = coupon;
       }
     }
 
-    if (!pick) return null;
-    return { after: bestAfter, saved: base - bestAfter, coupon: pick };
+    if (!picked) return null;
+    return { after: bestAfter, saved: base - bestAfter, coupon: picked };
   }
 }

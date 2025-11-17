@@ -49,7 +49,7 @@ export class ProductsController {
   @Delete(":id/coupons/:couponId")
   unlink(
     @Param("id", ParseIntPipe) id: number,
-    @Param("couponId") couponId: string
+    @Param("couponId", ParseIntPipe) couponId: number
   ) {
     return this.svc.unlinkCoupon(id, couponId);
   }

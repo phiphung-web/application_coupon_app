@@ -3,31 +3,31 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  JoinColumn,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
+  JoinColumn,
 } from "typeorm";
 import { Source } from "./source.entity";
-import { CouponCategory } from "./coupon_category.entity";
+import { ItemCategory } from "./item_category.entity";
 import { Badge } from "./badge.entity";
 import { ItemCouponLink } from "./item_coupon_link.entity";
 
-export enum DiscountType {
-  PERCENT = "PERCENT",
-  FIXED_AMOUNT = "FIXED_AMOUNT",
-  FREESHIP = "FREESHIP",
-  GIFT = "GIFT",
+export enum ItemType {
+  PRODUCT = "PRODUCT",
+  APP = "APP",
+  GAME = "GAME",
+  SERVICE = "SERVICE",
 }
 
-@Entity("coupons")
-export class Coupon extends BaseEntity {
+@Entity("items")
+export class Item extends BaseEntity {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Column({ length: 100 })
-  code!: string;
+  @Column({ length: 255 })
+  name!: string;
 
   @Column("text", { nullable: true })
   description?: string;
@@ -36,29 +36,28 @@ export class Coupon extends BaseEntity {
   imageUrl?: string;
 
   @Column({
-    name: "discount_type",
+    name: "item_type",
     type: "enum",
-    enum: DiscountType,
-    default: DiscountType.FIXED_AMOUNT,
+    enum: ItemType,
+    default: ItemType.PRODUCT,
   })
-  discountType!: DiscountType;
+  itemType!: ItemType;
+
+  @Column({ name: "item_url", length: 255, nullable: true })
+  itemUrl?: string;
 
   @Column({
-    name: "discount_value",
     type: "decimal",
     precision: 12,
     scale: 2,
     nullable: true,
   })
-  discountValue?: string;
-
-  @Column({ name: "deal_url", length: 255, nullable: true })
-  dealUrl?: string;
+  price?: string;
 
   @Column({ name: "source_id", nullable: true })
   sourceId?: number;
 
-  @ManyToOne(() => Source, (source) => source.coupons, {
+  @ManyToOne(() => Source, (source) => source.items, {
     onDelete: "SET NULL",
   })
   @JoinColumn({ name: "source_id" })
@@ -67,27 +66,21 @@ export class Coupon extends BaseEntity {
   @Column({ name: "category_id", nullable: true })
   categoryId?: number;
 
-  @ManyToOne(() => CouponCategory, (category) => category.coupons, {
+  @ManyToOne(() => ItemCategory, (category) => category.items, {
     onDelete: "SET NULL",
   })
   @JoinColumn({ name: "category_id" })
-  category?: CouponCategory;
+  category?: ItemCategory;
 
   @Column({ name: "badge_id", nullable: true })
   badgeId?: number;
 
-  @ManyToOne(() => Badge, (badge) => badge.coupons, { onDelete: "SET NULL" })
+  @ManyToOne(() => Badge, (badge) => badge.items, { onDelete: "SET NULL" })
   @JoinColumn({ name: "badge_id" })
   badge?: Badge;
 
-  @Column({ name: "start_date", type: "timestamptz", nullable: true })
-  startDate?: Date;
-
-  @Column({ name: "end_date", type: "timestamptz", nullable: true })
-  endDate?: Date;
-
-  @OneToMany(() => ItemCouponLink, (link) => link.coupon)
-  itemLinks!: ItemCouponLink[];
+  @OneToMany(() => ItemCouponLink, (link) => link.item)
+  couponLinks!: ItemCouponLink[];
 
   @CreateDateColumn({ name: "created_at" })
   createdAt!: Date;

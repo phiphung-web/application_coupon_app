@@ -1,41 +1,54 @@
 import {
-  IsArray,
-  IsBoolean,
   IsDateString,
   IsEnum,
-  IsInt,
   IsNotEmpty,
+  IsNumber,
   IsOptional,
   IsString,
-  Min,
 } from "class-validator";
-
-export enum DiscountTypeDto {
-  PERCENT = "PERCENT",
-  FIXED = "FIXED",
-}
+import { DiscountType } from "../../entities/coupon.entity";
 
 export class UpsertCouponDto {
-  @IsOptional() @IsString() id?: string;
-  @IsString() @IsNotEmpty() title!: string;
-  @IsString() @IsNotEmpty() code!: string;
+  @IsOptional()
+  id?: number;
 
-  @IsEnum(DiscountTypeDto) discountType!: DiscountTypeDto;
-  @IsInt() @Min(0) discountValue!: number; // % hoặc cent
+  @IsString()
+  @IsNotEmpty()
+  code!: string;
 
-  @IsOptional() @IsInt() @Min(0) minSpend?: number;
-  @IsOptional() @IsInt() @Min(0) maxDiscount?: number;
+  @IsOptional()
+  @IsString()
+  description?: string;
 
-  @IsOptional() @IsDateString() endAt?: string;
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
 
-  @IsOptional() @IsString() sourceId?: string;
-  @IsOptional() @IsString() imageUrl?: string;
+  @IsEnum(DiscountType)
+  discountType!: DiscountType;
 
-  @IsOptional() @IsArray() categoryIds?: number[]; // coupon categories
-  @IsOptional() @IsArray() badgeIds?: number[];
+  @IsOptional()
+  @IsNumber()
+  discountValue?: number | null;
 
-  @IsOptional() @IsInt() priority?: number;
-  @IsOptional() @IsString() trackingLink?: string;
-  @IsOptional() @IsString() deeplink?: string;
-  @IsOptional() @IsBoolean() isActive?: boolean;
+  @IsOptional()
+  @IsString()
+  dealUrl?: string;
+
+  @IsOptional()
+  sourceId?: number;
+
+  @IsOptional()
+  categoryId?: number;
+
+  @IsOptional()
+  badgeId?: number;
+
+  @IsOptional()
+  @IsDateString()
+  startDate?: string;
+
+  @IsOptional()
+  @IsDateString()
+  endDate?: string;
 }

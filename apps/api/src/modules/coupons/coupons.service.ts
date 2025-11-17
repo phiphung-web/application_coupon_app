@@ -1,69 +1,92 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In, MoreThanOrEqual } from 'typeorm';
-import { Coupon } from '../../entities/coupon.entity';
-import { Badge } from '../../entities/badge.entity';
-import { CouponCategory } from '../../entities/coupon_category.entity';
-import { UpsertCouponDto } from './dto';
-import { PaginationDto } from '../../common/dtos/pagination.dto';
+import { Injectable, NotFoundException } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { Coupon } from "../../entities/coupon.entity";
+import { UpsertCouponDto } from "./dto";
+import { PaginationDto } from "../../common/dtos/pagination.dto";
 
 @Injectable()
 export class CouponsService {
   constructor(
-    @InjectRepository(Coupon) private readonly repo: Repository<Coupon>,
-    @InjectRepository(Badge) private readonly badgeRepo: Repository<Badge>,
-    @InjectRepository(CouponCategory) private readonly catRepo: Repository<CouponCategory>,
+    @InjectRepository(Coupon) private readonly repo: Repository<Coupon>
   ) {}
 
   async paginate(q: PaginationDto & { active?: string }) {
-    const qb = this.repo.createQueryBuilder('c')
-      .leftJoinAndSelect('c.badges', 'b')
-      .leftJoinAndSelect('c.categories', 'k');
+    const qb = this.repo
+      .createQueryBuilder("c")
+      .leftJoinAndSelect("c.source", "source")
+      .leftJoinAndSelect("c.category", "category")
+      .leftJoinAndSelect("c.badge", "badge");
 
-    if (q.q) qb.andWhere('c.title ILIKE :q OR c.code ILIKE :q', { q: `%${q.q}%` });
-    if (q.source) qb.andWhere('c.sourceId = :sid', { sid: q.source });
-    if (q.cat) qb.andWhere('k.id = :cid', { cid: q.cat });
-    if (q.badge) qb.andWhere('b.key = :bk', { bk: q.badge });
-    if (q.active === 'true') qb.andWhere('c.isActive = true').andWhere('(c.endAt IS NULL OR c.endAt >= NOW())');
+    if (q.q)
+      qb.andWhere("(c.code ILIKE :q OR c.description ILIKE :q)", {
+        q: `%${q.q}%`,
+      });
+    if (q.source)
+      qb.andWhere("c.sourceId = :sid", { sid: Number(q.source) || q.source });
+    if (q.cat) qb.andWhere("c.categoryId = :cid", { cid: q.cat });
+    if (q.badge)
+      qb.andWhere("(badge.slug = :slug OR badge.name ILIKE :slugLike)", {
+        slug: q.badge,
+        slugLike: q.badge,
+      });
+    if (q.active === "true") {
+      qb.andWhere(
+        "(c.startDate IS NULL OR c.startDate <= NOW()) AND (c.endDate IS NULL OR c.endDate >= NOW())"
+      );
+    }
 
-    qb.orderBy('c.priority', 'DESC').addOrderBy('c.createdAt', 'DESC');
+    qb.orderBy("COALESCE(c.startDate, c.created_at)", "DESC");
 
-    const page = q.page ?? 1, limit = q.limit ?? 20;
+    const page = q.page ?? 1;
+    const limit = q.limit ?? 20;
     qb.skip((page - 1) * limit).take(limit);
 
     const [items, total] = await qb.getManyAndCount();
     return { items, meta: { page, limit, total } };
   }
 
-  async get(id: string) {
-    const c = await this.repo.findOne({ where: { id }, relations: ['badges','categories'] });
-    if (!c) throw new NotFoundException('Coupon not found');
-    return c;
+  async get(id: number) {
+    const coupon = await this.repo.findOne({
+      where: { id },
+      relations: ["source", "category", "badge"],
+    });
+    if (!coupon) throw new NotFoundException("Coupon not found");
+    return coupon;
   }
 
   async upsert(dto: UpsertCouponDto) {
-    const badges = dto.badgeIds?.length ? await this.badgeRepo.findBy({ id: In(dto.badgeIds) }) : [];
-    const cats = dto.categoryIds?.length ? await this.catRepo.findBy({ id: In(dto.categoryIds) }) : [];
+    let entity: Coupon;
+    if (dto.id) {
+      entity = await this.repo.findOne({ where: { id: dto.id } });
+      if (!entity) throw new NotFoundException("Coupon not found");
+    } else {
+      entity = this.repo.create();
+    }
 
-    const entity = this.repo.create({
-      id: dto.id ?? `C_${Date.now()}`,
-      title: dto.title, code: dto.code,
-      discountType: dto.discountType, discountValue: dto.discountValue,
-      minSpend: dto.minSpend, maxDiscount: dto.maxDiscount,
-      endAt: dto.endAt ? new Date(dto.endAt) : undefined,
-      sourceId: dto.sourceId, imageUrl: dto.imageUrl,
-      priority: dto.priority, trackingLink: dto.trackingLink, deeplink: dto.deeplink,
-      isActive: dto.isActive ?? true,
-      badges, categories: cats,
+    Object.assign(entity, {
+      code: dto.code,
+      description: dto.description,
+      imageUrl: dto.imageUrl,
+      discountType: dto.discountType,
+      discountValue:
+        dto.discountValue != null ? String(dto.discountValue) : null,
+      dealUrl: dto.dealUrl,
+      sourceId: dto.sourceId,
+      categoryId: dto.categoryId,
+      badgeId: dto.badgeId,
+      startDate: dto.startDate ? new Date(dto.startDate) : undefined,
+      endDate: dto.endDate ? new Date(dto.endDate) : undefined,
     });
-    await this.repo.save(entity);
-    return this.get(entity.id);
+
+    const saved = await this.repo.save(entity);
+    return this.get(saved.id);
   }
 
-  async deactivate(id: string) {
-    const c = await this.get(id);
-    c.isActive = false;
-    await this.repo.save(c);
+  async deactivate(id: number) {
+    const coupon = await this.get(id);
+    coupon.endDate = new Date();
+    await this.repo.save(coupon);
     return { ok: true };
   }
 }

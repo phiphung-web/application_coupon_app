@@ -10,25 +10,26 @@ export class BadgesService {
   ) {}
 
   list() {
-    return this.repo.find({
-      where: { isActive: true },
-      order: { priority: "DESC" },
-    });
+    return this.repo.find({ order: { id: "DESC" } });
   }
+
   get(id: number) {
     return this.repo.findOneByOrFail({ id });
   }
+
   async create(data: Partial<Badge>) {
     return this.repo.save(this.repo.create(data));
   }
+
   async update(id: number, data: Partial<Badge>) {
-    const b = await this.repo.findOneBy({ id });
-    if (!b) throw new NotFoundException();
-    Object.assign(b, data);
-    return this.repo.save(b);
+    const badge = await this.repo.findOneBy({ id });
+    if (!badge) throw new NotFoundException();
+    Object.assign(badge, data);
+    return this.repo.save(badge);
   }
+
   async remove(id: number) {
-    await this.repo.softDelete({ id });
+    await this.repo.delete({ id });
     return { ok: true };
   }
 }

@@ -1,27 +1,41 @@
 import {
   BaseEntity,
   Column,
-  Entity,
-  Index,
-  PrimaryGeneratedColumn,
   CreateDateColumn,
+  Entity,
+  OneToMany,
+  PrimaryGeneratedColumn,
   UpdateDateColumn,
-  DeleteDateColumn,
 } from "typeorm";
+import { Item } from "./item.entity";
+import { Coupon } from "./coupon.entity";
 
 @Entity("badges")
 export class Badge extends BaseEntity {
-  @PrimaryGeneratedColumn() id!: number;
+  @PrimaryGeneratedColumn()
+  id!: number;
 
-  @Index() @Column({ length: 50 }) key!: string; // 'HOT', 'TOP_SELL'
-  @Column({ length: 120 }) label!: string; // 'Hot'
-  @Column({ nullable: true }) color?: string; // '#FFFFFF'
-  @Column({ nullable: true }) bgColor?: string; // '#FF0000'
-  @Column({ nullable: true }) icon?: string; // 'flame'
-  @Column("int", { default: 0 }) priority!: number;
-  @Index() @Column({ default: true }) isActive!: boolean;
+  @Column({ length: 50 })
+  name!: string;
 
-  @CreateDateColumn() createdAt!: Date;
-  @UpdateDateColumn() updatedAt!: Date;
-  @DeleteDateColumn() deletedAt?: Date;
+  @Column({ length: 50, unique: true, nullable: true })
+  slug?: string;
+
+  @Column({ name: "icon_url", length: 255, nullable: true })
+  iconUrl?: string;
+
+  @Column({ name: "color_code", length: 7, nullable: true })
+  colorCode?: string;
+
+  @OneToMany(() => Item, (item) => item.badge)
+  items!: Item[];
+
+  @OneToMany(() => Coupon, (coupon) => coupon.badge)
+  coupons!: Coupon[];
+
+  @CreateDateColumn({ name: "created_at" })
+  createdAt!: Date;
+
+  @UpdateDateColumn({ name: "updated_at" })
+  updatedAt!: Date;
 }

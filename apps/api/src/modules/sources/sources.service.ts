@@ -11,33 +11,31 @@ export class SourcesService {
   ) {}
 
   async list() {
-    return this.repo.find({ order: { priority: "DESC", name: "ASC" } });
+    return this.repo.find({ order: { name: "ASC" } });
   }
 
-  async get(id: string) {
+  async get(id: number) {
     const s = await this.repo.findOne({ where: { id } });
     if (!s) throw new NotFoundException("Source not found");
     return s;
   }
 
   async create(dto: CreateSourceDto) {
-    const exists = await this.repo.findOne({ where: { id: dto.id } });
-    if (exists) throw new Error("Source ID already exists");
     const s = this.repo.create(dto);
     return this.repo.save(s);
   }
 
-  async update(id: string, dto: UpdateSourceDto) {
+  async update(id: number, dto: UpdateSourceDto) {
     const s = await this.repo.findOne({ where: { id } });
     if (!s) throw new NotFoundException("Source not found");
     Object.assign(s, dto);
     return this.repo.save(s);
   }
 
-  async remove(id: string) {
+  async remove(id: number) {
     const s = await this.repo.findOne({ where: { id } });
     if (!s) throw new NotFoundException("Source not found");
-    await this.repo.softDelete({ id });
+    await this.repo.delete({ id });
     return { ok: true };
   }
 }

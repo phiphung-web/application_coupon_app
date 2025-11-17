@@ -1,52 +1,102 @@
 import {
-  IsArray,
   IsBoolean,
-  IsInt,
+  IsEnum,
   IsNotEmpty,
+  IsNumber,
   IsOptional,
   IsString,
-  Min,
 } from "class-validator";
+import { ItemType } from "../../entities/item.entity";
+import { DiscountType } from "../../entities/coupon.entity";
 
 export class CreateProductDto {
-  @IsString() @IsNotEmpty() name!: string;
-  @IsOptional() @IsString() imageUrl?: string;
+  @IsString()
+  @IsNotEmpty()
+  name!: string;
 
-  @IsInt() @Min(0) priceOriginal!: number; // cent
-  @IsOptional() @IsInt() @Min(0) priceCurrent?: number;
+  @IsOptional()
+  @IsString()
+  description?: string;
 
-  @IsOptional() @IsString() description?: string;
-  @IsOptional() @IsString() sourceId?: string;
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
 
-  @IsArray() categoryIds!: number[]; // product categories
-  @IsOptional() @IsArray() badgeIds?: number[];
+  @IsOptional()
+  @IsEnum(ItemType)
+  itemType: ItemType = ItemType.PRODUCT;
 
-  // tạo coupon kèm
-  @IsOptional() createCoupon?: {
-    id?: string;
-    title: string;
+  @IsOptional()
+  @IsString()
+  itemUrl?: string;
+
+  @IsOptional()
+  @IsNumber()
+  price?: number | null;
+
+  @IsOptional()
+  sourceId?: number;
+
+  @IsOptional()
+  categoryId?: number;
+
+  @IsOptional()
+  badgeId?: number;
+
+  @IsOptional()
+  createCoupon?: {
     code: string;
-    discountType: "PERCENT" | "FIXED";
-    discountValue: number; // cent hoặc %
-    minSpend?: number;
-    maxDiscount?: number;
-    endAt?: string;
-    sourceId?: string;
+    description?: string;
+    imageUrl?: string;
+    discountType: DiscountType;
+    discountValue?: number | null;
+    dealUrl?: string;
+    badgeId?: number;
+    categoryId?: number;
+    startDate?: string;
+    endDate?: string;
   };
 }
 
 export class UpdateProductDto {
-  @IsOptional() @IsString() name?: string;
-  @IsOptional() @IsString() imageUrl?: string;
-  @IsOptional() @IsInt() @Min(0) priceOriginal?: number;
-  @IsOptional() @IsInt() @Min(0) priceCurrent?: number;
-  @IsOptional() @IsString() description?: string;
-  @IsOptional() @IsString() sourceId?: string;
-  @IsOptional() categoryIds?: number[];
-  @IsOptional() badgeIds?: number[];
+  @IsOptional()
+  @IsString()
+  name?: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
+
+  @IsOptional()
+  @IsEnum(ItemType)
+  itemType?: ItemType;
+
+  @IsOptional()
+  @IsString()
+  itemUrl?: string;
+
+  @IsOptional()
+  @IsNumber()
+  price?: number | null;
+
+  @IsOptional()
+  sourceId?: number;
+
+  @IsOptional()
+  categoryId?: number;
+
+  @IsOptional()
+  badgeId?: number;
 }
 
 export class LinkCouponDto {
-  @IsString() couponId!: string;
-  @IsBoolean() isPrimary = false;
+  @IsNumber()
+  couponId!: number;
+
+  @IsBoolean()
+  isPrimary = false;
 }

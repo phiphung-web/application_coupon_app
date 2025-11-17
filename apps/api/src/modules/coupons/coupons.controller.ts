@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -21,7 +22,7 @@ export class CouponsController {
   }
 
   @Get(":id")
-  get(@Param("id") id: string) {
+  get(@Param("id", ParseIntPipe) id: number) {
     return this.svc.get(id);
   }
 
@@ -31,7 +32,7 @@ export class CouponsController {
   }
 
   @Patch(":id/deactivate")
-  deactivate(@Param("id") id: string) {
+  deactivate(@Param("id", ParseIntPipe) id: number) {
     return this.svc.deactivate(id);
   }
 }

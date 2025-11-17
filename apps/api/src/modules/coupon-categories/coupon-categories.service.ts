@@ -11,25 +11,26 @@ export class CouponCategoriesService {
   ) {}
 
   list() {
-    return this.repo.find({
-      where: { isActive: true },
-      order: { priority: "DESC" },
-    });
+    return this.repo.find({ order: { id: "DESC" } });
   }
+
   get(id: number) {
     return this.repo.findOneByOrFail({ id });
   }
+
   async create(data: Partial<CouponCategory>) {
     return this.repo.save(this.repo.create(data));
   }
+
   async update(id: number, data: Partial<CouponCategory>) {
-    const c = await this.repo.findOneBy({ id });
-    if (!c) throw new NotFoundException();
-    Object.assign(c, data);
-    return this.repo.save(c);
+    const category = await this.repo.findOneBy({ id });
+    if (!category) throw new NotFoundException();
+    Object.assign(category, data);
+    return this.repo.save(category);
   }
+
   async remove(id: number) {
-    await this.repo.softDelete({ id });
+    await this.repo.delete({ id });
     return { ok: true };
   }
 }

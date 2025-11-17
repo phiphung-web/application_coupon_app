@@ -1,60 +1,39 @@
-import {
-  IsBoolean,
-  IsEnum,
-  IsInt,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  MaxLength,
-  Min,
-} from "class-validator";
-import { SourceType } from "../../entities/source.entity";
+import { IsNotEmpty, IsOptional, IsString, MaxLength } from "class-validator";
 
 export class CreateSourceDto {
   @IsString()
   @IsNotEmpty()
-  @MaxLength(50)
-  id!: string;
-
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(120)
+  @MaxLength(255)
   name!: string;
 
-  @IsEnum(["ECOM", "APP", "GAME", "SERVICE", "OTHER"])
-  type!: SourceType;
-
-  @IsOptional() @IsString() logoUrl?: string;
-  @IsOptional() @IsString() domain?: string;
-  @IsOptional() @IsString() packageId?: string;
-  @IsOptional() @IsString() bundleId?: string;
-  @IsOptional() @IsString() publisher?: string;
+  @IsOptional()
+  @IsString()
+  description?: string;
 
   @IsOptional()
-  @IsInt()
-  @Min(0)
-  priority?: number;
+  @IsString()
+  imageUrl?: string;
 
   @IsOptional()
-  @IsBoolean()
-  isActive?: boolean;
+  @IsString()
+  websiteUrl?: string;
 }
 
 export class UpdateSourceDto {
-  @IsOptional() @IsString() name?: string;
   @IsOptional()
-  @IsEnum(["ECOM", "APP", "GAME", "SERVICE", "OTHER"])
-  type?: SourceType;
-  @IsOptional() @IsString() logoUrl?: string;
-  @IsOptional() @IsString() domain?: string;
-  @IsOptional() @IsString() packageId?: string;
-  @IsOptional() @IsString() bundleId?: string;
-  @IsOptional() @IsString() publisher?: string;
+  @IsString()
+  @MaxLength(255)
+  name?: string;
+
   @IsOptional()
-  @IsInt()
-  @Min(0)
-  priority?: number;
+  @IsString()
+  description?: string;
+
   @IsOptional()
-  @IsBoolean()
-  isActive?: boolean;
+  @IsString()
+  imageUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  websiteUrl?: string;
 }

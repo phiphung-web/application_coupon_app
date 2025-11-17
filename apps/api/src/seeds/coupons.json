@@ -1,38 +1,41 @@
 [
   {
-    "id": "C_SP10",
-    "title": "Shopee 10%",
     "code": "SP10",
+    "description": "Giảm 10% tối đa 100k cho đơn hàng Shopee.",
+    "imageUrl": "https://cdn.example.com/coupons/sp10.png",
     "discountType": "PERCENT",
     "discountValue": 10,
-    "minSpend": 2000,
-    "maxDiscount": 500,
-    "endAt": "2026-12-31T23:59:59Z",
-    "sourceId": "shopee",
-    "isActive": true
+    "dealUrl": "https://shopee.vn/deal/sp10",
+    "source": "Shopee",
+    "category": "Mã sàn TMĐT",
+    "badge": "hot",
+    "startDate": "2025-01-01T00:00:00Z",
+    "endDate": "2025-12-31T23:59:59Z"
   },
   {
-    "id": "C_LZ5",
-    "title": "Lazada $5",
     "code": "LZ5",
-    "discountType": "FIXED",
-    "discountValue": 500,
-    "endAt": "2026-12-31T23:59:59Z",
-    "sourceId": "lazada",
-    "isActive": true
+    "description": "Giảm 50k cho đơn từ 300k tại Lazada.",
+    "imageUrl": "https://cdn.example.com/coupons/lz5.png",
+    "discountType": "FIXED_AMOUNT",
+    "discountValue": 50,
+    "dealUrl": "https://www.lazada.vn/deal/lz5",
+    "source": "Lazada",
+    "category": "Mã freeship",
+    "badge": "top-sell",
+    "startDate": "2025-01-01T00:00:00Z",
+    "endDate": "2025-06-30T23:59:59Z"
   },
   {
-    "id": "C_SHOPEE10",
-    "title": "Shopee 10% toàn sàn",
-    "code": "SP10",
-    "discountType": "PERCENT",
-    "discountValue": 10,
-    "minSpend": 2000,
-    "maxDiscount": 500,
-    "endAt": "2026-12-31T23:59:59Z",
-    "sourceId": "shopee",
-    "imageUrl": "https://cdn.example.com/images/shopee10.png",
-    "priority": 100,
-    "isActive": true
+    "code": "FASTGO_NEW",
+    "description": "Tặng chuyến đi 30k cho người dùng FastGo lần đầu.",
+    "imageUrl": "https://cdn.example.com/coupons/fastgo.png",
+    "discountType": "GIFT",
+    "discountValue": null,
+    "dealUrl": "https://fastgo.vn/deal/new",
+    "source": "Tiki",
+    "category": "Mã ứng dụng",
+    "badge": "new",
+    "startDate": "2025-02-01T00:00:00Z",
+    "endDate": "2025-08-31T23:59:59Z"
   }
 ]

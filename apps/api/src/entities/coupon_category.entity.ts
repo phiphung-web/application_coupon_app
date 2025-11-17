@@ -1,25 +1,31 @@
 import {
   BaseEntity,
   Column,
-  Entity,
-  Index,
-  PrimaryGeneratedColumn,
   CreateDateColumn,
+  Entity,
+  OneToMany,
+  PrimaryGeneratedColumn,
   UpdateDateColumn,
-  DeleteDateColumn,
 } from "typeorm";
+import { Coupon } from "./coupon.entity";
 
 @Entity("coupon_categories")
 export class CouponCategory extends BaseEntity {
-  @PrimaryGeneratedColumn() id!: number;
+  @PrimaryGeneratedColumn()
+  id!: number;
 
-  @Index() @Column({ length: 120 }) name!: string;
-  @Column({ nullable: true }) imageUrl?: string;
-  @Column("int", { nullable: true }) parentId?: number;
-  @Column("int", { default: 0 }) priority!: number;
-  @Index() @Column({ default: true }) isActive!: boolean;
+  @Column({ length: 100 })
+  name!: string;
 
-  @CreateDateColumn() createdAt!: Date;
-  @UpdateDateColumn() updatedAt!: Date;
-  @DeleteDateColumn() deletedAt?: Date;
+  @Column("text", { nullable: true })
+  description?: string;
+
+  @OneToMany(() => Coupon, (coupon) => coupon.category)
+  coupons!: Coupon[];
+
+  @CreateDateColumn({ name: "created_at" })
+  createdAt!: Date;
+
+  @UpdateDateColumn({ name: "updated_at" })
+  updatedAt!: Date;
 }

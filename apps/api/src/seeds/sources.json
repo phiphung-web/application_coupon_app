@@ -1,30 +1,20 @@
 [
   {
-    "id": "shopee",
     "name": "Shopee",
-    "type": "ECOM",
-    "logoUrl": "https://cdn/.../shopee.png",
-    "priority": 100
+    "description": "Nền tảng thương mại điện tử phổ biến với nhiều ngành hàng.",
+    "imageUrl": "https://cdn.example.com/sources/shopee.png",
+    "websiteUrl": "https://shopee.vn"
   },
   {
-    "id": "lazada",
     "name": "Lazada",
-    "type": "ECOM",
-    "logoUrl": "https://cdn/.../lazada.png",
-    "priority": 90
+    "description": "Hệ sinh thái mua sắm Lazada.",
+    "imageUrl": "https://cdn.example.com/sources/lazada.png",
+    "websiteUrl": "https://www.lazada.vn"
   },
   {
-    "id": "tiki",
     "name": "Tiki",
-    "type": "ECOM",
-    "logoUrl": "https://cdn/.../tiki.png",
-    "priority": 80
-  },
-  {
-    "id": "genshin",
-    "name": "Genshin Impact",
-    "type": "GAME",
-    "logoUrl": "https://cdn/.../genshin.png",
-    "priority": 50
+    "description": "Sàn thương mại điện tử Tiki.",
+    "imageUrl": "https://cdn.example.com/sources/tiki.png",
+    "websiteUrl": "https://tiki.vn"
   }
 ]
