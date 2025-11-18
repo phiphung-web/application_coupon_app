@@ -1,12 +1,10 @@
 class Shop {
   final String id;
   final String name;
-  final String type; // ECOM | APP | GAME | SERVICE | OTHER
+  final String type;
+  final String? description;
   final String? logoUrl;
-  final String? domain;
-  final String? packageId;
-  final String? bundleId;
-  final String? publisher;
+  final String? websiteUrl;
   final int priority;
   final bool isActive;
 
@@ -14,11 +12,9 @@ class Shop {
     required this.id,
     required this.name,
     this.type = 'ECOM',
+    this.description,
     this.logoUrl,
-    this.domain,
-    this.packageId,
-    this.bundleId,
-    this.publisher,
+    this.websiteUrl,
     this.priority = 0,
     this.isActive = true,
   });
@@ -29,11 +25,9 @@ class Shop {
       id: id,
       name: json['name'] ?? '',
       type: json['type'] ?? 'ECOM',
-      logoUrl: json['logoUrl'] ?? json['logo_url'],
-      domain: json['domain'],
-      packageId: json['packageId'],
-      bundleId: json['bundleId'],
-      publisher: json['publisher'],
+      description: json['description'],
+      logoUrl: json['imageUrl'] ?? json['logoUrl'],
+      websiteUrl: json['websiteUrl'] ?? json['domain'],
       priority: json['priority'] is num
           ? (json['priority'] as num).toInt()
           : int.tryParse('${json['priority']}') ?? 0,
@@ -45,11 +39,9 @@ class Shop {
         'id': id,
         'name': name,
         'type': type,
-        'logoUrl': logoUrl,
-        'domain': domain,
-        'packageId': packageId,
-        'bundleId': bundleId,
-        'publisher': publisher,
+        'description': description,
+        'imageUrl': logoUrl,
+        'websiteUrl': websiteUrl,
         'priority': priority,
         'isActive': isActive,
       };

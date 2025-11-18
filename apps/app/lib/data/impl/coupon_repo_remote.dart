@@ -89,7 +89,7 @@ class CouponRepoRemote implements CouponRepo {
   }
 
   @override
-  Future<Coupon?> getById(String id) async {
+  Future<Coupon?> getById(int id) async {
     try {
       final json = await _api.get('coupons/$id');
       if (json is Map<String, dynamic>) {

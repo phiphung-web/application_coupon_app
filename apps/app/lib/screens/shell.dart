@@ -96,7 +96,7 @@ class _TabNavigator extends StatelessWidget {
           settings: settings,
         );
       case AppRoutes.coupon:
-        final id = settings.arguments as String;
+        final id = settings.arguments as int;
         return MaterialPageRoute(
           builder: (_) => VoucherDetailScreen(couponId: id),
           settings: settings,

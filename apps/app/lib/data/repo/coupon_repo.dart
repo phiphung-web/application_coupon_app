@@ -13,5 +13,5 @@ abstract class CouponRepo {
   });
 
   Future<List<Coupon>> hot({int limit = 10});
-  Future<Coupon?> getById(String id);
+  Future<Coupon?> getById(int id);
 }

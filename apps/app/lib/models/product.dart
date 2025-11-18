@@ -12,12 +12,13 @@ class Product {
   final String currency;
   final String? description;
   final String? sourceId;
+  final String? sourceName;
   final String? itemType;
   final String? itemUrl;
   final List<Category> categories;
   final List<Badge> badges;
   final ProductDeal? bestDeal;
-  final String? primaryCouponId;
+  final int? primaryCouponId;
 
   const Product({
     required this.id,
@@ -28,6 +29,7 @@ class Product {
     this.imageUrl,
     this.description,
     this.sourceId,
+    this.sourceName,
     this.itemType,
     this.itemUrl,
     this.categories = const [],
@@ -70,28 +72,40 @@ class Product {
     return const [];
   }
 
+  static int? _toInt(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    return int.tryParse(value.toString());
+  }
+
   factory Product.fromJson(Map<String, dynamic> json) {
     final priceCents =
         _toCents(json['price'] ?? json['priceOriginal'] ?? json['priceCurrent']);
     final bestDeal = json['bestDeal'] != null
         ? ProductDeal.fromJson(json['bestDeal'] as Map<String, dynamic>)
         : null;
+    final source = json['source'];
     return Product(
-      id: json['id'] as int,
+      id: json['id'] is int ? json['id'] as int : int.tryParse('${json['id']}') ?? 0,
       name: json['name'] ?? '',
       imageUrl: json['imageUrl'],
       priceOriginal: priceCents,
-      priceCurrent: bestDeal?.after ?? _toCents(json['priceCurrent']),
-      currency: json['currency'] ?? 'USD',
+      priceCurrent: json.containsKey('priceCurrent')
+          ? _toCents(json['priceCurrent'])
+          : (bestDeal?.after ?? priceCents),
+      currency: (json['currency'] ?? 'VND').toString(),
       description: json['description'],
       sourceId: json['sourceId']?.toString() ??
-          (json['source'] != null ? '${json['source']['id']}' : null),
+          (source is Map<String, dynamic> ? '${source['id']}' : null),
+      sourceName: source is Map<String, dynamic>
+          ? source['name']?.toString()
+          : json['sourceName']?.toString(),
       itemType: json['itemType']?.toString(),
       itemUrl: json['itemUrl'],
       categories: _parseCategories(json),
       badges: _parseBadges(json),
       bestDeal: bestDeal,
-      primaryCouponId: json['primaryCouponId']?.toString(),
+      primaryCouponId: _toInt(json['primaryCouponId']),
     );
   }
 
@@ -121,6 +135,7 @@ class Product {
         'currency': currency,
         'description': description,
         'sourceId': sourceId,
+        'sourceName': sourceName,
         'itemType': itemType,
         'itemUrl': itemUrl,
         'categories': categories.map((c) => c.toJson()).toList(),

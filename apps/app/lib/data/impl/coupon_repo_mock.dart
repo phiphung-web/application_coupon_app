@@ -27,7 +27,7 @@ class CouponRepoMock implements CouponRepo {
     if (index % 4 == 0) badgeList.add(_hotBadge);
 
     return Coupon(
-      id: 'C${index + 1}',
+      id: index + 1,
       title: isPercent
           ? 'Giảm $percent% toàn sàn'
           : 'Giảm ${fixed ~/ 1000}k đơn hàng',
@@ -37,7 +37,7 @@ class CouponRepoMock implements CouponRepo {
       minSpend: index % 3 == 0 ? 150000 : null,
       maxDiscount: isPercent ? 120000 : null,
       endAt: DateTime.now().add(Duration(days: 5 + index)),
-      sourceId: ['shopee', 'lazada', 'tiki'][index % 3],
+      sourceId: ['1', '2', '3'][index % 3],
       imageUrl: 'https://picsum.photos/seed/c${index + 1}/600/400',
       categories: [cat],
       badges: badgeList,
@@ -133,7 +133,7 @@ class CouponRepoMock implements CouponRepo {
   }
 
   @override
-  Future<Coupon?> getById(String id) async {
+  Future<Coupon?> getById(int id) async {
     try {
       return _data.firstWhere((c) => c.id == id);
     } catch (_) {

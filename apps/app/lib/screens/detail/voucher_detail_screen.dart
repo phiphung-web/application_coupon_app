@@ -8,7 +8,7 @@ import '../../data/repo/coupon_repo.dart';
 import '../../models/coupon.dart';
 
 class VoucherDetailScreen extends StatefulWidget {
-  final String couponId;
+  final int couponId;
   const VoucherDetailScreen({super.key, required this.couponId});
 
   @override
