@@ -1,23 +1,30 @@
 import { ResourceOptions } from "adminjs";
-import { Product } from "../entities/product.entity";
+import { Item } from "../entities/item.entity";
 import { Coupon } from "../entities/coupon.entity";
 import { Category } from "../entities/category.entity";
 import { CouponCategory } from "../entities/coupon_category.entity";
 import { Badge } from "../entities/badge.entity";
 import { Source } from "../entities/source.entity";
-import { ProductCoupon } from "../entities/product_coupon.entity";
+import { ItemCouponLink } from "../entities/item_coupon_link.entity";
+import { User } from "../entities/user.entity";
 import { DataSource } from "typeorm";
 
 export function buildAdminOptions(ds: DataSource) {
   const resources: { resource: any; options?: ResourceOptions }[] = [
     {
-      resource: Product,
+      resource: Item,
       options: {
         navigation: { name: "Catalog", icon: "Box" },
         properties: {
-          priceOriginal: { type: "number" },
-          priceCurrent: { type: "number" },
-          currency: { availableValues: [{ value: "USD", label: "USD" }] },
+          price: { type: "number" },
+          itemType: {
+            availableValues: [
+              { value: "PRODUCT", label: "Product" },
+              { value: "APP", label: "App" },
+              { value: "GAME", label: "Game" },
+              { value: "SERVICE", label: "Service" },
+            ],
+          },
           createdAt: {
             isVisible: { list: true, filter: true, show: true, edit: false },
           },
@@ -28,11 +35,11 @@ export function buildAdminOptions(ds: DataSource) {
         listProperties: [
           "id",
           "name",
-          "priceCurrent",
-          "priceOriginal",
+          "itemType",
+          "price",
           "sourceId",
+          "categoryId",
         ],
-        filterProperties: ["name", "sourceId", "categories", "badges"],
       },
     },
     {
@@ -42,55 +49,31 @@ export function buildAdminOptions(ds: DataSource) {
         properties: {
           discountType: {
             availableValues: [
-              { value: "PERCENT", label: "PERCENT" },
-              { value: "FIXED", label: "FIXED" },
+              { value: "PERCENT", label: "Percent" },
+              { value: "FIXED_AMOUNT", label: "Fixed amount" },
+              { value: "FREESHIP", label: "Freeshop" },
+              { value: "GIFT", label: "Gift" },
             ],
           },
           discountValue: { type: "number" },
-          minSpend: { type: "number" },
-          maxDiscount: { type: "number" },
-          endAt: { type: "datetime" },
-          imageUrl: { type: "string" },
-          isActive: { type: "boolean" },
-          createdAt: {
-            isVisible: { list: true, filter: true, show: true, edit: false },
-          },
-          updatedAt: {
-            isVisible: { list: true, filter: true, show: true, edit: false },
-          },
+          startDate: { type: "datetime" },
+          endDate: { type: "datetime" },
         },
         listProperties: [
           "id",
-          "title",
           "code",
           "discountType",
           "discountValue",
-          "endAt",
-          "isActive",
-        ],
-        filterProperties: [
-          "title",
-          "code",
-          "sourceId",
-          "categories",
-          "badges",
-          "isActive",
+          "startDate",
+          "endDate",
         ],
       },
     },
     {
-      resource: ProductCoupon,
+      resource: ItemCouponLink,
       options: {
         navigation: { name: "Relations", icon: "Shuffle" },
-        properties: {
-          productId: { type: "number" },
-          couponId: { type: "string" },
-          isPrimary: { type: "boolean" },
-          createdAt: {
-            isVisible: { list: true, filter: true, show: true, edit: false },
-          },
-        },
-        listProperties: ["productId", "couponId", "isPrimary", "createdAt"],
+        listProperties: ["itemId", "couponId", "isPrimaryDisplay", "linkedAt"],
       },
     },
     {
@@ -109,6 +92,10 @@ export function buildAdminOptions(ds: DataSource) {
       resource: Source,
       options: { navigation: { name: "Settings", icon: "Cloud" } },
     },
+    {
+      resource: User,
+      options: { navigation: { name: "Settings", icon: "User" } },
+    },
   ];
 
   return {
@@ -119,8 +106,6 @@ export function buildAdminOptions(ds: DataSource) {
       companyName: "Coupon App Admin",
       softwareBrothers: false,
     },
-    locale: {
-      language: "vi",
-    },
+    locale: { language: "vi" },
   };
 }

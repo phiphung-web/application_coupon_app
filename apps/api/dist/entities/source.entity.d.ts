@@ -1,17 +1,14 @@
 import { BaseEntity } from "typeorm";
-export type SourceType = "ECOM" | "APP" | "GAME" | "SERVICE" | "OTHER";
+import { Item } from "./item.entity";
+import { Coupon } from "./coupon.entity";
 export declare class Source extends BaseEntity {
-    id: string;
+    id: number;
     name: string;
-    type: SourceType;
-    logoUrl?: string;
-    domain?: string;
-    packageId?: string;
-    bundleId?: string;
-    publisher?: string;
-    priority: number;
-    isActive: boolean;
+    description?: string;
+    imageUrl?: string;
+    websiteUrl?: string;
+    items: Item[];
+    coupons: Coupon[];
     createdAt: Date;
     updatedAt: Date;
-    deletedAt?: Date;
 }

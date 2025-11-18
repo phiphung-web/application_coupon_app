@@ -7,13 +7,14 @@ import { DataSource } from "typeorm";
 import AdminJS from "adminjs";
 
 // Import Entities
-import { Product } from "../entities/product.entity";
+import { Item } from "../entities/item.entity";
 import { Coupon } from "../entities/coupon.entity";
 import { Category } from "../entities/category.entity";
 import { CouponCategory } from "../entities/coupon_category.entity";
 import { Badge } from "../entities/badge.entity";
 import { Source } from "../entities/source.entity";
-import { ProductCoupon } from "../entities/product_coupon.entity";
+import { ItemCouponLink } from "../entities/item_coupon_link.entity";
+import { User } from "../entities/user.entity";
 
 // Đăng ký Adapter ngay bên ngoài (cho gọn)
 AdminJS.registerAdapter({ Database, Resource });
@@ -21,7 +22,14 @@ AdminJS.registerAdapter({ Database, Resource });
 @Module({
   imports: [
     TypeOrmModule.forFeature([
-      Product, Coupon, Category, CouponCategory, Badge, Source, ProductCoupon
+      Item,
+      Coupon,
+      Category,
+      CouponCategory,
+      Badge,
+      Source,
+      ItemCouponLink,
+      User,
     ]),
 
     NestAdminModule.createAdminAsync({
@@ -33,13 +41,14 @@ AdminJS.registerAdapter({ Database, Resource });
             branding: { companyName: "Coupon CMS" },
             resources: [
               // ✅ AdminJS v6 tự hiểu Entity, không cần { model: ds }
-              Product,
+              Item,
               Coupon,
               Category,
               CouponCategory,
               Badge,
               Source,
-              ProductCoupon,
+              ItemCouponLink,
+              User,
             ],
           },
           auth: {

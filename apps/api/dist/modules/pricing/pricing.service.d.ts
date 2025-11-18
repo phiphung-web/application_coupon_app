@@ -1,7 +1,7 @@
-import { Product } from "../../entities/product.entity";
+import { Item } from "../../entities/item.entity";
 import { Coupon } from "../../entities/coupon.entity";
 export declare class PricingService {
-    bestDealForProduct(p: Product, coupons: Coupon[]): {
+    bestDealForProduct(item: Item, coupons: Coupon[]): {
         after: number;
         saved: number;
         coupon: Coupon;

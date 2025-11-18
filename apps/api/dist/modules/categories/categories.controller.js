@@ -23,11 +23,11 @@ let CategoriesController = class CategoriesController {
     list(q) {
         return this.svc.paginate(q);
     }
-    listAll(active) {
-        return this.svc.listAll(active === "true");
+    listAll() {
+        return this.svc.listAll();
     }
-    tree(active) {
-        return this.svc.tree(active === "true");
+    tree() {
+        return this.svc.tree();
     }
     get(id) {
         return this.svc.get(id);
@@ -55,16 +55,14 @@ __decorate([
 ], CategoriesController.prototype, "list", null);
 __decorate([
     (0, common_1.Get)("all"),
-    __param(0, (0, common_1.Query)("active", new common_1.DefaultValuePipe("false"))),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], CategoriesController.prototype, "listAll", null);
 __decorate([
     (0, common_1.Get)("tree"),
-    __param(0, (0, common_1.Query)("active", new common_1.DefaultValuePipe("false"))),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], CategoriesController.prototype, "tree", null);
 __decorate([

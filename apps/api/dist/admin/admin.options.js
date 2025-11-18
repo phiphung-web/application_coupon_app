@@ -1,23 +1,30 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.buildAdminOptions = buildAdminOptions;
-const product_entity_1 = require("../entities/product.entity");
+const item_entity_1 = require("../entities/item.entity");
 const coupon_entity_1 = require("../entities/coupon.entity");
 const category_entity_1 = require("../entities/category.entity");
 const coupon_category_entity_1 = require("../entities/coupon_category.entity");
 const badge_entity_1 = require("../entities/badge.entity");
 const source_entity_1 = require("../entities/source.entity");
-const product_coupon_entity_1 = require("../entities/product_coupon.entity");
+const item_coupon_link_entity_1 = require("../entities/item_coupon_link.entity");
+const user_entity_1 = require("../entities/user.entity");
 function buildAdminOptions(ds) {
     const resources = [
         {
-            resource: product_entity_1.Product,
+            resource: item_entity_1.Item,
             options: {
                 navigation: { name: "Catalog", icon: "Box" },
                 properties: {
-                    priceOriginal: { type: "number" },
-                    priceCurrent: { type: "number" },
-                    currency: { availableValues: [{ value: "USD", label: "USD" }] },
+                    price: { type: "number" },
+                    itemType: {
+                        availableValues: [
+                            { value: "PRODUCT", label: "Product" },
+                            { value: "APP", label: "App" },
+                            { value: "GAME", label: "Game" },
+                            { value: "SERVICE", label: "Service" },
+                        ],
+                    },
                     createdAt: {
                         isVisible: { list: true, filter: true, show: true, edit: false },
                     },
@@ -28,11 +35,11 @@ function buildAdminOptions(ds) {
                 listProperties: [
                     "id",
                     "name",
-                    "priceCurrent",
-                    "priceOriginal",
+                    "itemType",
+                    "price",
                     "sourceId",
+                    "categoryId",
                 ],
-                filterProperties: ["name", "sourceId", "categories", "badges"],
             },
         },
         {
@@ -42,55 +49,31 @@ function buildAdminOptions(ds) {
                 properties: {
                     discountType: {
                         availableValues: [
-                            { value: "PERCENT", label: "PERCENT" },
-                            { value: "FIXED", label: "FIXED" },
+                            { value: "PERCENT", label: "Percent" },
+                            { value: "FIXED_AMOUNT", label: "Fixed amount" },
+                            { value: "FREESHIP", label: "Freeshop" },
+                            { value: "GIFT", label: "Gift" },
                         ],
                     },
                     discountValue: { type: "number" },
-                    minSpend: { type: "number" },
-                    maxDiscount: { type: "number" },
-                    endAt: { type: "datetime" },
-                    imageUrl: { type: "string" },
-                    isActive: { type: "boolean" },
-                    createdAt: {
-                        isVisible: { list: true, filter: true, show: true, edit: false },
-                    },
-                    updatedAt: {
-                        isVisible: { list: true, filter: true, show: true, edit: false },
-                    },
+                    startDate: { type: "datetime" },
+                    endDate: { type: "datetime" },
                 },
                 listProperties: [
                     "id",
-                    "title",
                     "code",
                     "discountType",
                     "discountValue",
-                    "endAt",
-                    "isActive",
-                ],
-                filterProperties: [
-                    "title",
-                    "code",
-                    "sourceId",
-                    "categories",
-                    "badges",
-                    "isActive",
+                    "startDate",
+                    "endDate",
                 ],
             },
         },
         {
-            resource: product_coupon_entity_1.ProductCoupon,
+            resource: item_coupon_link_entity_1.ItemCouponLink,
             options: {
                 navigation: { name: "Relations", icon: "Shuffle" },
-                properties: {
-                    productId: { type: "number" },
-                    couponId: { type: "string" },
-                    isPrimary: { type: "boolean" },
-                    createdAt: {
-                        isVisible: { list: true, filter: true, show: true, edit: false },
-                    },
-                },
-                listProperties: ["productId", "couponId", "isPrimary", "createdAt"],
+                listProperties: ["itemId", "couponId", "isPrimaryDisplay", "linkedAt"],
             },
         },
         {
@@ -109,6 +92,10 @@ function buildAdminOptions(ds) {
             resource: source_entity_1.Source,
             options: { navigation: { name: "Settings", icon: "Cloud" } },
         },
+        {
+            resource: user_entity_1.User,
+            options: { navigation: { name: "Settings", icon: "User" } },
+        },
     ];
     return {
         rootPath: "/admin",
@@ -118,8 +105,6 @@ function buildAdminOptions(ds) {
             companyName: "Coupon App Admin",
             softwareBrothers: false,
         },
-        locale: {
-            language: "vi",
-        },
+        locale: { language: "vi" },
     };
 }

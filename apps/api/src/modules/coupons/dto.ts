@@ -1,6 +1,7 @@
 import {
   IsDateString,
   IsEnum,
+  IsInt,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -36,12 +37,15 @@ export class UpsertCouponDto {
   dealUrl?: string;
 
   @IsOptional()
+  @IsInt()
   sourceId?: number;
 
   @IsOptional()
+  @IsInt()
   categoryId?: number;
 
   @IsOptional()
+  @IsInt()
   badgeId?: number;
 
   @IsOptional()

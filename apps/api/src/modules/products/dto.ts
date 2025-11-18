@@ -1,13 +1,55 @@
 import {
   IsBoolean,
   IsEnum,
+  IsInt,
   IsNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
+  ValidateNested,
 } from "class-validator";
+import { Type } from "class-transformer";
 import { ItemType } from "../../entities/item.entity";
 import { DiscountType } from "../../entities/coupon.entity";
+
+class CreateInlineCouponDto {
+  @IsString()
+  @IsNotEmpty()
+  code!: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
+
+  @IsEnum(DiscountType)
+  discountType!: DiscountType;
+
+  @IsOptional()
+  @IsNumber()
+  discountValue?: number | null;
+
+  @IsOptional()
+  @IsString()
+  dealUrl?: string;
+
+  @IsOptional()
+  @IsInt()
+  badgeId?: number;
+
+  @IsOptional()
+  @IsInt()
+  categoryId?: number;
+
+  @IsOptional()
+  startDate?: string;
+
+  @IsOptional()
+  endDate?: string;
+}
 
 export class CreateProductDto {
   @IsString()
@@ -35,27 +77,21 @@ export class CreateProductDto {
   price?: number | null;
 
   @IsOptional()
+  @IsInt()
   sourceId?: number;
 
   @IsOptional()
+  @IsInt()
   categoryId?: number;
 
   @IsOptional()
+  @IsInt()
   badgeId?: number;
 
   @IsOptional()
-  createCoupon?: {
-    code: string;
-    description?: string;
-    imageUrl?: string;
-    discountType: DiscountType;
-    discountValue?: number | null;
-    dealUrl?: string;
-    badgeId?: number;
-    categoryId?: number;
-    startDate?: string;
-    endDate?: string;
-  };
+  @ValidateNested()
+  @Type(() => CreateInlineCouponDto)
+  createCoupon?: CreateInlineCouponDto;
 }
 
 export class UpdateProductDto {
@@ -84,17 +120,20 @@ export class UpdateProductDto {
   price?: number | null;
 
   @IsOptional()
+  @IsInt()
   sourceId?: number;
 
   @IsOptional()
+  @IsInt()
   categoryId?: number;
 
   @IsOptional()
+  @IsInt()
   badgeId?: number;
 }
 
 export class LinkCouponDto {
-  @IsNumber()
+  @IsInt()
   couponId!: number;
 
   @IsBoolean()

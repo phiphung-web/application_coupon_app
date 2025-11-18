@@ -9,95 +9,112 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Coupon = void 0;
+exports.Coupon = exports.DiscountType = void 0;
 const typeorm_1 = require("typeorm");
-const badge_entity_1 = require("./badge.entity");
+const source_entity_1 = require("./source.entity");
 const coupon_category_entity_1 = require("./coupon_category.entity");
+const badge_entity_1 = require("./badge.entity");
+const item_coupon_link_entity_1 = require("./item_coupon_link.entity");
+var DiscountType;
+(function (DiscountType) {
+    DiscountType["PERCENT"] = "PERCENT";
+    DiscountType["FIXED_AMOUNT"] = "FIXED_AMOUNT";
+    DiscountType["FREESHIP"] = "FREESHIP";
+    DiscountType["GIFT"] = "GIFT";
+})(DiscountType || (exports.DiscountType = DiscountType = {}));
 let Coupon = class Coupon extends typeorm_1.BaseEntity {
 };
 exports.Coupon = Coupon;
 __decorate([
-    (0, typeorm_1.PrimaryColumn)({ length: 64 }),
-    __metadata("design:type", String)
+    (0, typeorm_1.PrimaryGeneratedColumn)(),
+    __metadata("design:type", Number)
 ], Coupon.prototype, "id", void 0);
 __decorate([
-    (0, typeorm_1.Index)(),
-    (0, typeorm_1.Column)({ length: 200 }),
-    __metadata("design:type", String)
-], Coupon.prototype, "title", void 0);
-__decorate([
-    (0, typeorm_1.Index)(),
-    (0, typeorm_1.Column)({ length: 64 }),
+    (0, typeorm_1.Column)({ length: 100 }),
     __metadata("design:type", String)
 ], Coupon.prototype, "code", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: "enum", enum: ["PERCENT", "FIXED"] }),
+    (0, typeorm_1.Column)("text", { nullable: true }),
     __metadata("design:type", String)
-], Coupon.prototype, "discountType", void 0);
+], Coupon.prototype, "description", void 0);
 __decorate([
-    (0, typeorm_1.Column)("int"),
-    __metadata("design:type", Number)
-], Coupon.prototype, "discountValue", void 0);
-__decorate([
-    (0, typeorm_1.Column)("int", { nullable: true }),
-    __metadata("design:type", Number)
-], Coupon.prototype, "minSpend", void 0);
-__decorate([
-    (0, typeorm_1.Column)("int", { nullable: true }),
-    __metadata("design:type", Number)
-], Coupon.prototype, "maxDiscount", void 0);
-__decorate([
-    (0, typeorm_1.Column)({ type: "timestamptz", nullable: true }),
-    __metadata("design:type", Date)
-], Coupon.prototype, "endAt", void 0);
-__decorate([
-    (0, typeorm_1.Index)(),
-    (0, typeorm_1.Column)({ nullable: true }),
-    __metadata("design:type", String)
-], Coupon.prototype, "sourceId", void 0);
-__decorate([
-    (0, typeorm_1.Column)({ nullable: true }),
+    (0, typeorm_1.Column)({ name: "image_url", length: 255, nullable: true }),
     __metadata("design:type", String)
 ], Coupon.prototype, "imageUrl", void 0);
 __decorate([
-    (0, typeorm_1.ManyToMany)(() => coupon_category_entity_1.CouponCategory, { eager: true }),
-    (0, typeorm_1.JoinTable)({ name: "coupon_categories_map" }),
-    __metadata("design:type", Array)
-], Coupon.prototype, "categories", void 0);
+    (0, typeorm_1.Column)({
+        name: "discount_type",
+        type: "enum",
+        enum: DiscountType,
+        default: DiscountType.FIXED_AMOUNT,
+    }),
+    __metadata("design:type", String)
+], Coupon.prototype, "discountType", void 0);
 __decorate([
-    (0, typeorm_1.ManyToMany)(() => badge_entity_1.Badge, { eager: true }),
-    (0, typeorm_1.JoinTable)({ name: "coupon_badges" }),
-    __metadata("design:type", Array)
-], Coupon.prototype, "badges", void 0);
+    (0, typeorm_1.Column)({
+        name: "discount_value",
+        type: "decimal",
+        precision: 12,
+        scale: 2,
+        nullable: true,
+    }),
+    __metadata("design:type", String)
+], Coupon.prototype, "discountValue", void 0);
 __decorate([
-    (0, typeorm_1.Column)("int", { nullable: true }),
+    (0, typeorm_1.Column)({ name: "deal_url", length: 255, nullable: true }),
+    __metadata("design:type", String)
+], Coupon.prototype, "dealUrl", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: "source_id", nullable: true }),
     __metadata("design:type", Number)
-], Coupon.prototype, "priority", void 0);
+], Coupon.prototype, "sourceId", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: true }),
-    __metadata("design:type", String)
-], Coupon.prototype, "trackingLink", void 0);
+    (0, typeorm_1.ManyToOne)(() => source_entity_1.Source, (source) => source.coupons, {
+        onDelete: "SET NULL",
+    }),
+    (0, typeorm_1.JoinColumn)({ name: "source_id" }),
+    __metadata("design:type", source_entity_1.Source)
+], Coupon.prototype, "source", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: true }),
-    __metadata("design:type", String)
-], Coupon.prototype, "deeplink", void 0);
+    (0, typeorm_1.Column)({ name: "category_id", nullable: true }),
+    __metadata("design:type", Number)
+], Coupon.prototype, "categoryId", void 0);
 __decorate([
-    (0, typeorm_1.Index)(),
-    (0, typeorm_1.Column)({ default: true }),
-    __metadata("design:type", Boolean)
-], Coupon.prototype, "isActive", void 0);
+    (0, typeorm_1.ManyToOne)(() => coupon_category_entity_1.CouponCategory, (category) => category.coupons, {
+        onDelete: "SET NULL",
+    }),
+    (0, typeorm_1.JoinColumn)({ name: "category_id" }),
+    __metadata("design:type", coupon_category_entity_1.CouponCategory)
+], Coupon.prototype, "category", void 0);
 __decorate([
-    (0, typeorm_1.CreateDateColumn)(),
+    (0, typeorm_1.Column)({ name: "badge_id", nullable: true }),
+    __metadata("design:type", Number)
+], Coupon.prototype, "badgeId", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => badge_entity_1.Badge, (badge) => badge.coupons, { onDelete: "SET NULL" }),
+    (0, typeorm_1.JoinColumn)({ name: "badge_id" }),
+    __metadata("design:type", badge_entity_1.Badge)
+], Coupon.prototype, "badge", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: "start_date", type: "timestamptz", nullable: true }),
+    __metadata("design:type", Date)
+], Coupon.prototype, "startDate", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: "end_date", type: "timestamptz", nullable: true }),
+    __metadata("design:type", Date)
+], Coupon.prototype, "endDate", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => item_coupon_link_entity_1.ItemCouponLink, (link) => link.coupon),
+    __metadata("design:type", Array)
+], Coupon.prototype, "itemLinks", void 0);
+__decorate([
+    (0, typeorm_1.CreateDateColumn)({ name: "created_at" }),
     __metadata("design:type", Date)
 ], Coupon.prototype, "createdAt", void 0);
 __decorate([
-    (0, typeorm_1.UpdateDateColumn)(),
+    (0, typeorm_1.UpdateDateColumn)({ name: "updated_at" }),
     __metadata("design:type", Date)
 ], Coupon.prototype, "updatedAt", void 0);
-__decorate([
-    (0, typeorm_1.DeleteDateColumn)(),
-    __metadata("design:type", Date)
-], Coupon.prototype, "deletedAt", void 0);
 exports.Coupon = Coupon = __decorate([
     (0, typeorm_1.Entity)("coupons")
 ], Coupon);

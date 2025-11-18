@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from "@nestjs/config";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { APP_PIPE } from "@nestjs/core";
 import { ValidationPipe } from "@nestjs/common";
+import { typeormConfig } from "./config/typeorm.config";
 
 // Admin CMS
 import { AdminCmsModule } from "./admin/admin.module";
@@ -33,8 +34,9 @@ import { PricingModule } from "./modules/pricing/pricing.module";
         return {
           type: "postgres",
           url,
-          autoLoadEntities: true, // tự load entity từ các module
-          synchronize: false, // dùng migration/seed, không auto sync trên prod
+          entities: typeormConfig.entities,
+          autoLoadEntities: true,
+          synchronize: false,
           logging:
             cfg.get("TYPEORM_LOGGING") === "true"
               ? ["error", "query"]

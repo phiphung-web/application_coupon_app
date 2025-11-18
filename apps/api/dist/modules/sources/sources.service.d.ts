@@ -5,10 +5,10 @@ export declare class SourcesService {
     private readonly repo;
     constructor(repo: Repository<Source>);
     list(): Promise<Source[]>;
-    get(id: string): Promise<Source>;
+    get(id: number): Promise<Source>;
     create(dto: CreateSourceDto): Promise<Source>;
-    update(id: string, dto: UpdateSourceDto): Promise<Source>;
-    remove(id: string): Promise<{
+    update(id: number, dto: UpdateSourceDto): Promise<Source>;
+    remove(id: number): Promise<{
         ok: boolean;
     }>;
 }

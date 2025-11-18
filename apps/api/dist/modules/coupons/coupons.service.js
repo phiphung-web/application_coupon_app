@@ -17,61 +17,79 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const coupon_entity_1 = require("../../entities/coupon.entity");
-const badge_entity_1 = require("../../entities/badge.entity");
-const coupon_category_entity_1 = require("../../entities/coupon_category.entity");
 let CouponsService = class CouponsService {
-    constructor(repo, badgeRepo, catRepo) {
+    constructor(repo) {
         this.repo = repo;
-        this.badgeRepo = badgeRepo;
-        this.catRepo = catRepo;
     }
     async paginate(q) {
-        const qb = this.repo.createQueryBuilder('c')
-            .leftJoinAndSelect('c.badges', 'b')
-            .leftJoinAndSelect('c.categories', 'k');
+        const qb = this.repo
+            .createQueryBuilder("c")
+            .leftJoinAndSelect("c.source", "source")
+            .leftJoinAndSelect("c.category", "category")
+            .leftJoinAndSelect("c.badge", "badge");
         if (q.q)
-            qb.andWhere('c.title ILIKE :q OR c.code ILIKE :q', { q: `%${q.q}%` });
-        if (q.source)
-            qb.andWhere('c.sourceId = :sid', { sid: q.source });
-        if (q.cat)
-            qb.andWhere('k.id = :cid', { cid: q.cat });
+            qb.andWhere("(c.code ILIKE :q OR c.description ILIKE :q)", {
+                q: `%${q.q}%`,
+            });
+        if (typeof q.source === "number")
+            qb.andWhere("c.sourceId = :sid", { sid: q.source });
+        if (typeof q.cat === "number")
+            qb.andWhere("c.categoryId = :cid", { cid: q.cat });
         if (q.badge)
-            qb.andWhere('b.key = :bk', { bk: q.badge });
-        if (q.active === 'true')
-            qb.andWhere('c.isActive = true').andWhere('(c.endAt IS NULL OR c.endAt >= NOW())');
-        qb.orderBy('c.priority', 'DESC').addOrderBy('c.createdAt', 'DESC');
-        const page = q.page ?? 1, limit = q.limit ?? 20;
+            qb.andWhere("(badge.slug = :slug OR badge.name ILIKE :slugLike)", {
+                slug: q.badge,
+                slugLike: `%${q.badge}%`,
+            });
+        if (q.active === "true") {
+            qb.andWhere("(c.startDate IS NULL OR c.startDate <= NOW()) AND (c.endDate IS NULL OR c.endDate >= NOW())");
+        }
+        qb.orderBy("COALESCE(c.startDate, c.createdAt)", "DESC");
+        const page = q.page ?? 1;
+        const limit = q.limit ?? 20;
         qb.skip((page - 1) * limit).take(limit);
         const [items, total] = await qb.getManyAndCount();
         return { items, meta: { page, limit, total } };
     }
     async get(id) {
-        const c = await this.repo.findOne({ where: { id }, relations: ['badges', 'categories'] });
-        if (!c)
-            throw new common_1.NotFoundException('Coupon not found');
-        return c;
+        const coupon = await this.repo.findOne({
+            where: { id },
+            relations: ["source", "category", "badge"],
+        });
+        if (!coupon)
+            throw new common_1.NotFoundException("Coupon not found");
+        return coupon;
     }
     async upsert(dto) {
-        const badges = dto.badgeIds?.length ? await this.badgeRepo.findBy({ id: (0, typeorm_2.In)(dto.badgeIds) }) : [];
-        const cats = dto.categoryIds?.length ? await this.catRepo.findBy({ id: (0, typeorm_2.In)(dto.categoryIds) }) : [];
-        const entity = this.repo.create({
-            id: dto.id ?? `C_${Date.now()}`,
-            title: dto.title, code: dto.code,
-            discountType: dto.discountType, discountValue: dto.discountValue,
-            minSpend: dto.minSpend, maxDiscount: dto.maxDiscount,
-            endAt: dto.endAt ? new Date(dto.endAt) : undefined,
-            sourceId: dto.sourceId, imageUrl: dto.imageUrl,
-            priority: dto.priority, trackingLink: dto.trackingLink, deeplink: dto.deeplink,
-            isActive: dto.isActive ?? true,
-            badges, categories: cats,
+        let entity;
+        if (dto.id) {
+            const existing = await this.repo.findOne({ where: { id: dto.id } });
+            if (!existing)
+                throw new common_1.NotFoundException("Coupon not found");
+            entity = existing;
+        }
+        else {
+            entity = this.repo.create();
+        }
+        Object.assign(entity, {
+            code: dto.code,
+            description: dto.description,
+            imageUrl: dto.imageUrl,
+            discountType: dto.discountType,
+            discountValue: dto.discountValue != null ? String(dto.discountValue) : undefined,
+            dealUrl: dto.dealUrl,
+            sourceId: dto.sourceId,
+            categoryId: dto.categoryId,
+            badgeId: dto.badgeId,
+            startDate: dto.startDate ? new Date(dto.startDate) : undefined,
+            endDate: dto.endDate ? new Date(dto.endDate) : undefined,
         });
-        await this.repo.save(entity);
-        return this.get(entity.id);
+        const saved = await this.repo.save(entity);
+        return this.get(saved.id);
     }
     async deactivate(id) {
-        const c = await this.get(id);
-        c.isActive = false;
-        await this.repo.save(c);
+        const coupon = await this.get(id);
+        coupon.endDate = new Date();
+        await this.repo.save(coupon);
         return { ok: true };
     }
 };
@@ -79,9 +97,5 @@ exports.CouponsService = CouponsService;
 exports.CouponsService = CouponsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(coupon_entity_1.Coupon)),
-    __param(1, (0, typeorm_1.InjectRepository)(badge_entity_1.Badge)),
-    __param(2, (0, typeorm_1.InjectRepository)(coupon_category_entity_1.CouponCategory)),
-    __metadata("design:paramtypes", [typeorm_2.Repository,
-        typeorm_2.Repository,
-        typeorm_2.Repository])
+    __metadata("design:paramtypes", [typeorm_2.Repository])
 ], CouponsService);

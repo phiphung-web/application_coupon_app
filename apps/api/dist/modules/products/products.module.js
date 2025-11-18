@@ -11,11 +11,9 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const products_controller_1 = require("./products.controller");
 const products_service_1 = require("./products.service");
-const product_entity_1 = require("../../entities/product.entity");
-const category_entity_1 = require("../../entities/category.entity");
-const badge_entity_1 = require("../../entities/badge.entity");
+const item_entity_1 = require("../../entities/item.entity");
 const coupon_entity_1 = require("../../entities/coupon.entity");
-const product_coupon_entity_1 = require("../../entities/product_coupon.entity");
+const item_coupon_link_entity_1 = require("../../entities/item_coupon_link.entity");
 const pricing_module_1 = require("../pricing/pricing.module");
 let ProductsModule = class ProductsModule {
 };
@@ -23,7 +21,7 @@ exports.ProductsModule = ProductsModule;
 exports.ProductsModule = ProductsModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            typeorm_1.TypeOrmModule.forFeature([product_entity_1.Product, category_entity_1.Category, badge_entity_1.Badge, coupon_entity_1.Coupon, product_coupon_entity_1.ProductCoupon]),
+            typeorm_1.TypeOrmModule.forFeature([item_entity_1.Item, coupon_entity_1.Coupon, item_coupon_link_entity_1.ItemCouponLink]),
             pricing_module_1.PricingModule,
         ],
         controllers: [products_controller_1.ProductsController],

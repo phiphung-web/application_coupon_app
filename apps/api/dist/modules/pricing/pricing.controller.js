@@ -16,42 +16,44 @@ exports.PricingController = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
-const product_entity_1 = require("../../entities/product.entity");
-const product_coupon_entity_1 = require("../../entities/product_coupon.entity");
+const item_entity_1 = require("../../entities/item.entity");
+const item_coupon_link_entity_1 = require("../../entities/item_coupon_link.entity");
 const coupon_entity_1 = require("../../entities/coupon.entity");
 const pricing_service_1 = require("./pricing.service");
 let PricingController = class PricingController {
-    constructor(prodRepo, pcRepo, couponRepo, pricing) {
-        this.prodRepo = prodRepo;
-        this.pcRepo = pcRepo;
+    constructor(itemRepo, linkRepo, couponRepo, pricing) {
+        this.itemRepo = itemRepo;
+        this.linkRepo = linkRepo;
         this.couponRepo = couponRepo;
         this.pricing = pricing;
     }
-    async bestDeal(productId) {
-        const p = await this.prodRepo.findOne({ where: { id: productId } });
-        if (!p)
+    async bestDeal(itemId) {
+        const item = await this.itemRepo.findOne({ where: { id: itemId } });
+        if (!item)
             return { bestDeal: null };
-        const pcs = await this.pcRepo.find({ where: { productId } });
-        const ids = pcs.map((x) => x.couponId);
-        if (!ids.length)
+        const links = await this.linkRepo.find({ where: { itemId } });
+        if (!links.length)
             return { bestDeal: null };
-        const coupons = await this.couponRepo.findByIds(ids);
-        const deal = this.pricing.bestDealForProduct(p, coupons);
+        const ids = links.map((link) => link.couponId);
+        const coupons = ids.length
+            ? await this.couponRepo.findBy({ id: (0, typeorm_2.In)(ids) })
+            : [];
+        const deal = this.pricing.bestDealForProduct(item, coupons);
         return { bestDeal: deal };
     }
 };
 exports.PricingController = PricingController;
 __decorate([
-    (0, common_1.Get)("best-deal/:productId"),
-    __param(0, (0, common_1.Param)("productId", common_1.ParseIntPipe)),
+    (0, common_1.Get)("best-deal/:itemId"),
+    __param(0, (0, common_1.Param)("itemId", common_1.ParseIntPipe)),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number]),
     __metadata("design:returntype", Promise)
 ], PricingController.prototype, "bestDeal", null);
 exports.PricingController = PricingController = __decorate([
     (0, common_1.Controller)("pricing"),
-    __param(0, (0, typeorm_1.InjectRepository)(product_entity_1.Product)),
-    __param(1, (0, typeorm_1.InjectRepository)(product_coupon_entity_1.ProductCoupon)),
+    __param(0, (0, typeorm_1.InjectRepository)(item_entity_1.Item)),
+    __param(1, (0, typeorm_1.InjectRepository)(item_coupon_link_entity_1.ItemCouponLink)),
     __param(2, (0, typeorm_1.InjectRepository)(coupon_entity_1.Coupon)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
         typeorm_2.Repository,

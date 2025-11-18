@@ -18,13 +18,14 @@ const typeorm_2 = require("@adminjs/typeorm"); // ✅ Import trực tiếp bình
 const typeorm_3 = require("typeorm");
 const adminjs_1 = __importDefault(require("adminjs"));
 // Import Entities
-const product_entity_1 = require("../entities/product.entity");
+const item_entity_1 = require("../entities/item.entity");
 const coupon_entity_1 = require("../entities/coupon.entity");
 const category_entity_1 = require("../entities/category.entity");
 const coupon_category_entity_1 = require("../entities/coupon_category.entity");
 const badge_entity_1 = require("../entities/badge.entity");
 const source_entity_1 = require("../entities/source.entity");
-const product_coupon_entity_1 = require("../entities/product_coupon.entity");
+const item_coupon_link_entity_1 = require("../entities/item_coupon_link.entity");
+const user_entity_1 = require("../entities/user.entity");
 // Đăng ký Adapter ngay bên ngoài (cho gọn)
 adminjs_1.default.registerAdapter({ Database: typeorm_2.Database, Resource: typeorm_2.Resource });
 let AdminCmsModule = class AdminCmsModule {
@@ -34,7 +35,14 @@ exports.AdminCmsModule = AdminCmsModule = __decorate([
     (0, common_1.Module)({
         imports: [
             typeorm_1.TypeOrmModule.forFeature([
-                product_entity_1.Product, coupon_entity_1.Coupon, category_entity_1.Category, coupon_category_entity_1.CouponCategory, badge_entity_1.Badge, source_entity_1.Source, product_coupon_entity_1.ProductCoupon
+                item_entity_1.Item,
+                coupon_entity_1.Coupon,
+                category_entity_1.Category,
+                coupon_category_entity_1.CouponCategory,
+                badge_entity_1.Badge,
+                source_entity_1.Source,
+                item_coupon_link_entity_1.ItemCouponLink,
+                user_entity_1.User,
             ]),
             nestjs_1.AdminModule.createAdminAsync({
                 inject: [typeorm_3.DataSource],
@@ -45,13 +53,14 @@ exports.AdminCmsModule = AdminCmsModule = __decorate([
                             branding: { companyName: "Coupon CMS" },
                             resources: [
                                 // ✅ AdminJS v6 tự hiểu Entity, không cần { model: ds }
-                                product_entity_1.Product,
+                                item_entity_1.Item,
                                 coupon_entity_1.Coupon,
                                 category_entity_1.Category,
                                 coupon_category_entity_1.CouponCategory,
                                 badge_entity_1.Badge,
                                 source_entity_1.Source,
-                                product_coupon_entity_1.ProductCoupon,
+                                item_coupon_link_entity_1.ItemCouponLink,
+                                user_entity_1.User,
                             ],
                         },
                         auth: {

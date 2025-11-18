@@ -22,13 +22,14 @@ export class CouponsService {
       qb.andWhere("(c.code ILIKE :q OR c.description ILIKE :q)", {
         q: `%${q.q}%`,
       });
-    if (q.source)
-      qb.andWhere("c.sourceId = :sid", { sid: Number(q.source) || q.source });
-    if (q.cat) qb.andWhere("c.categoryId = :cid", { cid: q.cat });
+    if (typeof q.source === "number")
+      qb.andWhere("c.sourceId = :sid", { sid: q.source });
+    if (typeof q.cat === "number")
+      qb.andWhere("c.categoryId = :cid", { cid: q.cat });
     if (q.badge)
       qb.andWhere("(badge.slug = :slug OR badge.name ILIKE :slugLike)", {
         slug: q.badge,
-        slugLike: q.badge,
+        slugLike: `%${q.badge}%`,
       });
     if (q.active === "true") {
       qb.andWhere(
@@ -36,7 +37,7 @@ export class CouponsService {
       );
     }
 
-    qb.orderBy("COALESCE(c.startDate, c.created_at)", "DESC");
+    qb.orderBy("COALESCE(c.startDate, c.createdAt)", "DESC");
 
     const page = q.page ?? 1;
     const limit = q.limit ?? 20;
@@ -58,8 +59,9 @@ export class CouponsService {
   async upsert(dto: UpsertCouponDto) {
     let entity: Coupon;
     if (dto.id) {
-      entity = await this.repo.findOne({ where: { id: dto.id } });
-      if (!entity) throw new NotFoundException("Coupon not found");
+      const existing = await this.repo.findOne({ where: { id: dto.id } });
+      if (!existing) throw new NotFoundException("Coupon not found");
+      entity = existing;
     } else {
       entity = this.repo.create();
     }
@@ -70,7 +72,7 @@ export class CouponsService {
       imageUrl: dto.imageUrl,
       discountType: dto.discountType,
       discountValue:
-        dto.discountValue != null ? String(dto.discountValue) : null,
+        dto.discountValue != null ? String(dto.discountValue) : undefined,
       dealUrl: dto.dealUrl,
       sourceId: dto.sourceId,
       categoryId: dto.categoryId,

@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CouponCategory = void 0;
 const typeorm_1 = require("typeorm");
+const coupon_entity_1 = require("./coupon.entity");
 let CouponCategory = class CouponCategory extends typeorm_1.BaseEntity {
 };
 exports.CouponCategory = CouponCategory;
@@ -19,39 +20,25 @@ __decorate([
     __metadata("design:type", Number)
 ], CouponCategory.prototype, "id", void 0);
 __decorate([
-    (0, typeorm_1.Index)(),
-    (0, typeorm_1.Column)({ length: 120 }),
+    (0, typeorm_1.Column)({ length: 100 }),
     __metadata("design:type", String)
 ], CouponCategory.prototype, "name", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: true }),
+    (0, typeorm_1.Column)("text", { nullable: true }),
     __metadata("design:type", String)
-], CouponCategory.prototype, "imageUrl", void 0);
+], CouponCategory.prototype, "description", void 0);
 __decorate([
-    (0, typeorm_1.Column)("int", { nullable: true }),
-    __metadata("design:type", Number)
-], CouponCategory.prototype, "parentId", void 0);
+    (0, typeorm_1.OneToMany)(() => coupon_entity_1.Coupon, (coupon) => coupon.category),
+    __metadata("design:type", Array)
+], CouponCategory.prototype, "coupons", void 0);
 __decorate([
-    (0, typeorm_1.Column)("int", { default: 0 }),
-    __metadata("design:type", Number)
-], CouponCategory.prototype, "priority", void 0);
-__decorate([
-    (0, typeorm_1.Index)(),
-    (0, typeorm_1.Column)({ default: true }),
-    __metadata("design:type", Boolean)
-], CouponCategory.prototype, "isActive", void 0);
-__decorate([
-    (0, typeorm_1.CreateDateColumn)(),
+    (0, typeorm_1.CreateDateColumn)({ name: "created_at" }),
     __metadata("design:type", Date)
 ], CouponCategory.prototype, "createdAt", void 0);
 __decorate([
-    (0, typeorm_1.UpdateDateColumn)(),
+    (0, typeorm_1.UpdateDateColumn)({ name: "updated_at" }),
     __metadata("design:type", Date)
 ], CouponCategory.prototype, "updatedAt", void 0);
-__decorate([
-    (0, typeorm_1.DeleteDateColumn)(),
-    __metadata("design:type", Date)
-], CouponCategory.prototype, "deletedAt", void 0);
 exports.CouponCategory = CouponCategory = __decorate([
     (0, typeorm_1.Entity)("coupon_categories")
 ], CouponCategory);

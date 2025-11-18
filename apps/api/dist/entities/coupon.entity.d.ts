@@ -1,25 +1,31 @@
 import { BaseEntity } from "typeorm";
-import { Badge } from "./badge.entity";
+import { Source } from "./source.entity";
 import { CouponCategory } from "./coupon_category.entity";
-export type DiscountType = "PERCENT" | "FIXED";
+import { Badge } from "./badge.entity";
+import { ItemCouponLink } from "./item_coupon_link.entity";
+export declare enum DiscountType {
+    PERCENT = "PERCENT",
+    FIXED_AMOUNT = "FIXED_AMOUNT",
+    FREESHIP = "FREESHIP",
+    GIFT = "GIFT"
+}
 export declare class Coupon extends BaseEntity {
-    id: string;
-    title: string;
+    id: number;
     code: string;
-    discountType: DiscountType;
-    discountValue: number;
-    minSpend?: number;
-    maxDiscount?: number;
-    endAt?: Date;
-    sourceId?: string;
+    description?: string;
     imageUrl?: string;
-    categories: CouponCategory[];
-    badges: Badge[];
-    priority?: number;
-    trackingLink?: string;
-    deeplink?: string;
-    isActive: boolean;
+    discountType: DiscountType;
+    discountValue?: string;
+    dealUrl?: string;
+    sourceId?: number;
+    source?: Source;
+    categoryId?: number;
+    category?: CouponCategory;
+    badgeId?: number;
+    badge?: Badge;
+    startDate?: Date;
+    endDate?: Date;
+    itemLinks: ItemCouponLink[];
     createdAt: Date;
     updatedAt: Date;
-    deletedAt?: Date;
 }

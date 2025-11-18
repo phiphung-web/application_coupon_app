@@ -1,14 +1,10 @@
-import { Repository } from 'typeorm';
-import { Coupon } from '../../entities/coupon.entity';
-import { Badge } from '../../entities/badge.entity';
-import { CouponCategory } from '../../entities/coupon_category.entity';
-import { UpsertCouponDto } from './dto';
-import { PaginationDto } from '../../common/dtos/pagination.dto';
+import { Repository } from "typeorm";
+import { Coupon } from "../../entities/coupon.entity";
+import { UpsertCouponDto } from "./dto";
+import { PaginationDto } from "../../common/dtos/pagination.dto";
 export declare class CouponsService {
     private readonly repo;
-    private readonly badgeRepo;
-    private readonly catRepo;
-    constructor(repo: Repository<Coupon>, badgeRepo: Repository<Badge>, catRepo: Repository<CouponCategory>);
+    constructor(repo: Repository<Coupon>);
     paginate(q: PaginationDto & {
         active?: string;
     }): Promise<{
@@ -19,9 +15,9 @@ export declare class CouponsService {
             total: number;
         };
     }>;
-    get(id: string): Promise<Coupon>;
+    get(id: number): Promise<Coupon>;
     upsert(dto: UpsertCouponDto): Promise<Coupon>;
-    deactivate(id: string): Promise<{
+    deactivate(id: number): Promise<{
         ok: boolean;
     }>;
 }

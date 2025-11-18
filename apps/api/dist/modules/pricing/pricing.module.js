@@ -11,15 +11,15 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const pricing_service_1 = require("./pricing.service");
 const pricing_controller_1 = require("./pricing.controller");
-const product_entity_1 = require("../../entities/product.entity");
-const product_coupon_entity_1 = require("../../entities/product_coupon.entity");
+const item_entity_1 = require("../../entities/item.entity");
+const item_coupon_link_entity_1 = require("../../entities/item_coupon_link.entity");
 const coupon_entity_1 = require("../../entities/coupon.entity");
 let PricingModule = class PricingModule {
 };
 exports.PricingModule = PricingModule;
 exports.PricingModule = PricingModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([product_entity_1.Product, product_coupon_entity_1.ProductCoupon, coupon_entity_1.Coupon])],
+        imports: [typeorm_1.TypeOrmModule.forFeature([item_entity_1.Item, item_coupon_link_entity_1.ItemCouponLink, coupon_entity_1.Coupon])],
         providers: [pricing_service_1.PricingService],
         controllers: [pricing_controller_1.PricingController],
         exports: [pricing_service_1.PricingService],

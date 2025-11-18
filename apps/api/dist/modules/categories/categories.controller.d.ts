@@ -4,19 +4,19 @@ export declare class CategoriesController {
     private readonly svc;
     constructor(svc: CategoriesService);
     list(q: CategoryQueryDto): Promise<{
-        items: import("../../entities/category.entity").Category[];
+        items: import("../../entities/item_category.entity").ItemCategory[];
         meta: {
             page: number;
             limit: number;
             total: number;
         };
     }>;
-    listAll(active: string): Promise<import("../../entities/category.entity").Category[]>;
-    tree(active: string): Promise<any[]>;
-    get(id: number): Promise<import("../../entities/category.entity").Category>;
-    breadcrumbs(id: number): Promise<import("../../entities/category.entity").Category[]>;
-    create(dto: CreateCategoryDto): Promise<import("../../entities/category.entity").Category>;
-    update(id: number, dto: UpdateCategoryDto): Promise<import("../../entities/category.entity").Category>;
+    listAll(): Promise<import("../../entities/item_category.entity").ItemCategory[]>;
+    tree(): Promise<any[]>;
+    get(id: number): Promise<import("../../entities/item_category.entity").ItemCategory>;
+    breadcrumbs(id: number): Promise<import("../../entities/item_category.entity").ItemCategory[]>;
+    create(dto: CreateCategoryDto): Promise<import("../../entities/item_category.entity").ItemCategory>;
+    update(id: number, dto: UpdateCategoryDto): Promise<import("../../entities/item_category.entity").ItemCategory>;
     remove(id: number): Promise<{
         ok: boolean;
     }>;

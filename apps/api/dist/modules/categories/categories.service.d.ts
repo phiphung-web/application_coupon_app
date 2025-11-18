@@ -12,13 +12,13 @@ export declare class CategoriesService {
             total: number;
         };
     }>;
-    listAll(activeOnly?: boolean): Promise<Category[]>;
+    listAll(): Promise<Category[]>;
     get(id: number): Promise<Category>;
     create(dto: CreateCategoryDto): Promise<Category>;
     update(id: number, dto: UpdateCategoryDto): Promise<Category>;
     remove(id: number): Promise<{
         ok: boolean;
     }>;
-    tree(activeOnly?: boolean): Promise<any[]>;
+    tree(): Promise<any[]>;
     breadcrumbs(id: number): Promise<Category[]>;
 }

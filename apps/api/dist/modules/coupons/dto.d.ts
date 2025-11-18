@@ -1,22 +1,15 @@
-export declare enum DiscountTypeDto {
-    PERCENT = "PERCENT",
-    FIXED = "FIXED"
-}
+import { DiscountType } from "../../entities/coupon.entity";
 export declare class UpsertCouponDto {
-    id?: string;
-    title: string;
+    id?: number;
     code: string;
-    discountType: DiscountTypeDto;
-    discountValue: number;
-    minSpend?: number;
-    maxDiscount?: number;
-    endAt?: string;
-    sourceId?: string;
+    description?: string;
     imageUrl?: string;
-    categoryIds?: number[];
-    badgeIds?: number[];
-    priority?: number;
-    trackingLink?: string;
-    deeplink?: string;
-    isActive?: boolean;
+    discountType: DiscountType;
+    discountValue?: number | null;
+    dealUrl?: string;
+    sourceId?: number;
+    categoryId?: number;
+    badgeId?: number;
+    startDate?: string;
+    endDate?: string;
 }

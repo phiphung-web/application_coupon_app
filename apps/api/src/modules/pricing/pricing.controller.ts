@@ -1,6 +1,6 @@
 import { Controller, Get, Param, ParseIntPipe } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { In, Repository } from "typeorm";
 import { Item } from "../../entities/item.entity";
 import { ItemCouponLink } from "../../entities/item_coupon_link.entity";
 import { Coupon } from "../../entities/coupon.entity";
@@ -24,9 +24,10 @@ export class PricingController {
     const links = await this.linkRepo.find({ where: { itemId } });
     if (!links.length) return { bestDeal: null };
 
-    const coupons = await this.couponRepo.findByIds(
-      links.map((link) => link.couponId)
-    );
+    const ids = links.map((link) => link.couponId);
+    const coupons = ids.length
+      ? await this.couponRepo.findBy({ id: In(ids) })
+      : [];
     const deal = this.pricing.bestDealForProduct(item, coupons);
     return { bestDeal: deal };
   }

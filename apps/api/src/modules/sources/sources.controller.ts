@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
 } from "@nestjs/common";
@@ -20,7 +21,7 @@ export class SourcesController {
   }
 
   @Get(":id")
-  get(@Param("id") id: string) {
+  get(@Param("id", ParseIntPipe) id: number) {
     return this.svc.get(id);
   }
 
@@ -30,12 +31,12 @@ export class SourcesController {
   }
 
   @Patch(":id")
-  update(@Param("id") id: string, @Body() dto: UpdateSourceDto) {
+  update(@Param("id", ParseIntPipe) id: number, @Body() dto: UpdateSourceDto) {
     return this.svc.update(id, dto);
   }
 
   @Delete(":id")
-  remove(@Param("id") id: string) {
+  remove(@Param("id", ParseIntPipe) id: number) {
     return this.svc.remove(id);
   }
 }

@@ -20,6 +20,9 @@ export class CoreRefactor1720867200000 implements MigrationInterface {
       DROP TABLE IF EXISTS badges CASCADE;
       DROP TABLE IF EXISTS sources CASCADE;
       DROP TABLE IF EXISTS users CASCADE;
+      DROP TYPE IF EXISTS user_role;
+      DROP TYPE IF EXISTS discount_type;
+      DROP TYPE IF EXISTS item_type;
     `);
 
     await queryRunner.query(`

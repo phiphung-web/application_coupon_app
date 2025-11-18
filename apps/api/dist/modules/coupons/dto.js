@@ -9,94 +9,67 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UpsertCouponDto = exports.DiscountTypeDto = void 0;
+exports.UpsertCouponDto = void 0;
 const class_validator_1 = require("class-validator");
-var DiscountTypeDto;
-(function (DiscountTypeDto) {
-    DiscountTypeDto["PERCENT"] = "PERCENT";
-    DiscountTypeDto["FIXED"] = "FIXED";
-})(DiscountTypeDto || (exports.DiscountTypeDto = DiscountTypeDto = {}));
+const coupon_entity_1 = require("../../entities/coupon.entity");
 class UpsertCouponDto {
 }
 exports.UpsertCouponDto = UpsertCouponDto;
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
+    __metadata("design:type", Number)
 ], UpsertCouponDto.prototype, "id", void 0);
-__decorate([
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
-    __metadata("design:type", String)
-], UpsertCouponDto.prototype, "title", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
 ], UpsertCouponDto.prototype, "code", void 0);
 __decorate([
-    (0, class_validator_1.IsEnum)(DiscountTypeDto),
-    __metadata("design:type", String)
-], UpsertCouponDto.prototype, "discountType", void 0);
-__decorate([
-    (0, class_validator_1.IsInt)(),
-    (0, class_validator_1.Min)(0),
-    __metadata("design:type", Number)
-], UpsertCouponDto.prototype, "discountValue", void 0);
-__decorate([
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsInt)(),
-    (0, class_validator_1.Min)(0),
-    __metadata("design:type", Number)
-], UpsertCouponDto.prototype, "minSpend", void 0);
-__decorate([
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsInt)(),
-    (0, class_validator_1.Min)(0),
-    __metadata("design:type", Number)
-], UpsertCouponDto.prototype, "maxDiscount", void 0);
-__decorate([
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsDateString)(),
-    __metadata("design:type", String)
-], UpsertCouponDto.prototype, "endAt", void 0);
-__decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], UpsertCouponDto.prototype, "sourceId", void 0);
+], UpsertCouponDto.prototype, "description", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], UpsertCouponDto.prototype, "imageUrl", void 0);
 __decorate([
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsArray)(),
-    __metadata("design:type", Array)
-], UpsertCouponDto.prototype, "categoryIds", void 0);
+    (0, class_validator_1.IsEnum)(coupon_entity_1.DiscountType),
+    __metadata("design:type", String)
+], UpsertCouponDto.prototype, "discountType", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsArray)(),
-    __metadata("design:type", Array)
-], UpsertCouponDto.prototype, "badgeIds", void 0);
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Object)
+], UpsertCouponDto.prototype, "discountValue", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], UpsertCouponDto.prototype, "dealUrl", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsInt)(),
     __metadata("design:type", Number)
-], UpsertCouponDto.prototype, "priority", void 0);
+], UpsertCouponDto.prototype, "sourceId", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsInt)(),
+    __metadata("design:type", Number)
+], UpsertCouponDto.prototype, "categoryId", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsInt)(),
+    __metadata("design:type", Number)
+], UpsertCouponDto.prototype, "badgeId", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsDateString)(),
     __metadata("design:type", String)
-], UpsertCouponDto.prototype, "trackingLink", void 0);
+], UpsertCouponDto.prototype, "startDate", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsDateString)(),
     __metadata("design:type", String)
-], UpsertCouponDto.prototype, "deeplink", void 0);
-__decorate([
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsBoolean)(),
-    __metadata("design:type", Boolean)
-], UpsertCouponDto.prototype, "isActive", void 0);
+], UpsertCouponDto.prototype, "endDate", void 0);

@@ -19,18 +19,22 @@ class Badge {
     this.isActive = true,
   });
 
-  factory Badge.fromJson(Map<String, dynamic> json) => Badge(
-        id: json['id'] as int,
-        key: json['key'] ?? '',
-        label: json['label'] ?? '',
-        color: json['color'],
-        bgColor: json['bgColor'],
-        icon: json['icon'],
-        priority: json['priority'] is int
-            ? json['priority'] as int
-            : int.tryParse('${json['priority']}') ?? 0,
-        isActive: json['isActive'] ?? true,
-      );
+  factory Badge.fromJson(Map<String, dynamic> json) {
+    final name = json['name'] ?? json['label'] ?? '';
+    final slug = json['slug'] ?? json['key'] ?? name;
+    return Badge(
+      id: json['id'] is int ? json['id'] as int : int.tryParse('${json['id']}') ?? 0,
+      key: slug.toString(),
+      label: name.toString(),
+      color: json['color'] ?? json['colorCode'],
+      bgColor: json['bgColor'] ?? json['colorCode'],
+      icon: json['icon'] ?? json['iconUrl'],
+      priority: json['priority'] is int
+          ? json['priority'] as int
+          : int.tryParse('${json['priority']}') ?? 0,
+      isActive: json['isActive'] ?? true,
+    );
+  }
 
   Map<String, dynamic> toJson() => {
         'id': id,

@@ -12,9 +12,9 @@ export declare class CouponsController {
             total: number;
         };
     }>;
-    get(id: string): Promise<import("../../entities/coupon.entity").Coupon>;
+    get(id: number): Promise<import("../../entities/coupon.entity").Coupon>;
     upsert(dto: UpsertCouponDto): Promise<import("../../entities/coupon.entity").Coupon>;
-    deactivate(id: string): Promise<{
+    deactivate(id: number): Promise<{
         ok: boolean;
     }>;
 }

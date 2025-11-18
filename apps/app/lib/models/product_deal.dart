@@ -1,8 +1,8 @@
 import 'coupon.dart';
 
 class ProductDeal {
-  final int after;
-  final int saved;
+  final int after; // cent
+  final int saved; // cent
   final Coupon coupon;
 
   const ProductDeal({
@@ -11,9 +11,17 @@ class ProductDeal {
     required this.coupon,
   });
 
+  static int _toCents(dynamic value) {
+    if (value == null) return 0;
+    if (value is int) return value;
+    if (value is double) return (value * 100).round();
+    final parsed = double.tryParse(value.toString());
+    return parsed == null ? 0 : (parsed * 100).round();
+  }
+
   factory ProductDeal.fromJson(Map<String, dynamic> json) => ProductDeal(
-        after: (json['after'] ?? 0) as int,
-        saved: (json['saved'] ?? 0) as int,
+        after: _toCents(json['after']),
+        saved: _toCents(json['saved']),
         coupon: Coupon.fromJson(json['coupon'] as Map<String, dynamic>),
       );
 

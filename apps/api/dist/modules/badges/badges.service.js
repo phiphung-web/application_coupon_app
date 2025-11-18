@@ -22,10 +22,7 @@ let BadgesService = class BadgesService {
         this.repo = repo;
     }
     list() {
-        return this.repo.find({
-            where: { isActive: true },
-            order: { priority: "DESC" },
-        });
+        return this.repo.find({ order: { id: "DESC" } });
     }
     get(id) {
         return this.repo.findOneByOrFail({ id });
@@ -34,14 +31,14 @@ let BadgesService = class BadgesService {
         return this.repo.save(this.repo.create(data));
     }
     async update(id, data) {
-        const b = await this.repo.findOneBy({ id });
-        if (!b)
+        const badge = await this.repo.findOneBy({ id });
+        if (!badge)
             throw new common_1.NotFoundException();
-        Object.assign(b, data);
-        return this.repo.save(b);
+        Object.assign(badge, data);
+        return this.repo.save(badge);
     }
     async remove(id) {
-        await this.repo.softDelete({ id });
+        await this.repo.delete({ id });
         return { ok: true };
     }
 };

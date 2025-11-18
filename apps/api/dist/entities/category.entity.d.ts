@@ -1,12 +1,1 @@
-import { BaseEntity } from "typeorm";
-export declare class Category extends BaseEntity {
-    id: number;
-    name: string;
-    imageUrl?: string;
-    parentId?: number;
-    priority: number;
-    isActive: boolean;
-    createdAt: Date;
-    updatedAt: Date;
-    deletedAt?: Date;
-}
+export { ItemCategory as Category } from "./item_category.entity";

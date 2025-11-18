@@ -1,8 +1,1 @@
-import { BaseEntity } from "typeorm";
-export declare class ProductCoupon extends BaseEntity {
-    id: number;
-    productId: number;
-    couponId: string;
-    isPrimary: boolean;
-    createdAt: Date;
-}
+export { ItemCouponLink as ProductCoupon } from "./item_coupon_link.entity";

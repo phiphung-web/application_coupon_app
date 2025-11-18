@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { In, Repository } from "typeorm";
 import { Item } from "../../entities/item.entity";
 import { Coupon } from "../../entities/coupon.entity";
 import { ItemCouponLink } from "../../entities/item_coupon_link.entity";
@@ -26,13 +26,14 @@ export class ProductsService {
       .leftJoinAndSelect("i.source", "source");
 
     if (q.q) qb.andWhere("i.name ILIKE :q", { q: `%${q.q}%` });
-    if (q.source)
-      qb.andWhere("i.sourceId = :sid", { sid: Number(q.source) || q.source });
-    if (q.cat) qb.andWhere("i.categoryId = :cid", { cid: q.cat });
+    if (typeof q.source === "number")
+      qb.andWhere("i.sourceId = :sid", { sid: q.source });
+    if (typeof q.cat === "number")
+      qb.andWhere("i.categoryId = :cid", { cid: q.cat });
     if (q.badge)
       qb.andWhere("(badge.slug = :slug OR badge.name ILIKE :slugLike)", {
         slug: q.badge,
-        slugLike: q.badge,
+        slugLike: `%${q.badge}%`,
       });
 
     switch (q.sort) {
@@ -61,9 +62,10 @@ export class ProductsService {
         if (!links.length) {
           return { ...item, bestDeal: null, primaryCouponId: null };
         }
-        const coupons = await this.couponRepo.findByIds(
-          links.map((l) => l.couponId)
-        );
+        const ids = links.map((l) => l.couponId);
+        const coupons = ids.length
+          ? await this.couponRepo.findBy({ id: In(ids) })
+          : [];
         const primary =
           links.find((l) => l.isPrimaryDisplay)?.couponId ?? null;
         const best = this.pricing.bestDealForProduct(item, coupons);
@@ -87,9 +89,10 @@ export class ProductsService {
     if (!links.length) {
       return { ...item, bestDeal: null, primaryCouponId: null };
     }
-    const coupons = await this.couponRepo.findByIds(
-      links.map((l) => l.couponId)
-    );
+    const ids = links.map((l) => l.couponId);
+    const coupons = ids.length
+      ? await this.couponRepo.findBy({ id: In(ids) })
+      : [];
     const primary = links.find((l) => l.isPrimaryDisplay)?.couponId ?? null;
     const best = coupons.length
       ? this.pricing.bestDealForProduct(item, coupons)
@@ -105,36 +108,35 @@ export class ProductsService {
       imageUrl: dto.imageUrl,
       itemType: dto.itemType,
       itemUrl: dto.itemUrl,
-      price: dto.price != null ? String(dto.price) : null,
+      price: dto.price != null ? String(dto.price) : undefined,
       sourceId: dto.sourceId,
       categoryId: dto.categoryId,
       badgeId: dto.badgeId,
     });
-    const saved = await this.repo.save(entity);
+    const saved: Item = await this.repo.save(entity);
 
     if (dto.createCoupon) {
-      const coupon = await this.couponRepo.save(
-        this.couponRepo.create({
-          code: dto.createCoupon.code,
-          description: dto.createCoupon.description,
-          imageUrl: dto.createCoupon.imageUrl,
-          discountType: dto.createCoupon.discountType,
-          discountValue:
-            dto.createCoupon.discountValue != null
-              ? String(dto.createCoupon.discountValue)
-              : null,
-          dealUrl: dto.createCoupon.dealUrl,
-          sourceId: dto.sourceId,
-          categoryId: dto.createCoupon.categoryId,
-          badgeId: dto.createCoupon.badgeId,
-          startDate: dto.createCoupon.startDate
-            ? new Date(dto.createCoupon.startDate)
+      const couponEntity = this.couponRepo.create({
+        code: dto.createCoupon.code,
+        description: dto.createCoupon.description,
+        imageUrl: dto.createCoupon.imageUrl,
+        discountType: dto.createCoupon.discountType,
+        discountValue:
+          dto.createCoupon.discountValue != null
+            ? String(dto.createCoupon.discountValue)
             : undefined,
-          endDate: dto.createCoupon.endDate
-            ? new Date(dto.createCoupon.endDate)
-            : undefined,
-        })
-      );
+        dealUrl: dto.createCoupon.dealUrl,
+        sourceId: dto.sourceId,
+        categoryId: dto.createCoupon.categoryId ?? dto.categoryId,
+        badgeId: dto.createCoupon.badgeId ?? dto.badgeId,
+        startDate: dto.createCoupon.startDate
+          ? new Date(dto.createCoupon.startDate)
+          : undefined,
+        endDate: dto.createCoupon.endDate
+          ? new Date(dto.createCoupon.endDate)
+          : undefined,
+      });
+      const coupon: Coupon = await this.couponRepo.save(couponEntity);
       await this.linkRepo.save(
         this.linkRepo.create({
           itemId: saved.id,

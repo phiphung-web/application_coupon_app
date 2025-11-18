@@ -3,7 +3,7 @@ export declare class PaginationDto {
     limit: number;
     q?: string;
     sort?: string;
-    source?: string;
+    source?: number;
     cat?: number;
     badge?: string;
 }

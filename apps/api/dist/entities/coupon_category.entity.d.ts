@@ -1,12 +1,10 @@
 import { BaseEntity } from "typeorm";
+import { Coupon } from "./coupon.entity";
 export declare class CouponCategory extends BaseEntity {
     id: number;
     name: string;
-    imageUrl?: string;
-    parentId?: number;
-    priority: number;
-    isActive: boolean;
+    description?: string;
+    coupons: Coupon[];
     createdAt: Date;
     updatedAt: Date;
-    deletedAt?: Date;
 }

@@ -41,29 +41,31 @@ function load<T>(file: string): T {
 
   const sourceMap = new Map<string, Source>();
   for (const s of load<any[]>("./sources.json")) {
-    const entity = await sourceRepo.save(sourceRepo.create(s));
-    sourceMap.set(s.name, entity);
+    const entity = sourceRepo.create(s as Partial<Source>);
+    const saved = await sourceRepo.save(entity);
+    sourceMap.set(s.name, saved);
   }
 
   const badgeMap = new Map<string, Badge>();
   for (const b of load<any[]>("./badges.json")) {
-    const entity = await badgeRepo.save(badgeRepo.create(b));
-    if (b.slug) badgeMap.set(b.slug, entity);
-    badgeMap.set(b.name, entity);
+    const entity = badgeRepo.create(b as Partial<Badge>);
+    const saved = await badgeRepo.save(entity);
+    if (b.slug) badgeMap.set(b.slug, saved);
+    badgeMap.set(b.name, saved);
   }
 
   const itemCategoryMap = new Map<string, ItemCategory>();
   for (const c of load<any[]>("./item_categories.json")) {
-    const entity = await itemCategoryRepo.save(itemCategoryRepo.create(c));
-    itemCategoryMap.set(c.name, entity);
+    const entity = itemCategoryRepo.create(c as Partial<ItemCategory>);
+    const saved = await itemCategoryRepo.save(entity);
+    itemCategoryMap.set(c.name, saved);
   }
 
   const couponCategoryMap = new Map<string, CouponCategory>();
   for (const c of load<any[]>("./coupon_categories.json")) {
-    const entity = await couponCategoryRepo.save(
-      couponCategoryRepo.create(c)
-    );
-    couponCategoryMap.set(c.name, entity);
+    const entity = couponCategoryRepo.create(c as Partial<CouponCategory>);
+    const saved = await couponCategoryRepo.save(entity);
+    couponCategoryMap.set(c.name, saved);
   }
 
   const itemMap = new Map<string, Item>();
@@ -74,11 +76,11 @@ function load<T>(file: string): T {
       imageUrl: item.imageUrl,
       itemType: item.itemType,
       itemUrl: item.itemUrl,
-      price: item.price != null ? String(item.price) : null,
+      price: item.price != null ? String(item.price) : undefined,
       sourceId: sourceMap.get(item.source)?.id,
       categoryId: itemCategoryMap.get(item.category)?.id,
       badgeId: item.badge ? badgeMap.get(item.badge)?.id : undefined,
-    });
+    } as Partial<Item>);
     const saved = await itemRepo.save(entity);
     itemMap.set(item.name, saved);
   }
@@ -90,14 +92,15 @@ function load<T>(file: string): T {
       description: c.description,
       imageUrl: c.imageUrl,
       discountType: c.discountType,
-      discountValue: c.discountValue != null ? String(c.discountValue) : null,
+      discountValue:
+        c.discountValue != null ? String(c.discountValue) : undefined,
       dealUrl: c.dealUrl,
       sourceId: sourceMap.get(c.source)?.id,
       categoryId: couponCategoryMap.get(c.category)?.id,
       badgeId: c.badge ? badgeMap.get(c.badge)?.id : undefined,
       startDate: c.startDate ? new Date(c.startDate) : undefined,
       endDate: c.endDate ? new Date(c.endDate) : undefined,
-    });
+    } as Partial<Coupon>);
     const saved = await couponRepo.save(entity);
     couponMap.set(c.code, saved);
   }

@@ -40,11 +40,12 @@ __decorate([
 ], PaginationDto.prototype, "sort", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
+    (0, class_validator_1.IsInt)(),
+    __metadata("design:type", Number)
 ], PaginationDto.prototype, "source", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsInt)(),
     __metadata("design:type", Number)
 ], PaginationDto.prototype, "cat", void 0);
 __decorate([

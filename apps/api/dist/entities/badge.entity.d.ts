@@ -1,14 +1,14 @@
 import { BaseEntity } from "typeorm";
+import { Item } from "./item.entity";
+import { Coupon } from "./coupon.entity";
 export declare class Badge extends BaseEntity {
     id: number;
-    key: string;
-    label: string;
-    color?: string;
-    bgColor?: string;
-    icon?: string;
-    priority: number;
-    isActive: boolean;
+    name: string;
+    slug?: string;
+    iconUrl?: string;
+    colorCode?: string;
+    items: Item[];
+    coupons: Coupon[];
     createdAt: Date;
     updatedAt: Date;
-    deletedAt?: Date;
 }

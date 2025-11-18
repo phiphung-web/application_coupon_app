@@ -17,101 +17,45 @@ exports.CreateSourceDto = CreateSourceDto;
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.MaxLength)(50),
-    __metadata("design:type", String)
-], CreateSourceDto.prototype, "id", void 0);
-__decorate([
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.MaxLength)(120),
+    (0, class_validator_1.MaxLength)(255),
     __metadata("design:type", String)
 ], CreateSourceDto.prototype, "name", void 0);
 __decorate([
-    (0, class_validator_1.IsEnum)(["ECOM", "APP", "GAME", "SERVICE", "OTHER"]),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], CreateSourceDto.prototype, "type", void 0);
+], CreateSourceDto.prototype, "description", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], CreateSourceDto.prototype, "logoUrl", void 0);
+], CreateSourceDto.prototype, "imageUrl", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], CreateSourceDto.prototype, "domain", void 0);
-__decorate([
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], CreateSourceDto.prototype, "packageId", void 0);
-__decorate([
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], CreateSourceDto.prototype, "bundleId", void 0);
-__decorate([
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], CreateSourceDto.prototype, "publisher", void 0);
-__decorate([
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsInt)(),
-    (0, class_validator_1.Min)(0),
-    __metadata("design:type", Number)
-], CreateSourceDto.prototype, "priority", void 0);
-__decorate([
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsBoolean)(),
-    __metadata("design:type", Boolean)
-], CreateSourceDto.prototype, "isActive", void 0);
+], CreateSourceDto.prototype, "websiteUrl", void 0);
 class UpdateSourceDto {
 }
 exports.UpdateSourceDto = UpdateSourceDto;
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(255),
     __metadata("design:type", String)
 ], UpdateSourceDto.prototype, "name", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsEnum)(["ECOM", "APP", "GAME", "SERVICE", "OTHER"]),
+    (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], UpdateSourceDto.prototype, "type", void 0);
+], UpdateSourceDto.prototype, "description", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], UpdateSourceDto.prototype, "logoUrl", void 0);
+], UpdateSourceDto.prototype, "imageUrl", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], UpdateSourceDto.prototype, "domain", void 0);
-__decorate([
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], UpdateSourceDto.prototype, "packageId", void 0);
-__decorate([
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], UpdateSourceDto.prototype, "bundleId", void 0);
-__decorate([
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], UpdateSourceDto.prototype, "publisher", void 0);
-__decorate([
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsInt)(),
-    (0, class_validator_1.Min)(0),
-    __metadata("design:type", Number)
-], UpdateSourceDto.prototype, "priority", void 0);
-__decorate([
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsBoolean)(),
-    __metadata("design:type", Boolean)
-], UpdateSourceDto.prototype, "isActive", void 0);
+], UpdateSourceDto.prototype, "websiteUrl", void 0);

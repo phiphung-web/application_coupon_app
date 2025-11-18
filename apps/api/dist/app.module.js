@@ -12,6 +12,7 @@ const config_1 = require("@nestjs/config");
 const typeorm_1 = require("@nestjs/typeorm");
 const core_1 = require("@nestjs/core");
 const common_2 = require("@nestjs/common");
+const typeorm_config_1 = require("./config/typeorm.config");
 // Admin CMS
 const admin_module_1 = require("./admin/admin.module");
 // Business modules
@@ -43,8 +44,9 @@ exports.AppModule = AppModule = __decorate([
                     return {
                         type: "postgres",
                         url,
-                        autoLoadEntities: true, // tự load entity từ các module
-                        synchronize: false, // dùng migration/seed, không auto sync trên prod
+                        entities: typeorm_config_1.typeormConfig.entities,
+                        autoLoadEntities: true,
+                        synchronize: false,
                         logging: cfg.get("TYPEORM_LOGGING") === "true"
                             ? ["error", "query"]
                             : ["error"],

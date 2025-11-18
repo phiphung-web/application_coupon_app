@@ -83,9 +83,9 @@ __decorate([
 __decorate([
     (0, common_1.Delete)(":id/coupons/:couponId"),
     __param(0, (0, common_1.Param)("id", common_1.ParseIntPipe)),
-    __param(1, (0, common_1.Param)("couponId")),
+    __param(1, (0, common_1.Param)("couponId", common_1.ParseIntPipe)),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, String]),
+    __metadata("design:paramtypes", [Number, Number]),
     __metadata("design:returntype", void 0)
 ], ProductsController.prototype, "unlink", null);
 exports.ProductsController = ProductsController = __decorate([

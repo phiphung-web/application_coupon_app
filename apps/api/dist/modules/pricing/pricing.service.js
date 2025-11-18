@@ -8,36 +8,44 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PricingService = void 0;
 const common_1 = require("@nestjs/common");
+const coupon_entity_1 = require("../../entities/coupon.entity");
 let PricingService = class PricingService {
-    bestDealForProduct(p, coupons) {
-        const base = p.priceCurrent ?? p.priceOriginal;
-        let pick = null;
-        let bestAfter = base;
+    bestDealForProduct(item, coupons) {
+        const base = item.price ? Number(item.price) : 0;
+        if (!base)
+            return null;
         const now = new Date();
-        for (const c of coupons) {
-            if (!c.isActive)
+        let bestAfter = base;
+        let picked = null;
+        for (const coupon of coupons) {
+            if (coupon.startDate && coupon.startDate > now)
                 continue;
-            if (c.endAt && c.endAt < now)
+            if (coupon.endDate && coupon.endDate < now)
                 continue;
-            if (c.minSpend && base < c.minSpend)
-                continue;
+            const value = coupon.discountValue
+                ? Number(coupon.discountValue)
+                : undefined;
             let cut = 0;
-            if (c.discountType === "FIXED") {
-                cut = Math.min(c.discountValue, base);
+            if (coupon.discountType === coupon_entity_1.DiscountType.FIXED_AMOUNT &&
+                value != null) {
+                cut = Math.min(value, base);
+            }
+            else if (coupon.discountType === coupon_entity_1.DiscountType.PERCENT &&
+                value != null) {
+                cut = Math.min((base * value) / 100, base);
             }
             else {
-                const raw = Math.floor((base * c.discountValue) / 100);
-                cut = Math.min(raw, c.maxDiscount ?? raw);
+                cut = value ?? 0;
             }
             const after = Math.max(base - cut, 0);
             if (after < bestAfter) {
                 bestAfter = after;
-                pick = c;
+                picked = coupon;
             }
         }
-        if (!pick)
+        if (!picked)
             return null;
-        return { after: bestAfter, saved: base - bestAfter, coupon: pick };
+        return { after: bestAfter, saved: base - bestAfter, coupon: picked };
     }
 };
 exports.PricingService = PricingService;

@@ -22,7 +22,7 @@ let SourcesService = class SourcesService {
         this.repo = repo;
     }
     async list() {
-        return this.repo.find({ order: { priority: "DESC", name: "ASC" } });
+        return this.repo.find({ order: { name: "ASC" } });
     }
     async get(id) {
         const s = await this.repo.findOne({ where: { id } });
@@ -31,9 +31,6 @@ let SourcesService = class SourcesService {
         return s;
     }
     async create(dto) {
-        const exists = await this.repo.findOne({ where: { id: dto.id } });
-        if (exists)
-            throw new Error("Source ID already exists");
         const s = this.repo.create(dto);
         return this.repo.save(s);
     }
@@ -48,7 +45,7 @@ let SourcesService = class SourcesService {
         const s = await this.repo.findOne({ where: { id } });
         if (!s)
             throw new common_1.NotFoundException("Source not found");
-        await this.repo.softDelete({ id });
+        await this.repo.delete({ id });
         return { ok: true };
     }
 };

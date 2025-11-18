@@ -11,6 +11,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Badge = void 0;
 const typeorm_1 = require("typeorm");
+const item_entity_1 = require("./item.entity");
+const coupon_entity_1 = require("./coupon.entity");
 let Badge = class Badge extends typeorm_1.BaseEntity {
 };
 exports.Badge = Badge;
@@ -19,47 +21,37 @@ __decorate([
     __metadata("design:type", Number)
 ], Badge.prototype, "id", void 0);
 __decorate([
-    (0, typeorm_1.Index)(),
     (0, typeorm_1.Column)({ length: 50 }),
     __metadata("design:type", String)
-], Badge.prototype, "key", void 0);
+], Badge.prototype, "name", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ length: 120 }),
+    (0, typeorm_1.Column)({ length: 50, unique: true, nullable: true }),
     __metadata("design:type", String)
-], Badge.prototype, "label", void 0);
+], Badge.prototype, "slug", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: true }),
+    (0, typeorm_1.Column)({ name: "icon_url", length: 255, nullable: true }),
     __metadata("design:type", String)
-], Badge.prototype, "color", void 0);
+], Badge.prototype, "iconUrl", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: true }),
+    (0, typeorm_1.Column)({ name: "color_code", length: 7, nullable: true }),
     __metadata("design:type", String)
-], Badge.prototype, "bgColor", void 0);
+], Badge.prototype, "colorCode", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: true }),
-    __metadata("design:type", String)
-], Badge.prototype, "icon", void 0);
+    (0, typeorm_1.OneToMany)(() => item_entity_1.Item, (item) => item.badge),
+    __metadata("design:type", Array)
+], Badge.prototype, "items", void 0);
 __decorate([
-    (0, typeorm_1.Column)("int", { default: 0 }),
-    __metadata("design:type", Number)
-], Badge.prototype, "priority", void 0);
+    (0, typeorm_1.OneToMany)(() => coupon_entity_1.Coupon, (coupon) => coupon.badge),
+    __metadata("design:type", Array)
+], Badge.prototype, "coupons", void 0);
 __decorate([
-    (0, typeorm_1.Index)(),
-    (0, typeorm_1.Column)({ default: true }),
-    __metadata("design:type", Boolean)
-], Badge.prototype, "isActive", void 0);
-__decorate([
-    (0, typeorm_1.CreateDateColumn)(),
+    (0, typeorm_1.CreateDateColumn)({ name: "created_at" }),
     __metadata("design:type", Date)
 ], Badge.prototype, "createdAt", void 0);
 __decorate([
-    (0, typeorm_1.UpdateDateColumn)(),
+    (0, typeorm_1.UpdateDateColumn)({ name: "updated_at" }),
     __metadata("design:type", Date)
 ], Badge.prototype, "updatedAt", void 0);
-__decorate([
-    (0, typeorm_1.DeleteDateColumn)(),
-    __metadata("design:type", Date)
-], Badge.prototype, "deletedAt", void 0);
 exports.Badge = Badge = __decorate([
     (0, typeorm_1.Entity)("badges")
 ], Badge);

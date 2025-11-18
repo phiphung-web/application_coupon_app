@@ -1,35 +1,42 @@
+import { ItemType } from "../../entities/item.entity";
+import { DiscountType } from "../../entities/coupon.entity";
+declare class CreateInlineCouponDto {
+    code: string;
+    description?: string;
+    imageUrl?: string;
+    discountType: DiscountType;
+    discountValue?: number | null;
+    dealUrl?: string;
+    badgeId?: number;
+    categoryId?: number;
+    startDate?: string;
+    endDate?: string;
+}
 export declare class CreateProductDto {
     name: string;
-    imageUrl?: string;
-    priceOriginal: number;
-    priceCurrent?: number;
     description?: string;
-    sourceId?: string;
-    categoryIds: number[];
-    badgeIds?: number[];
-    createCoupon?: {
-        id?: string;
-        title: string;
-        code: string;
-        discountType: "PERCENT" | "FIXED";
-        discountValue: number;
-        minSpend?: number;
-        maxDiscount?: number;
-        endAt?: string;
-        sourceId?: string;
-    };
+    imageUrl?: string;
+    itemType: ItemType;
+    itemUrl?: string;
+    price?: number | null;
+    sourceId?: number;
+    categoryId?: number;
+    badgeId?: number;
+    createCoupon?: CreateInlineCouponDto;
 }
 export declare class UpdateProductDto {
     name?: string;
-    imageUrl?: string;
-    priceOriginal?: number;
-    priceCurrent?: number;
     description?: string;
-    sourceId?: string;
-    categoryIds?: number[];
-    badgeIds?: number[];
+    imageUrl?: string;
+    itemType?: ItemType;
+    itemUrl?: string;
+    price?: number | null;
+    sourceId?: number;
+    categoryId?: number;
+    badgeId?: number;
 }
 export declare class LinkCouponDto {
-    couponId: string;
+    couponId: number;
     isPrimary: boolean;
 }
+export {};

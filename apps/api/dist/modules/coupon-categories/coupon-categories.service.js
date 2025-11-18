@@ -22,10 +22,7 @@ let CouponCategoriesService = class CouponCategoriesService {
         this.repo = repo;
     }
     list() {
-        return this.repo.find({
-            where: { isActive: true },
-            order: { priority: "DESC" },
-        });
+        return this.repo.find({ order: { id: "DESC" } });
     }
     get(id) {
         return this.repo.findOneByOrFail({ id });
@@ -34,14 +31,14 @@ let CouponCategoriesService = class CouponCategoriesService {
         return this.repo.save(this.repo.create(data));
     }
     async update(id, data) {
-        const c = await this.repo.findOneBy({ id });
-        if (!c)
+        const category = await this.repo.findOneBy({ id });
+        if (!category)
             throw new common_1.NotFoundException();
-        Object.assign(c, data);
-        return this.repo.save(c);
+        Object.assign(category, data);
+        return this.repo.save(category);
     }
     async remove(id) {
-        await this.repo.softDelete({ id });
+        await this.repo.delete({ id });
         return { ok: true };
     }
 };

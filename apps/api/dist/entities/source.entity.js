@@ -11,63 +11,47 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Source = void 0;
 const typeorm_1 = require("typeorm");
+const item_entity_1 = require("./item.entity");
+const coupon_entity_1 = require("./coupon.entity");
 let Source = class Source extends typeorm_1.BaseEntity {
 };
 exports.Source = Source;
 __decorate([
-    (0, typeorm_1.PrimaryColumn)({ length: 50 }),
-    __metadata("design:type", String)
+    (0, typeorm_1.PrimaryGeneratedColumn)(),
+    __metadata("design:type", Number)
 ], Source.prototype, "id", void 0);
 __decorate([
-    (0, typeorm_1.Index)(),
-    (0, typeorm_1.Column)({ length: 120 }),
+    (0, typeorm_1.Column)({ length: 255 }),
     __metadata("design:type", String)
 ], Source.prototype, "name", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: "varchar", length: 10, default: "ECOM" }),
+    (0, typeorm_1.Column)("text", { nullable: true }),
     __metadata("design:type", String)
-], Source.prototype, "type", void 0);
+], Source.prototype, "description", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: true }),
+    (0, typeorm_1.Column)({ name: "image_url", length: 255, nullable: true }),
     __metadata("design:type", String)
-], Source.prototype, "logoUrl", void 0);
+], Source.prototype, "imageUrl", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: true }),
+    (0, typeorm_1.Column)({ name: "website_url", length: 255, nullable: true }),
     __metadata("design:type", String)
-], Source.prototype, "domain", void 0);
+], Source.prototype, "websiteUrl", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: true }),
-    __metadata("design:type", String)
-], Source.prototype, "packageId", void 0);
+    (0, typeorm_1.OneToMany)(() => item_entity_1.Item, (item) => item.source),
+    __metadata("design:type", Array)
+], Source.prototype, "items", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: true }),
-    __metadata("design:type", String)
-], Source.prototype, "bundleId", void 0);
+    (0, typeorm_1.OneToMany)(() => coupon_entity_1.Coupon, (coupon) => coupon.source),
+    __metadata("design:type", Array)
+], Source.prototype, "coupons", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: true }),
-    __metadata("design:type", String)
-], Source.prototype, "publisher", void 0);
-__decorate([
-    (0, typeorm_1.Column)("int", { default: 0 }),
-    __metadata("design:type", Number)
-], Source.prototype, "priority", void 0);
-__decorate([
-    (0, typeorm_1.Index)(),
-    (0, typeorm_1.Column)({ default: true }),
-    __metadata("design:type", Boolean)
-], Source.prototype, "isActive", void 0);
-__decorate([
-    (0, typeorm_1.CreateDateColumn)(),
+    (0, typeorm_1.CreateDateColumn)({ name: "created_at" }),
     __metadata("design:type", Date)
 ], Source.prototype, "createdAt", void 0);
 __decorate([
-    (0, typeorm_1.UpdateDateColumn)(),
+    (0, typeorm_1.UpdateDateColumn)({ name: "updated_at" }),
     __metadata("design:type", Date)
 ], Source.prototype, "updatedAt", void 0);
-__decorate([
-    (0, typeorm_1.DeleteDateColumn)(),
-    __metadata("design:type", Date)
-], Source.prototype, "deletedAt", void 0);
 exports.Source = Source = __decorate([
     (0, typeorm_1.Entity)("sources")
 ], Source);

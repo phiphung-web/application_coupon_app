@@ -45,9 +45,9 @@ __decorate([
 ], CouponsController.prototype, "list", null);
 __decorate([
     (0, common_1.Get)(":id"),
-    __param(0, (0, common_1.Param)("id")),
+    __param(0, (0, common_1.Param)("id", common_1.ParseIntPipe)),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [Number]),
     __metadata("design:returntype", void 0)
 ], CouponsController.prototype, "get", null);
 __decorate([
@@ -59,9 +59,9 @@ __decorate([
 ], CouponsController.prototype, "upsert", null);
 __decorate([
     (0, common_1.Patch)(":id/deactivate"),
-    __param(0, (0, common_1.Param)("id")),
+    __param(0, (0, common_1.Param)("id", common_1.ParseIntPipe)),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [Number]),
     __metadata("design:returntype", void 0)
 ], CouponsController.prototype, "deactivate", null);
 exports.CouponsController = CouponsController = __decorate([
