@@ -31,13 +31,23 @@ export class UploadsController {
   @UseInterceptors(
     FileInterceptor("file", {
       storage: diskStorage({
-        destination: (req, file, cb) => {
-          const folder = sanitizeFolder((req.query.folder as string) ?? "general");
+        destination: (
+          req: Express.Request & { query?: Record<string, any> },
+          file: Express.Multer.File,
+          cb: (error: Error | null, destination: string) => void
+        ) => {
+          const folder = sanitizeFolder(
+            ((req.query?.folder ?? req.query?.["folder"]) as string) ?? "general"
+          );
           const dest = join(UPLOAD_ROOT, folder);
           ensureDir(dest);
           cb(null, dest);
         },
-        filename: (_req, file, cb) => {
+        filename: (
+          _req: Express.Request,
+          file: Express.Multer.File,
+          cb: (error: Error | null, filename: string) => void
+        ) => {
           const normalized = file.originalname.replace(/\s+/g, "-");
           cb(null, `${Date.now()}-${normalized}`);
         },

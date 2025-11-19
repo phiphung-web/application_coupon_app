@@ -1,4 +1,4 @@
-import { ResourceWithOptions } from "adminjs";
+import { Locale, ResourceWithOptions } from "adminjs";
 import { DataSource } from "typeorm";
 export declare function buildAdminOptions(ds: DataSource): {
     rootPath: string;
@@ -8,7 +8,5 @@ export declare function buildAdminOptions(ds: DataSource): {
         companyName: string;
         softwareBrothers: boolean;
     };
-    locale: {
-        language: string;
-    };
+    locale: Locale;
 };

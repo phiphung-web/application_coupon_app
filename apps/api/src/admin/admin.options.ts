@@ -1,4 +1,9 @@
-import { ActionRequest, ActionResponse, ResourceWithOptions } from "adminjs";
+import {
+  ActionRequest,
+  ActionResponse,
+  Locale,
+  ResourceWithOptions,
+} from "adminjs";
 import uploadFeature from "@adminjs/upload";
 import { join } from "path";
 import { existsSync, mkdirSync } from "fs";
@@ -28,13 +33,13 @@ function imageUploadFeature(folder: string, property = "imageUrl") {
     provider: {
       local: {
         bucket,
+        opts: {},
       },
     },
     properties: {
       key: property,
       file: `${property}File`,
     },
-    publicPath: "/uploads",
     uploadPath: (_record, filename) =>
       `${folder}/${Date.now()}-${filename.replace(/\s+/g, "-")}`,
   });
@@ -42,7 +47,6 @@ function imageUploadFeature(folder: string, property = "imageUrl") {
 
 export function buildAdminOptions(ds: DataSource) {
   const couponRepo = ds.getRepository(Coupon);
-  const itemRepo = ds.getRepository(Item);
   const linkRepo = ds.getRepository(ItemCouponLink);
 
   const handleItemExtras = (actionName: string) => ({
@@ -58,7 +62,9 @@ export function buildAdminOptions(ds: DataSource) {
         };
         context.itemActionExtras = extras;
         Object.keys(extras).forEach((key) => {
-          if (key in request.payload) delete request.payload[key];
+          if (request.payload && key in request.payload) {
+            delete request.payload[key];
+          }
         });
       }
       return request;
@@ -118,8 +124,10 @@ export function buildAdminOptions(ds: DataSource) {
           linkIsPrimary: request.payload.couponLinkIsPrimary,
         };
         context.couponActionExtras = extras;
-        delete request.payload.linkItemId;
-        delete request.payload.couponLinkIsPrimary;
+        if (request.payload) {
+          delete request.payload.linkItemId;
+          delete request.payload.couponLinkIsPrimary;
+        }
       }
       return request;
     },
@@ -179,25 +187,21 @@ export function buildAdminOptions(ds: DataSource) {
             type: "reference",
             reference: "Coupon",
             isVisible: { list: false, filter: false, show: false, edit: true },
-            label: "Liên kết mã có sẵn",
             position: 120,
           },
           linkIsPrimary: {
             type: "boolean",
             isVisible: { list: false, filter: false, show: false, edit: true },
-            label: "Đặt làm mã chính",
             position: 121,
           },
           newCouponCode: {
             type: "string",
             isVisible: { list: false, filter: false, show: false, edit: true },
-            label: "Tạo mã mới (code)",
             position: 130,
           },
           newCouponDescription: {
             type: "textarea",
             isVisible: { list: false, filter: false, show: false, edit: true },
-            label: "Mô tả mã",
             position: 131,
           },
           newCouponDiscountType: {
@@ -209,13 +213,11 @@ export function buildAdminOptions(ds: DataSource) {
               { value: "GIFT", label: "Gift" },
             ],
             isVisible: { list: false, filter: false, show: false, edit: true },
-            label: "Loại giảm",
             position: 132,
           },
           newCouponDiscountValue: {
             type: "number",
             isVisible: { list: false, filter: false, show: false, edit: true },
-            label: "Giá trị giảm",
             position: 133,
           },
         },
@@ -257,13 +259,11 @@ export function buildAdminOptions(ds: DataSource) {
             type: "reference",
             reference: "Item",
             isVisible: { list: false, filter: false, show: false, edit: true },
-            label: "Gán sản phẩm",
             position: 110,
           },
           couponLinkIsPrimary: {
             type: "boolean",
             isVisible: { list: false, filter: false, show: false, edit: true },
-            label: "Đặt làm mã chính của sản phẩm",
             position: 111,
           },
         },
@@ -335,6 +335,9 @@ export function buildAdminOptions(ds: DataSource) {
       companyName: "Coupon App Admin",
       softwareBrothers: false,
     },
-    locale: { language: "vi" },
+    locale: {
+      language: "vi",
+      translations: {},
+    } as Locale,
   };
 }

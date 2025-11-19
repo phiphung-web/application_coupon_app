@@ -4,8 +4,9 @@ import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import { existsSync, mkdirSync } from "fs";
 import { join } from "path";
+import { NestExpressApplication } from "@nestjs/platform-express";
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.enableCors();
   const uploadsDir = join(__dirname, "..", "uploads");
   if (!existsSync(uploadsDir)) {

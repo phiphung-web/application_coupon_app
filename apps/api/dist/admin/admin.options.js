@@ -28,17 +28,111 @@ function imageUploadFeature(folder, property = "imageUrl") {
         provider: {
             local: {
                 bucket,
+                opts: {},
             },
         },
         properties: {
             key: property,
             file: `${property}File`,
         },
-        publicPath: "/uploads",
         uploadPath: (_record, filename) => `${folder}/${Date.now()}-${filename.replace(/\s+/g, "-")}`,
     });
 }
 function buildAdminOptions(ds) {
+    const couponRepo = ds.getRepository(coupon_entity_1.Coupon);
+    const linkRepo = ds.getRepository(item_coupon_link_entity_1.ItemCouponLink);
+    const handleItemExtras = (actionName) => ({
+        before: async (request, context) => {
+            if (request.payload) {
+                const extras = {
+                    linkCouponId: request.payload.linkCouponId,
+                    linkIsPrimary: request.payload.linkIsPrimary,
+                    newCouponCode: request.payload.newCouponCode,
+                    newCouponDescription: request.payload.newCouponDescription,
+                    newCouponDiscountType: request.payload.newCouponDiscountType,
+                    newCouponDiscountValue: request.payload.newCouponDiscountValue,
+                };
+                context.itemActionExtras = extras;
+                Object.keys(extras).forEach((key) => {
+                    if (request.payload && key in request.payload) {
+                        delete request.payload[key];
+                    }
+                });
+            }
+            return request;
+        },
+        after: async (response, request, context) => {
+            const extras = context.itemActionExtras || {};
+            const recordId = context.record?.params?.id || response.record?.id || response.record?.params?.id;
+            if (!recordId)
+                return response;
+            const itemId = Number(recordId);
+            if (extras.linkCouponId) {
+                const couponId = Number(extras.linkCouponId);
+                if (!Number.isNaN(couponId)) {
+                    await linkRepo.save(linkRepo.create({
+                        itemId,
+                        couponId,
+                        isPrimaryDisplay: extras.linkIsPrimary === true ||
+                            extras.linkIsPrimary === "true",
+                    }));
+                }
+            }
+            if (extras.newCouponCode) {
+                const discountValue = Number(extras.newCouponDiscountValue);
+                const coupon = couponRepo.create({
+                    code: extras.newCouponCode,
+                    description: extras.newCouponDescription,
+                    discountType: extras.newCouponDiscountType || undefined,
+                    discountValue: Number.isNaN(discountValue)
+                        ? undefined
+                        : String(discountValue),
+                });
+                const saved = await couponRepo.save(coupon);
+                await linkRepo.save(linkRepo.create({
+                    itemId,
+                    couponId: saved.id,
+                    isPrimaryDisplay: true,
+                }));
+            }
+            return response;
+        },
+    });
+    const handleCouponExtras = () => ({
+        before: async (request, context) => {
+            if (request.payload) {
+                const extras = {
+                    linkItemId: request.payload.linkItemId,
+                    linkIsPrimary: request.payload.couponLinkIsPrimary,
+                };
+                context.couponActionExtras = extras;
+                if (request.payload) {
+                    delete request.payload.linkItemId;
+                    delete request.payload.couponLinkIsPrimary;
+                }
+            }
+            return request;
+        },
+        after: async (response, request, context) => {
+            const extras = context.couponActionExtras || {};
+            const recordId = context.record?.params?.id || response.record?.id || response.record?.params?.id;
+            if (!recordId)
+                return response;
+            const couponId = Number(recordId);
+            if (extras.linkItemId) {
+                const itemId = Number(extras.linkItemId);
+                if (!Number.isNaN(itemId)) {
+                    await linkRepo.save(linkRepo.create({
+                        itemId,
+                        couponId,
+                        isPrimaryDisplay: extras.linkIsPrimary === true ||
+                            extras.linkIsPrimary === "true",
+                    }));
+                }
+            }
+            return response;
+        },
+    });
     const resources = [
         {
             resource: item_entity_1.Item,
@@ -63,6 +157,43 @@ function buildAdminOptions(ds) {
                     updatedAt: {
                         isVisible: { list: true, filter: true, show: true, edit: false },
                     },
+                    linkCouponId: {
+                        type: "reference",
+                        reference: "Coupon",
+                        isVisible: { list: false, filter: false, show: false, edit: true },
+                        position: 120,
+                    },
+                    linkIsPrimary: {
+                        type: "boolean",
+                        isVisible: { list: false, filter: false, show: false, edit: true },
+                        position: 121,
+                    },
+                    newCouponCode: {
+                        type: "string",
+                        isVisible: { list: false, filter: false, show: false, edit: true },
+                        position: 130,
+                    },
+                    newCouponDescription: {
+                        type: "textarea",
+                        isVisible: { list: false, filter: false, show: false, edit: true },
+                        position: 131,
+                    },
+                    newCouponDiscountType: {
+                        type: "string",
+                        availableValues: [
+                            { value: "PERCENT", label: "Percent" },
+                            { value: "FIXED_AMOUNT", label: "Fixed amount" },
+                            { value: "FREESHIP", label: "Freeship" },
+                            { value: "GIFT", label: "Gift" },
+                        ],
+                        isVisible: { list: false, filter: false, show: false, edit: true },
+                        position: 132,
+                    },
+                    newCouponDiscountValue: {
+                        type: "number",
+                        isVisible: { list: false, filter: false, show: false, edit: true },
+                        position: 133,
+                    },
                 },
                 listProperties: [
                     "id",
@@ -72,6 +203,10 @@ function buildAdminOptions(ds) {
                     "sourceId",
                     "categoryId",
                 ],
+                actions: {
+                    new: handleItemExtras("new"),
+                    edit: handleItemExtras("edit"),
+                },
             },
             features: [imageUploadFeature("items")],
         },
@@ -94,6 +229,17 @@ function buildAdminOptions(ds) {
                     discountValue: { type: "number" },
                     startDate: { type: "datetime" },
                     endDate: { type: "datetime" },
+                    linkItemId: {
+                        type: "reference",
+                        reference: "Item",
+                        isVisible: { list: false, filter: false, show: false, edit: true },
+                        position: 110,
+                    },
+                    couponLinkIsPrimary: {
+                        type: "boolean",
+                        isVisible: { list: false, filter: false, show: false, edit: true },
+                        position: 111,
+                    },
                 },
                 listProperties: [
                     "id",
@@ -103,6 +249,10 @@ function buildAdminOptions(ds) {
                     "startDate",
                     "endDate",
                 ],
+                actions: {
+                    new: handleCouponExtras(),
+                    edit: handleCouponExtras(),
+                },
             },
             features: [imageUploadFeature("coupons")],
         },
@@ -158,6 +308,9 @@ function buildAdminOptions(ds) {
             companyName: "Coupon App Admin",
             softwareBrothers: false,
         },
-        locale: { language: "vi" },
+        locale: {
+            language: "vi",
+            translations: {},
+        },
     };
 }

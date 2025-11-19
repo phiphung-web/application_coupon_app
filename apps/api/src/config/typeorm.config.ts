@@ -11,6 +11,7 @@ import { FavoriteItem } from "../entities/favorite_item.entity";
 import { FavoriteCoupon } from "../entities/favorite_coupon.entity";
 import { FavoriteSource } from "../entities/favorite_source.entity";
 import { ItemCategory } from "../entities/item_category.entity";
+import { Notification } from "../entities/notification.entity";
 
 export const typeormConfig: DataSourceOptions = {
   type: "postgres",
@@ -30,6 +31,7 @@ export const typeormConfig: DataSourceOptions = {
     FavoriteItem,
     FavoriteCoupon,
     FavoriteSource,
+    Notification,
   ],
   migrations: ["dist/migrations/*.js"],
 };
