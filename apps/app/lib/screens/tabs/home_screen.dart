@@ -23,7 +23,7 @@ import '../detail/voucher_detail_screen.dart';
 import 'coupons_screen.dart';
 import 'hot_coupons_screen.dart';
 import 'hot_products_screen.dart';
-import '../tabs/search_screen.dart';
+import 'search_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final ValueNotifier<int>? reloadTrigger;

@@ -2,11 +2,9 @@
 import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { AdminModule as NestAdminModule } from "@adminjs/nestjs";
-import { Database, Resource } from "@adminjs/typeorm"; // ✅ Import trực tiếp bình thường
+import { Database, Resource } from "@adminjs/typeorm";
 import { DataSource } from "typeorm";
 import AdminJS from "adminjs";
-
-// Import Entities
 import { Item } from "../entities/item.entity";
 import { Coupon } from "../entities/coupon.entity";
 import { Category } from "../entities/category.entity";
@@ -15,8 +13,8 @@ import { Badge } from "../entities/badge.entity";
 import { Source } from "../entities/source.entity";
 import { ItemCouponLink } from "../entities/item_coupon_link.entity";
 import { User } from "../entities/user.entity";
+import { buildAdminOptions } from "./admin.options";
 
-// Đăng ký Adapter ngay bên ngoài (cho gọn)
 AdminJS.registerAdapter({ Database, Resource });
 
 @Module({
@@ -35,22 +33,9 @@ AdminJS.registerAdapter({ Database, Resource });
     NestAdminModule.createAdminAsync({
       inject: [DataSource],
       useFactory: async (ds: DataSource) => {
+        const adminJsOptions = buildAdminOptions(ds);
         return {
-          adminJsOptions: {
-            rootPath: "/admin",
-            branding: { companyName: "Coupon CMS" },
-            resources: [
-              // ✅ AdminJS v6 tự hiểu Entity, không cần { model: ds }
-              Item,
-              Coupon,
-              Category,
-              CouponCategory,
-              Badge,
-              Source,
-              ItemCouponLink,
-              User,
-            ],
-          },
+          adminJsOptions,
           auth: {
             authenticate: async (email, password) =>
               email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD
