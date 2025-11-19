@@ -16,6 +16,25 @@ class CouponRepoRemote implements CouponRepo {
   final ApiClient _api;
   final CouponRepo _fallback;
 
+  List<Map<String, dynamic>> _parseItems(dynamic json) {
+    final raw =
+        json is List ? json : (json is Map<String, dynamic> ? json['items'] : null);
+    if (raw is List) {
+      return raw
+          .whereType<Map>()
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
+    }
+    return const [];
+  }
+
+  Map<String, dynamic>? _parseMeta(dynamic json) {
+    if (json is Map<String, dynamic> && json['meta'] is Map<String, dynamic>) {
+      return Map<String, dynamic>.from(json['meta'] as Map<String, dynamic>);
+    }
+    return null;
+  }
+
   @override
   Future<PageResult<Coupon>> list({
     int page = 1,
@@ -36,11 +55,11 @@ class CouponRepoRemote implements CouponRepo {
       if (badgeKey != null && badgeKey.isNotEmpty) 'badge': badgeKey,
     };
     try {
-      final json = await _api.get('coupons', query: query) as Map<String, dynamic>;
-      final items = (json['items'] as List<dynamic>? ?? [])
-          .map((e) => Coupon.fromJson(e as Map<String, dynamic>))
+      final response = await _api.get('coupons', query: query);
+      final items = _parseItems(response)
+          .map((e) => Coupon.fromJson(e))
           .toList();
-      final metaRaw = json['meta'] as Map<String, dynamic>?;
+      final metaRaw = _parseMeta(response);
       final currentPage =
           metaRaw != null && metaRaw['page'] is int ? metaRaw['page'] as int : page;
       final limit =
@@ -73,13 +92,13 @@ class CouponRepoRemote implements CouponRepo {
   @override
   Future<List<Coupon>> hot({int limit = 10}) async {
     try {
-      final json = await _api.get('coupons', query: {
+      final response = await _api.get('coupons', query: {
         'limit': limit,
         'active': 'true',
         'sort': 'hot',
-      }) as Map<String, dynamic>;
-      final items = (json['items'] as List<dynamic>? ?? [])
-          .map((e) => Coupon.fromJson(e as Map<String, dynamic>))
+      });
+      final items = _parseItems(response)
+          .map((e) => Coupon.fromJson(e))
           .toList();
       return items.take(limit).toList();
     } catch (e) {
@@ -94,6 +113,11 @@ class CouponRepoRemote implements CouponRepo {
       final json = await _api.get('coupons/$id');
       if (json is Map<String, dynamic>) {
         return Coupon.fromJson(json);
+      }
+      if (json is List && json.isNotEmpty && json.first is Map) {
+        return Coupon.fromJson(
+          Map<String, dynamic>.from(json.first as Map),
+        );
       }
       return null;
     } catch (e) {

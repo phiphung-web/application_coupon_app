@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
@@ -38,12 +38,15 @@ class _VoucherDetailScreenState extends State<VoucherDetailScreen> {
   @override
   Widget build(BuildContext context) {
     if (_loading) return const Center(child: CircularProgressIndicator());
-    if (_coupon == null) return const Center(child: Text('KhÃ´ng tÃ¬m tháº¥y mÃ£'));
+    if (_coupon == null) {
+      return const Center(child: Text('Không tìm thấy mã'));
+    }
 
     final c = _coupon!;
-    final isHot =
-        c.badges.any((b) => b.key.toUpperCase() == 'HOT') ||
+    final isHot = c.badges.any((b) => b.key.toUpperCase() == 'HOT') ||
         (c.priority ?? 0) >= 80;
+    final appliedSource =
+        c.sourceName ?? (c.sourceId != null ? 'Nguồn #${c.sourceId}' : 'Toàn sàn');
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
@@ -101,25 +104,24 @@ class _VoucherDetailScreenState extends State<VoucherDetailScreen> {
               onTap: () {
                 Clipboard.setData(ClipboardData(text: c.code));
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('ÄÃ£ copy mÃ£')),
+                  const SnackBar(content: Text('Đã copy mã')),
                 );
               },
             ),
-            if (c.minSpend != null)
-              _chip(context, 'Min ${money(c.minSpend!)}'),
+            if (c.minSpend != null) _chip(context, 'Min ${money(c.minSpend!)}'),
             if (c.maxDiscount != null)
               _chip(context, 'Max ${money(c.maxDiscount!)}'),
             _chip(
               context,
               c.isPercent
-                  ? 'Giáº£m ${c.discountValue}%'
-                  : 'Giáº£m ${money(c.discountValue)}',
+                  ? 'Giảm ${c.discountValue}%'
+                  : 'Giảm ${money(c.discountValue)}',
             ),
           ],
         ),
         const SizedBox(height: 6),
         Text(
-          'Háº¡n dÃ¹ng: ${_fmtDate(c.endAt)}',
+          'Hiệu lực: ${_fmtDate(c.startAt)} → ${_fmtDate(c.endAt)}',
           style: Theme.of(context).textTheme.bodySmall,
         ),
         const Divider(height: 24),
@@ -130,62 +132,40 @@ class _VoucherDetailScreenState extends State<VoucherDetailScreen> {
                 onPressed: () {
                   Clipboard.setData(ClipboardData(text: c.code));
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('ÄÃ£ copy mÃ£')),
+                    const SnackBar(content: Text('Đã copy mã')),
                   );
                 },
                 icon: const Icon(Icons.copy, size: 18),
-                label: const Text('Copy mÃ£'),
+                label: const Text('Copy mã'),
               ),
             ),
             const SizedBox(width: 8),
             Expanded(
               child: ElevatedButton.icon(
-                onPressed: () async {
-                  final messenger = ScaffoldMessenger.of(context);
-                  final link = c.deeplink ?? c.trackingLink;
-                  if (link == null || link.isEmpty) {
-                    messenger.showSnackBar(
-                      const SnackBar(content: Text('Chưa có liên kết dùng mã')),
-                    );
-                    return;
-                  }
-                  final canLaunchLink = await canLaunchUrlString(link);
-                  if (!canLaunchLink) {
-                    messenger.showSnackBar(
-                      SnackBar(content: Text('Không mở được: ')),
-                    );
-                    return;
-                  }
-                  await launchUrlString(
-                    link,
-                    mode: LaunchMode.externalApplication,
-                  );
-                },
+                onPressed: () => _openLink(context, c),
                 icon: const Icon(Icons.launch, size: 18),
-                label: const Text('DÃ¹ng mÃ£'),
+                label: const Text('Dùng mã'),
               ),
             ),
           ],
         ),
         const SizedBox(height: 8),
-        Text(
-          c.sourceId != null
-              ? 'Ãp dá»¥ng táº¡i: ${c.sourceId}'
-              : 'Ãp dá»¥ng: ToÃ n sÃ n',
-        ),
+        Text('Áp dụng tại: $appliedSource'),
         if (c.categories.isNotEmpty)
           Text(
-            'Danh má»¥c Ã¡p dá»¥ng: ${c.categories.map((cat) => cat.name).join(', ')}',
+            'Danh mục áp dụng: ${c.categories.map((cat) => cat.name).join(', ')}',
           ),
         const SizedBox(height: 16),
         const Text(
-          'Äiá»u kiá»‡n & Ä‘iá»u khoáº£n',
+          'Điều kiện & điều khoản',
           style: TextStyle(fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 4),
         Text(
-          'Demo: CÃ³ thá»ƒ yÃªu cáº§u tá»‘i thiá»ƒu ${c.minSpend != null ? money(c.minSpend!) : 'khÃ´ng'}.'
-          ' Má»©c giáº£m tá»‘i Ä‘a ${c.maxDiscount != null ? money(c.maxDiscount!) : 'khÃ´ng giá»›i háº¡n'}.',
+          'Ví dụ: Có thể yêu cầu đơn tối thiểu '
+          '${c.minSpend != null ? money(c.minSpend!) : 'không có'}. '
+          'Mức giảm tối đa '
+          '${c.maxDiscount != null ? money(c.maxDiscount!) : 'không giới hạn'}.',
         ),
       ],
     );
@@ -218,6 +198,25 @@ class _VoucherDetailScreenState extends State<VoucherDetailScreen> {
     );
     if (onTap == null) return child;
     return GestureDetector(onTap: onTap, child: child);
+  }
+
+  Future<void> _openLink(BuildContext context, Coupon coupon) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final link = coupon.dealUrl ?? coupon.deeplink ?? coupon.trackingLink;
+    if (link == null || link.isEmpty) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Chưa có liên kết dùng mã')),
+      );
+      return;
+    }
+    final canLaunchLink = await canLaunchUrlString(link);
+    if (!canLaunchLink) {
+      messenger.showSnackBar(
+        SnackBar(content: Text('Không mở được: $link')),
+      );
+      return;
+    }
+    await launchUrlString(link, mode: LaunchMode.externalApplication);
   }
 
   String _fmtDate(DateTime? d) {

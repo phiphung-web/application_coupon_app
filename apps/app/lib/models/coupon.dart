@@ -12,6 +12,7 @@ class Coupon {
   final DateTime? startDate;
   final DateTime? endDate;
   final String? sourceId;
+  final String? sourceName;
   final String? imageUrl;
   final List<CouponCategory> categories;
   final List<Badge> badges;
@@ -32,6 +33,7 @@ class Coupon {
     this.startDate,
     this.endDate,
     this.sourceId,
+    this.sourceName,
     this.imageUrl,
     this.categories = const [],
     this.badges = const [],
@@ -89,6 +91,7 @@ class Coupon {
     final now = DateTime.now();
     final rawId = json['id'];
     final parsedId = rawId is int ? rawId : int.tryParse('$rawId') ?? 0;
+    final source = json['source'];
     return Coupon(
       id: parsedId,
       title: json['title'] ??
@@ -103,7 +106,10 @@ class Coupon {
       startDate: start,
       endDate: end,
       sourceId: json['sourceId']?.toString() ??
-          (json['source'] != null ? '${json['source']['id']}' : null),
+          (source is Map<String, dynamic> ? '${source['id']}' : null),
+      sourceName: source is Map<String, dynamic>
+          ? source['name']?.toString()
+          : json['sourceName']?.toString(),
       imageUrl: json['imageUrl'],
       categories: _parseCategories(json),
       badges: _parseBadges(json),
@@ -121,6 +127,8 @@ class Coupon {
 
   bool get isPercent => discountType.toUpperCase() == 'PERCENT';
 
+  DateTime? get startAt => startDate;
+  DateTime? get endAt => endDate;
   DateTime? get expiredAt => endDate;
 
   Map<String, dynamic> toJson() => {
@@ -134,6 +142,7 @@ class Coupon {
         'startDate': startDate?.toIso8601String(),
         'endDate': endDate?.toIso8601String(),
         'sourceId': sourceId,
+        'sourceName': sourceName,
         'imageUrl': imageUrl,
         'categories': categories.map((c) => c.toJson()).toList(),
         'badges': badges.map((b) => b.toJson()).toList(),

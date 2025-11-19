@@ -16,6 +16,25 @@ class ProductRepoRemote implements ProductRepo {
   final ApiClient _api;
   final ProductRepo _fallback;
 
+  List<Map<String, dynamic>> _parseItems(dynamic json) {
+    final raw =
+        json is List ? json : (json is Map<String, dynamic> ? json['items'] : null);
+    if (raw is List) {
+      return raw
+          .whereType<Map>()
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
+    }
+    return const [];
+  }
+
+  Map<String, dynamic>? _parseMeta(dynamic json) {
+    if (json is Map<String, dynamic> && json['meta'] is Map<String, dynamic>) {
+      return Map<String, dynamic>.from(json['meta'] as Map<String, dynamic>);
+    }
+    return null;
+  }
+
   Map<String, dynamic> _meta(
     Map<String, dynamic>? raw,
     int fallbackPage,
@@ -38,6 +57,8 @@ class ProductRepoRemote implements ProductRepo {
     int pageSize = 20,
     int? categoryId,
     String? q,
+    String? sort,
+    String? shopId,
   }) async {
     final query = <String, dynamic>{
       'page': page,
@@ -45,13 +66,15 @@ class ProductRepoRemote implements ProductRepo {
       'withDeal': 'true',
       if (categoryId != null) 'cat': categoryId,
       if (q != null && q.isNotEmpty) 'q': q,
+      if (sort != null && sort.isNotEmpty) 'sort': sort,
+      if (shopId != null && shopId.isNotEmpty) 'source': shopId,
     };
     try {
-      final json = await _api.get('products', query: query) as Map<String, dynamic>;
-      final items = (json['items'] as List<dynamic>? ?? [])
-          .map((e) => Product.fromJson(e as Map<String, dynamic>))
+      final response = await _api.get('products', query: query);
+      final items = _parseItems(response)
+          .map((e) => Product.fromJson(e))
           .toList();
-      final metaRaw = json['meta'] as Map<String, dynamic>?;
+      final metaRaw = _parseMeta(response);
       final totalFromMeta =
           metaRaw != null && metaRaw['total'] is int ? metaRaw['total'] as int : items.length;
       final meta = _meta(metaRaw, page, pageSize, totalFromMeta);
@@ -72,6 +95,8 @@ class ProductRepoRemote implements ProductRepo {
         pageSize: pageSize,
         categoryId: categoryId,
         q: q,
+        sort: sort,
+        shopId: shopId,
       );
       return fallback.copyWith(fromFallback: true);
     }
@@ -80,12 +105,13 @@ class ProductRepoRemote implements ProductRepo {
   @override
   Future<List<Product>> hot({int limit = 8}) async {
     try {
-      final json = await _api.get('products', query: {
+      final response = await _api.get('products', query: {
         'limit': limit,
         'withDeal': 'true',
-      }) as Map<String, dynamic>;
-      final items = (json['items'] as List<dynamic>? ?? [])
-          .map((e) => Product.fromJson(e as Map<String, dynamic>))
+        'sort': 'hot',
+      });
+      final items = _parseItems(response)
+          .map((e) => Product.fromJson(e))
           .toList();
       return items.take(limit).toList();
     } catch (e) {
@@ -100,6 +126,11 @@ class ProductRepoRemote implements ProductRepo {
       final json = await _api.get('products/$id', query: {'withDeal': 'true'});
       if (json is Map<String, dynamic>) {
         return Product.fromJson(json);
+      }
+      if (json is List && json.isNotEmpty && json.first is Map) {
+        return Product.fromJson(
+          Map<String, dynamic>.from(json.first as Map),
+        );
       }
       return null;
     } catch (e) {
