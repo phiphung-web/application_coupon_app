@@ -1,4 +1,5 @@
 import 'dart:math';
+
 import '../../core/result.dart';
 import '../../models/badge.dart';
 import '../../models/coupon.dart';
@@ -11,7 +12,7 @@ class CouponRepoMock implements CouponRepo {
     (i) => CouponCategory(
       id: i + 1,
       name: 'Coupon cat ${i + 1}',
-      imageUrl: 'https://picsum.photos/seed/cc${i + 1}/200/200',
+      description: 'Danh mục coupon demo #${i + 1}',
     ),
   );
 
@@ -26,21 +27,27 @@ class CouponRepoMock implements CouponRepo {
     final badgeList = <Badge>[];
     if (index % 4 == 0) badgeList.add(_hotBadge);
 
+    final start = DateTime.now().subtract(Duration(days: index % 4));
+    final end = DateTime.now().add(Duration(days: 5 + index));
+
     return Coupon(
       id: index + 1,
       title: isPercent
           ? 'Giảm $percent% toàn sàn'
           : 'Giảm ${fixed ~/ 1000}k đơn hàng',
       code: 'CODE${1000 + index}',
-      discountType: isPercent ? 'PERCENT' : 'FIXED',
+      discountType: isPercent ? 'PERCENT' : 'FIXED_AMOUNT',
       discountValue: isPercent ? percent : fixed,
       minSpend: index % 3 == 0 ? 150000 : null,
       maxDiscount: isPercent ? 120000 : null,
-      endAt: DateTime.now().add(Duration(days: 5 + index)),
+      startDate: start,
+      endDate: end,
       sourceId: ['1', '2', '3'][index % 3],
+      sourceName: ['Shopee', 'Lazada', 'Tiki'][index % 3],
       imageUrl: 'https://picsum.photos/seed/c${index + 1}/600/400',
       categories: [cat],
       badges: badgeList,
+      dealUrl: 'https://example.com/deal/${index + 1}',
       priority: badgeList.isNotEmpty ? 90 : 50,
       trackingLink: 'https://example.com/track/${index + 1}',
       deeplink: 'https://example.com/deeplink/${index + 1}',
@@ -95,21 +102,19 @@ class CouponRepoMock implements CouponRepo {
         break;
       case 'endAtAsc':
         list.sort(
-          (a, b) => (a.endAt ?? DateTime(2100))
-              .compareTo(b.endAt ?? DateTime(2100)),
+          (a, b) => (a.endAt ?? DateTime(2100)).compareTo(b.endAt ?? DateTime(2100)),
         );
         break;
       default:
         list.sort((a, b) => a.id.compareTo(b.id));
     }
 
-    final start = (page - 1) * pageSize;
-    final end = min(start + pageSize, list.length);
+    final startIdx = (page - 1) * pageSize;
+    final endIdx = min(startIdx + pageSize, list.length);
     final meta = {'page': page, 'limit': pageSize, 'total': list.length};
-    final slice = (start >= list.length)
-        ? <Coupon>[]
-        : list.sublist(start, min(end, list.length));
-    final hasMore = end < list.length;
+    final slice =
+        (startIdx >= list.length) ? <Coupon>[] : list.sublist(startIdx, endIdx);
+    final hasMore = endIdx < list.length;
 
     return PageResult<Coupon>(
       data: slice,

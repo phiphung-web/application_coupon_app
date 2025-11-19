@@ -6,6 +6,8 @@ import '../../core/money.dart';
 import '../../data/impl/coupon_repo_remote.dart';
 import '../../data/repo/coupon_repo.dart';
 import '../../models/coupon.dart';
+import '../../widgets/coupon_list_item.dart';
+import '../../widgets/loading_skeleton.dart';
 
 class VoucherDetailScreen extends StatefulWidget {
   final int couponId;
@@ -19,6 +21,8 @@ class _VoucherDetailScreenState extends State<VoucherDetailScreen> {
   final CouponRepo _repo = CouponRepoRemote();
   Coupon? _coupon;
   bool _loading = true;
+  bool _loadingRelated = false;
+  List<Coupon> _related = const [];
 
   @override
   void initState() {
@@ -27,26 +31,80 @@ class _VoucherDetailScreenState extends State<VoucherDetailScreen> {
   }
 
   Future<void> _load() async {
-    final c = await _repo.getById(widget.couponId);
+    setState(() {
+      _loading = true;
+      _loadingRelated = true;
+    });
+    final coupon = await _repo.getById(widget.couponId);
+    final related = coupon != null ? await _fetchRelated(coupon) : <Coupon>[];
     if (!mounted) return;
     setState(() {
-      _coupon = c;
+      _coupon = coupon;
+      _related = related;
       _loading = false;
+      _loadingRelated = false;
     });
+  }
+
+  Future<List<Coupon>> _fetchRelated(Coupon coupon) async {
+    try {
+      final catId = coupon.categories.isNotEmpty ? coupon.categories.first.id : null;
+      if (catId == null && coupon.sourceId == null) return const [];
+      final res = await _repo.list(
+        page: 1,
+        pageSize: 10,
+        categoryId: catId,
+        shopId: coupon.sourceId,
+        badgeKey: coupon.badges.isNotEmpty ? coupon.badges.first.key : null,
+      );
+      return res.data.where((c) => c.id != coupon.id).toList();
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  void _handleHomePressed(BuildContext context) {
+    final navigator = Navigator.of(context);
+    if (navigator.canPop()) {
+      navigator.popUntil((route) => route.isFirst);
+    } else {
+      _load();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) return const Center(child: CircularProgressIndicator());
-    if (_coupon == null) {
-      return const Center(child: Text('Không tìm thấy mã'));
-    }
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Chi tiết mã giảm giá'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).maybePop(),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.home_outlined),
+            tooltip: 'Về trang chủ',
+            onPressed: () => _handleHomePressed(context),
+          ),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Tải lại',
+            onPressed: _load,
+          ),
+        ],
+      ),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : _coupon == null
+              ? const Center(child: Text('Không tìm thấy mã giảm giá'))
+              : _buildBody(_coupon!),
+    );
+  }
 
-    final c = _coupon!;
-    final isHot = c.badges.any((b) => b.key.toUpperCase() == 'HOT') ||
-        (c.priority ?? 0) >= 80;
-    final appliedSource =
-        c.sourceName ?? (c.sourceId != null ? 'Nguồn #${c.sourceId}' : 'Toàn sàn');
+  Widget _buildBody(Coupon c) {
+    final isHot = c.badges.any((b) => b.key.toUpperCase() == 'HOT') || (c.priority ?? 0) >= 80;
+    final appliedSource = c.sourceName ?? (c.sourceId != null ? 'Nguồn #${c.sourceId}' : 'Toàn sàn');
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
@@ -113,18 +171,78 @@ class _VoucherDetailScreenState extends State<VoucherDetailScreen> {
               _chip(context, 'Max ${money(c.maxDiscount!)}'),
             _chip(
               context,
-              c.isPercent
-                  ? 'Giảm ${c.discountValue}%'
-                  : 'Giảm ${money(c.discountValue)}',
+              c.isPercent ? 'Giảm ${c.discountValue}%' : 'Giảm ${money(c.discountValue)}',
             ),
           ],
         ),
         const SizedBox(height: 6),
         Text(
-          'Hiệu lực: ${_fmtDate(c.startAt)} → ${_fmtDate(c.endAt)}',
+          'Hiệu lực: ${_fmtDate(c.startAt)} ➜ ${_fmtDate(c.endAt)}',
           style: Theme.of(context).textTheme.bodySmall,
         ),
-        const Divider(height: 24),
+        const SizedBox(height: 8),
+        Card(
+          elevation: 0,
+          color: Colors.grey.shade100,
+          child: ListTile(
+            leading: const Icon(Icons.storefront_outlined),
+            title: Text(appliedSource),
+            subtitle: c.dealUrl != null ? Text(c.dealUrl!) : null,
+            trailing: IconButton(
+              icon: const Icon(Icons.open_in_new),
+              onPressed: () => _openLink(context, c),
+            ),
+          ),
+        ),
+        if (c.categories.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          const Text(
+            'Danh mục áp dụng',
+            style: TextStyle(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: c.categories
+                .map(
+                  (cat) => Chip(
+                    avatar: const Icon(Icons.label_outline, size: 16),
+                    label: Text(cat.name),
+                  ),
+                )
+                .toList(),
+          ),
+        ],
+        if (c.badges.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          const Text('Nhãn đánh dấu', style: TextStyle(fontWeight: FontWeight.w700)),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            children: c.badges
+                .map(
+                  (badge) => Chip(
+                    label: Text(badge.label),
+                    backgroundColor: Colors.orange.withOpacity(.15),
+                  ),
+                )
+                .toList(),
+          ),
+        ],
+        const SizedBox(height: 16),
+        const Text(
+          'Điều kiện & điều khoản',
+          style: TextStyle(fontWeight: FontWeight.w700),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Ví dụ: Cần đơn tối thiểu '
+          '${c.minSpend != null ? money(c.minSpend!) : 'không yêu cầu'}. '
+          'Mức giảm tối đa '
+          '${c.maxDiscount != null ? money(c.maxDiscount!) : 'không giới hạn'}.',
+        ),
+        const SizedBox(height: 16),
         Row(
           children: [
             Expanded(
@@ -144,29 +262,44 @@ class _VoucherDetailScreenState extends State<VoucherDetailScreen> {
               child: ElevatedButton.icon(
                 onPressed: () => _openLink(context, c),
                 icon: const Icon(Icons.launch, size: 18),
-                label: const Text('Dùng mã'),
+                label: const Text('Dùng mã ngay'),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 8),
-        Text('Áp dụng tại: $appliedSource'),
-        if (c.categories.isNotEmpty)
-          Text(
-            'Danh mục áp dụng: ${c.categories.map((cat) => cat.name).join(', ')}',
+        if (_loadingRelated) ...[
+          const SizedBox(height: 24),
+          const Text('Coupon liên quan', style: TextStyle(fontWeight: FontWeight.w700)),
+          const SizedBox(height: 8),
+          SizedBox(
+            height: 140,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemBuilder: (_, __) => const LoadingSkeleton(width: 260, height: 120),
+              separatorBuilder: (_, __) => const SizedBox(width: 12),
+              itemCount: 3,
+            ),
           ),
-        const SizedBox(height: 16),
-        const Text(
-          'Điều kiện & điều khoản',
-          style: TextStyle(fontWeight: FontWeight.w700),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          'Ví dụ: Có thể yêu cầu đơn tối thiểu '
-          '${c.minSpend != null ? money(c.minSpend!) : 'không có'}. '
-          'Mức giảm tối đa '
-          '${c.maxDiscount != null ? money(c.maxDiscount!) : 'không giới hạn'}.',
-        ),
+        ] else if (_related.isNotEmpty) ...[
+          const SizedBox(height: 24),
+          const Text('Coupon liên quan', style: TextStyle(fontWeight: FontWeight.w700)),
+          const SizedBox(height: 8),
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemBuilder: (_, index) => CouponListItem(
+              coupon: _related[index],
+              onTap: () => Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => VoucherDetailScreen(couponId: _related[index].id),
+                ),
+              ),
+            ),
+            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            itemCount: _related.length,
+          ),
+        ],
       ],
     );
   }
@@ -177,9 +310,7 @@ class _VoucherDetailScreenState extends State<VoucherDetailScreen> {
     bool primary = false,
     VoidCallback? onTap,
   }) {
-    final bg = primary
-        ? Theme.of(ctx).colorScheme.primary.withValues(alpha: .1)
-        : Colors.grey.shade200;
+    final bg = primary ? Theme.of(ctx).colorScheme.primary.withValues(alpha: .1) : Colors.grey.shade200;
     final fg = primary ? Theme.of(ctx).colorScheme.primary : Colors.black87;
     final child = Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),

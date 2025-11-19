@@ -1,39 +1,88 @@
 import 'package:flutter/material.dart';
+
 import '../../core/result.dart';
+import '../../data/impl/category_repo_remote.dart';
 import '../../data/impl/product_repo_remote.dart';
+import '../../data/impl/shop_repo_remote.dart';
+import '../../data/repo/category_repo.dart';
 import '../../data/repo/product_repo.dart';
+import '../../data/repo/shop_repo.dart';
+import '../../models/category.dart';
 import '../../models/product.dart';
-import '../detail/product_detail_screen.dart';
-import '../../widgets/product_grid_card.dart';
+import '../../models/shop.dart';
 import '../../widgets/loading_skeleton.dart';
+import '../../widgets/product_grid_card.dart';
 import '../../widgets/retry_view.dart';
+import '../detail/product_detail_screen.dart';
 
 class ProductsScreen extends StatefulWidget {
   const ProductsScreen({super.key});
+
   @override
   State<ProductsScreen> createState() => _ProductsScreenState();
 }
 
 class _ProductsScreenState extends State<ProductsScreen> {
   final ProductRepo _repo = ProductRepoRemote();
+  final CategoryRepo _categoryRepo = CategoryRepoRemote();
+  final ShopRepo _shopRepo = ShopRepoRemote();
+
   final _scroll = ScrollController();
   final _items = <Product>[];
+
+  List<Category> _categories = [];
+  List<Shop> _shops = [];
   int _page = 1;
   bool _loading = false;
   bool _end = false;
   bool _fallbackNotified = false;
+  bool _loadingFilters = true;
   String? _error;
+  int? _selectedCategory;
+  String? _selectedShop;
+  String? _sort;
 
   @override
   void initState() {
     super.initState();
-    _loadFirst();
-    _scroll.addListener(() {
-      if (_scroll.position.pixels >=
-          _scroll.position.maxScrollExtent - 200) {
-        _loadMore();
-      }
-    });
+    _bootstrap();
+    _scroll.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    if (_scroll.position.pixels >= _scroll.position.maxScrollExtent - 200) {
+      _loadMore();
+    }
+  }
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  Future<void> _bootstrap() async {
+    await _loadFilters();
+    if (!mounted) return;
+    await _loadFirst();
+  }
+
+  Future<void> _loadFilters() async {
+    try {
+      final cats = await _categoryRepo.list();
+      final shops = await _shopRepo.list();
+      if (!mounted) return;
+      setState(() {
+        _categories = cats;
+        _shops = shops;
+        _loadingFilters = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _loadingFilters = false;
+      });
+    }
   }
 
   Future<void> _loadFirst() async {
@@ -42,7 +91,13 @@ class _ProductsScreenState extends State<ProductsScreen> {
       _error = null;
     });
     try {
-      final PageResult<Product> data = await _repo.list(page: 1, pageSize: 20);
+      final PageResult<Product> data = await _repo.list(
+        page: 1,
+        pageSize: 20,
+        categoryId: _selectedCategory,
+        shopId: _selectedShop,
+        sort: _sort,
+      );
       setState(() {
         _items
           ..clear()
@@ -53,9 +108,10 @@ class _ProductsScreenState extends State<ProductsScreen> {
       });
       _maybeNotifyFallback(data.fromFallback);
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _loading = false;
-        _error = 'Không tải được danh sách sản phẩm.';
+        _error = 'Khong the tai danh sach san pham.';
       });
     }
   }
@@ -63,7 +119,13 @@ class _ProductsScreenState extends State<ProductsScreen> {
   Future<void> _loadMore() async {
     if (_loading || _end) return;
     setState(() => _loading = true);
-    final PageResult<Product> data = await _repo.list(page: _page, pageSize: 20);
+    final PageResult<Product> data = await _repo.list(
+      page: _page,
+      pageSize: 20,
+      categoryId: _selectedCategory,
+      shopId: _selectedShop,
+      sort: _sort,
+    );
     setState(() {
       _items.addAll(data.data);
       _page = data.nextPage;
@@ -80,11 +142,34 @@ class _ProductsScreenState extends State<ProductsScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Không kết nối được server, đang tạm hiển thị dữ liệu demo.'),
+          content: Text(
+            'Khong ket noi duoc server, dang tam hien thi du lieu demo.',
+          ),
         ),
       );
     });
   }
+
+  void _selectCategory(int? id) {
+    if (_selectedCategory == id) return;
+    setState(() => _selectedCategory = id);
+    _loadFirst();
+  }
+
+  void _selectShop(String? id) {
+    if (_selectedShop == id) return;
+    setState(() => _selectedShop = id);
+    _loadFirst();
+  }
+
+  void _selectSort(String? value) {
+    if (_sort == value) return;
+    setState(() => _sort = value);
+    _loadFirst();
+  }
+
+  _SortOption get _currentSort =>
+      _sortOptions.firstWhere((opt) => opt.value == _sort, orElse: () => _sortOptions.first);
 
   @override
   Widget build(BuildContext context) {
@@ -96,11 +181,42 @@ class _ProductsScreenState extends State<ProductsScreen> {
           const SizedBox(height: 8),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Text(
-              'Tất cả sản phẩm',
-              style: Theme.of(context).textTheme.titleLarge,
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Tat ca san pham',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                ),
+                PopupMenuButton<_SortOption>(
+                  tooltip: 'Sap xep',
+                  onSelected: (value) => _selectSort(value.value),
+                  itemBuilder: (_) => _sortOptions
+                      .map(
+                        (opt) => PopupMenuItem<_SortOption>(
+                          value: opt,
+                          child: Row(
+                            children: [
+                              Icon(opt.icon, size: 16),
+                              const SizedBox(width: 8),
+                              Text(opt.label),
+                            ],
+                          ),
+                        ),
+                      )
+                      .toList(),
+                  child: Chip(
+                    avatar: Icon(_currentSort.icon, size: 16),
+                    label: Text(_currentSort.label),
+                  ),
+                ),
+              ],
             ),
           ),
+          const SizedBox(height: 4),
+          if (!_loadingFilters && _categories.isNotEmpty) _buildCategoryChips(),
+          if (!_loadingFilters && _shops.isNotEmpty) _buildShopChips(),
           const SizedBox(height: 8),
           if (_items.isEmpty && _loading)
             Padding(
@@ -138,8 +254,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) =>
-                          ProductDetailScreen(productId: _items[i].id),
+                      builder: (_) => ProductDetailScreen(productId: _items[i].id),
                     ),
                   );
                 },
@@ -154,11 +269,85 @@ class _ProductsScreenState extends State<ProductsScreen> {
           if (_end)
             const Padding(
               padding: EdgeInsets.all(16),
-              child: Center(child: Text('Hết dữ liệu')),
+              child: Center(child: Text('Da het du lieu')),
             ),
           const SizedBox(height: 24),
         ],
       ),
     );
   }
+
+  Widget _buildCategoryChips() {
+    return SizedBox(
+      height: 44,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: ChoiceChip(
+              label: const Text('Tat ca'),
+              selected: _selectedCategory == null,
+              onSelected: (_) => _selectCategory(null),
+            ),
+          ),
+          ..._categories.take(12).map(
+                (c) => Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: ChoiceChip(
+                    label: Text(c.name),
+                    selected: _selectedCategory == c.id,
+                    onSelected: (_) => _selectCategory(c.id),
+                  ),
+                ),
+              ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildShopChips() {
+    return SizedBox(
+      height: 44,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: ChoiceChip(
+              label: const Text('Nguon'),
+              selected: _selectedShop == null,
+              onSelected: (_) => _selectShop(null),
+            ),
+          ),
+          ..._shops.take(12).map(
+                (s) => Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: ChoiceChip(
+                    label: Text(s.name),
+                    selected: _selectedShop == s.id,
+                    onSelected: (_) => _selectShop(s.id),
+                  ),
+                ),
+              ),
+        ],
+      ),
+    );
+  }
 }
+
+class _SortOption {
+  final String? value;
+  final String label;
+  final IconData icon;
+
+  const _SortOption(this.value, this.label, this.icon);
+}
+
+const List<_SortOption> _sortOptions = [
+  _SortOption(null, 'Mac dinh', Icons.sort),
+  _SortOption('price_asc', 'Gia tang dan', Icons.arrow_upward),
+  _SortOption('price_desc', 'Gia giam dan', Icons.arrow_downward),
+];

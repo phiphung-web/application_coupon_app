@@ -74,12 +74,15 @@ class ProductRepoMock implements ProductRepo {
 
     switch (sort) {
       case 'priceAsc':
+      case 'price_asc':
         list.sort((a, b) => a.priceEffective.compareTo(b.priceEffective));
         break;
       case 'priceDesc':
+      case 'price_desc':
         list.sort((a, b) => b.priceEffective.compareTo(a.priceEffective));
         break;
       case 'discountDesc':
+      case 'discount_desc':
         list.sort((a, b) => b.discountPercent.compareTo(a.discountPercent));
         break;
       case 'hot':
