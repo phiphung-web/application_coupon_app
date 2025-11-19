@@ -7,11 +7,16 @@ import '../../core/pricing.dart';
 import '../../data/impl/coupon_repo_remote.dart';
 import '../../data/impl/product_repo_remote.dart';
 import '../../data/repo/coupon_repo.dart';
+import '../../data/impl/shop_repo_remote.dart';
+import '../../data/repo/shop_repo.dart';
 import '../../data/repo/product_repo.dart';
 import '../../models/coupon.dart';
 import '../../models/product.dart';
+import '../../models/shop.dart';
+import '../../services/favorites_service.dart';
 import '../../widgets/loading_skeleton.dart';
 import '../../widgets/product_grid_card.dart';
+import 'source_detail_screen.dart';
 import 'voucher_detail_screen.dart';
 
 class ProductDetailScreen extends StatefulWidget {
@@ -25,12 +30,16 @@ class ProductDetailScreen extends StatefulWidget {
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
   final ProductRepo _pRepo = ProductRepoRemote();
   final CouponRepo _cRepo = CouponRepoRemote();
+  final ShopRepo _shopRepo = ShopRepoRemote();
+  final FavoritesService _favorites = FavoritesService.instance;
 
   Product? _product;
   PricingResult? _best;
   bool _loading = true;
   bool _loadingRelated = false;
   List<Product> _related = const [];
+  bool _itemFavorite = false;
+  bool _sourceFavorite = false;
 
   @override
   void initState() {
@@ -60,6 +69,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     }
     final related = product != null ? await _fetchRelated(product) : <Product>[];
 
+    bool favItem = false;
+    bool favSource = false;
+    if (product != null) {
+      favItem = await _favorites.isFavorite(FavoriteKind.item, product.id.toString());
+      if (product.sourceId != null && product.sourceId!.isNotEmpty) {
+        favSource = await _favorites.isFavorite(FavoriteKind.source, product.sourceId!);
+      }
+    }
     if (!mounted) return;
     setState(() {
       _product = product;
@@ -67,6 +84,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       _related = related;
       _loading = false;
       _loadingRelated = false;
+      _itemFavorite = favItem;
+      _sourceFavorite = favSource;
     });
   }
 
@@ -84,6 +103,51 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     } catch (_) {
       return const [];
     }
+  }
+
+  Future<void> _toggleFavoriteItem() async {
+    final product = _product;
+    if (product == null) return;
+    final added = await _favorites.toggle(FavoriteKind.item, product.id.toString());
+    if (!mounted) return;
+    setState(() => _itemFavorite = added);
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(added ? 'Đã thêm vào yêu thích' : 'Đã bỏ khỏi yêu thích'),
+      ),
+    );
+  }
+
+  Future<void> _toggleFavoriteSource(Product product) async {
+    final sourceId = product.sourceId;
+    if (sourceId == null || sourceId.isEmpty) return;
+    final added = await _favorites.toggle(FavoriteKind.source, sourceId);
+    if (!mounted) return;
+    setState(() => _sourceFavorite = added);
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(added ? 'Đang theo dõi nguồn này' : 'Đã bỏ theo dõi nguồn này'),
+      ),
+    );
+  }
+
+  Future<void> _openSourceDetail(String sourceId, String? sourceName) async {
+    final shop = await _shopRepo.get(sourceId) ??
+        (await _shopRepo.list()).firstWhere(
+          (s) => s.id == sourceId,
+          orElse: () => Shop(id: sourceId, name: sourceName ?? 'Nguồn #$sourceId'),
+        );
+    if (!mounted) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => SourceDetailScreen(
+          sourceId: sourceId,
+          initial: shop,
+        ),
+      ),
+    );
   }
 
   void _handleHomePressed(BuildContext context) {
@@ -197,6 +261,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           ],
         ),
         const SizedBox(height: 12),
+        _buildFavoriteActions(p),
+        const SizedBox(height: 12),
         if (coupon != null) _CouponInline(coupon: coupon),
         const SizedBox(height: 16),
         const Text('Mô tả', style: TextStyle(fontWeight: FontWeight.w700)),
@@ -263,6 +329,30 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     );
   }
 
+  Widget _buildFavoriteActions(Product p) {
+    return Row(
+      children: [
+        Expanded(
+          child: FilledButton.icon(
+            onPressed: _toggleFavoriteItem,
+            icon: Icon(_itemFavorite ? Icons.favorite : Icons.favorite_border),
+            label: Text(_itemFavorite ? 'Đã yêu thích' : 'Yêu thích sản phẩm'),
+          ),
+        ),
+        if (p.sourceId != null) ...[
+          const SizedBox(width: 8),
+          Expanded(
+            child: OutlinedButton.icon(
+              onPressed: () => _toggleFavoriteSource(p),
+              icon: Icon(_sourceFavorite ? Icons.bookmark : Icons.bookmark_border),
+              label: Text(_sourceFavorite ? 'Đang theo dõi' : 'Theo dõi nguồn'),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
   Widget _buildSourceCard(Product p) {
     final hasSource =
         p.sourceName != null || p.sourceId != null || (p.itemUrl != null && p.itemUrl!.isNotEmpty);
@@ -272,16 +362,27 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       elevation: 0,
       color: Colors.grey.shade100,
       child: ListTile(
+        onTap: p.sourceId != null ? () => _openSourceDetail(p.sourceId!, p.sourceName) : null,
         leading: const Icon(Icons.storefront_outlined),
         title: Text(sourceLabel),
         subtitle: p.itemUrl != null ? Text(p.itemUrl!) : null,
-        trailing: p.itemUrl != null
-            ? IconButton(
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (p.sourceId != null)
+              IconButton(
+                tooltip: 'Xem nguồn',
+                icon: const Icon(Icons.info_outline),
+                onPressed: () => _openSourceDetail(p.sourceId!, p.sourceName),
+              ),
+            if (p.itemUrl != null)
+              IconButton(
                 tooltip: 'Mở liên kết sản phẩm',
                 icon: const Icon(Icons.open_in_new),
                 onPressed: () => _openProductLink(p.itemUrl!),
-              )
-            : null,
+              ),
+          ],
+        ),
       ),
     );
   }

@@ -25,7 +25,17 @@ import 'hot_coupons_screen.dart';
 import 'coupon_categories_screen.dart';
 
 class CouponsScreen extends StatefulWidget {
-  const CouponsScreen({super.key});
+  final int? initialCategoryId;
+  final String? initialSourceId;
+  final String? initialBadgeKey;
+  final String? initialDiscountType;
+  const CouponsScreen({
+    super.key,
+    this.initialCategoryId,
+    this.initialSourceId,
+    this.initialBadgeKey,
+    this.initialDiscountType,
+  });
 
   @override
   State<CouponsScreen> createState() => _CouponsScreenState();
@@ -45,6 +55,8 @@ class _CouponsScreenState extends State<CouponsScreen> {
   String? _selectedSource;
   List<Badge> _badges = [];
   String? _selectedBadge;
+  String? _selectedDiscountType;
+  String _sort = 'newest';
 
   final List<Coupon> _hot = [];
   final List<Coupon> _items = [];
@@ -61,6 +73,10 @@ class _CouponsScreenState extends State<CouponsScreen> {
   @override
   void initState() {
     super.initState();
+    _selectedCategory = widget.initialCategoryId;
+    _selectedSource = widget.initialSourceId;
+    _selectedBadge = widget.initialBadgeKey;
+    _selectedDiscountType = widget.initialDiscountType;
     _init();
     _scrollCtrl.addListener(_onScroll);
   }
@@ -129,12 +145,14 @@ class _CouponsScreenState extends State<CouponsScreen> {
         categoryId: _selectedCategory,
         shopId: _selectedSource,
         badgeKey: _selectedBadge,
+        sort: _apiSort(),
       );
       if (!mounted) return;
+      final data = _filterAndSort(res.data);
       setState(() {
         _items
           ..clear()
-          ..addAll(res.data);
+          ..addAll(data);
         _page = res.nextPage;
         _end = !res.hasMore;
         _loading = false;
@@ -159,10 +177,12 @@ class _CouponsScreenState extends State<CouponsScreen> {
         categoryId: _selectedCategory,
         shopId: _selectedSource,
         badgeKey: _selectedBadge,
+        sort: _apiSort(),
       );
       if (!mounted) return;
+      final data = _filterAndSort(res.data);
       setState(() {
-        _items.addAll(res.data);
+        _items.addAll(data);
         _page = res.nextPage;
         _end = !res.hasMore;
         _loading = false;
@@ -208,7 +228,7 @@ class _CouponsScreenState extends State<CouponsScreen> {
         padding: const EdgeInsets.only(bottom: 24),
         children: [
           SectionTitle(
-            'Hot coupons',
+            'Mã nổi bật',
             trailing: TextButton(
               onPressed: () => Navigator.push(
                 context,
@@ -216,14 +236,14 @@ class _CouponsScreenState extends State<CouponsScreen> {
                   builder: (_) => const HotCouponsScreen(),
                 ),
               ),
-              child: const Text('View all'),
+              child: const Text('Xem tất cả'),
             ),
           ),
           _buildHotCouponsSection(),
 
           const SizedBox(height: 12),
           SectionTitle(
-            'Categories',
+            'Danh mục',
             trailing: TextButton(
               onPressed: () async {
                 final selected = await Navigator.push<int?>(
@@ -237,24 +257,25 @@ class _CouponsScreenState extends State<CouponsScreen> {
                   _loadFirst();
                 }
               },
-              child: const Text('View all'),
+              child: const Text('Xem tất cả'),
             ),
           ),
           _buildCategoryChips(),
 
           const SizedBox(height: 12),
           if (_sources.isNotEmpty) ...[
-            const SectionTitle('Sources'),
+            const SectionTitle('Nguồn'),
             _buildSourceChips(),
             const SizedBox(height: 12),
           ],
           if (_badges.isNotEmpty) ...[
-            const SectionTitle('Badges'),
+            const SectionTitle('Huy hiệu'),
             _buildBadgeChips(),
             const SizedBox(height: 12),
           ],
 
-          const SectionTitle('All coupons'),
+          _buildFilterBar(),
+          const SectionTitle('Tất cả mã'),
           if (_items.isEmpty && _loading)
             Padding(
               padding: const EdgeInsets.all(16),
@@ -455,6 +476,142 @@ class _CouponsScreenState extends State<CouponsScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  List<Coupon> _filterAndSort(List<Coupon> source) {
+    var filtered = List<Coupon>.from(source);
+    if (_selectedDiscountType != null && _selectedDiscountType!.isNotEmpty) {
+      final target = _selectedDiscountType!.toUpperCase();
+      filtered = filtered
+          .where((c) => c.discountType.toUpperCase() == target)
+          .toList();
+    }
+    switch (_sort) {
+      case 'ending':
+        filtered.sort(
+          (a, b) => (a.endAt ?? DateTime(2100)).compareTo(b.endAt ?? DateTime(2100)),
+        );
+        break;
+      case 'value':
+        filtered.sort((a, b) => b.discountValue.compareTo(a.discountValue));
+        break;
+      case 'hot':
+        filtered.sort((a, b) => (b.priority ?? 0).compareTo(a.priority ?? 0));
+        break;
+      default:
+        filtered.sort((a, b) => b.id.compareTo(a.id));
+    }
+    return filtered;
+  }
+
+  String? _apiSort() {
+    switch (_sort) {
+      case 'hot':
+        return 'hot';
+      default:
+        return null;
+    }
+  }
+
+  Widget _buildFilterBar() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Wrap(
+        spacing: 12,
+        runSpacing: 12,
+        children: [
+          SizedBox(width: 200, child: _categoryDropdown()),
+          SizedBox(width: 200, child: _sourceDropdown()),
+          SizedBox(width: 200, child: _discountDropdown()),
+          SizedBox(width: 200, child: _sortDropdown()),
+        ],
+      ),
+    );
+  }
+
+  Widget _categoryDropdown() {
+    return DropdownButtonFormField<int?>(
+      decoration: const InputDecoration(labelText: 'Danh mục mã'),
+      value: _selectedCategory,
+      items: [
+        const DropdownMenuItem<int?>(value: null, child: Text('Tất cả')),
+        ..._categories.map(
+          (cat) => DropdownMenuItem<int?>(
+            value: cat.id,
+            child: Text(cat.name),
+          ),
+        ),
+      ],
+      onChanged: (value) {
+        setState(() => _selectedCategory = value);
+        _loadFirst();
+      },
+    );
+  }
+
+  Widget _sourceDropdown() {
+    return DropdownButtonFormField<String?>(
+      decoration: const InputDecoration(labelText: 'Nguồn'),
+      value: _selectedSource,
+      items: [
+        const DropdownMenuItem<String?>(value: null, child: Text('Tất cả')),
+        ..._sources.map(
+          (shop) => DropdownMenuItem<String?>(
+            value: shop.id,
+            child: Text(shop.name),
+          ),
+        ),
+      ],
+      onChanged: (value) {
+        setState(() => _selectedSource = value);
+        _loadFirst();
+      },
+    );
+  }
+
+  Widget _discountDropdown() {
+    const options = [
+      DropdownMenuItem<String?>(value: null, child: Text('Tất cả loại giảm')),
+      DropdownMenuItem<String?>(value: 'PERCENT', child: Text('Giảm %')),
+      DropdownMenuItem<String?>(value: 'FIXED_AMOUNT', child: Text('Giảm tiền')),
+      DropdownMenuItem<String?>(value: 'FREESHIP', child: Text('Freeship')),
+      DropdownMenuItem<String?>(value: 'GIFT', child: Text('Quà tặng')),
+    ];
+    return DropdownButtonFormField<String?>(
+      decoration: const InputDecoration(labelText: 'Loại giảm'),
+      value: _selectedDiscountType,
+      items: options,
+      onChanged: (value) {
+        setState(() => _selectedDiscountType = value);
+        _loadFirst();
+      },
+    );
+  }
+
+  Widget _sortDropdown() {
+    const labels = {
+      'newest': 'Mới nhất',
+      'ending': 'Sắp hết hạn',
+      'value': 'Giảm mạnh nhất',
+      'hot': 'Phổ biến',
+    };
+    return DropdownButtonFormField<String>(
+      decoration: const InputDecoration(labelText: 'Sắp xếp'),
+      value: _sort,
+      items: labels.entries
+          .map(
+            (e) => DropdownMenuItem<String>(
+              value: e.key,
+              child: Text(e.value),
+            ),
+          )
+          .toList(),
+      onChanged: (value) {
+        if (value == null) return;
+        setState(() => _sort = value);
+        _loadFirst();
+      },
     );
   }
 }

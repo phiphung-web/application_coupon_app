@@ -39,4 +39,26 @@ class ShopRepoRemote implements ShopRepo {
       return _fallback.list();
     }
   }
+
+  @override
+  Future<Shop?> get(String id) async {
+    try {
+      final json = await _api.get('sources/$id');
+      if (json is Map<String, dynamic>) {
+        return Shop.fromJson(json);
+      }
+      if (json is Map) {
+        return Shop.fromJson(Map<String, dynamic>.from(json as Map));
+      }
+      return null;
+    } catch (e) {
+      debugPrint('ShopRepoRemote.get fallback: $e');
+      final list = await _fallback.list();
+      try {
+        return list.firstWhere((shop) => shop.id == id);
+      } catch (_) {
+        return null;
+      }
+    }
+  }
 }

@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
+
+import '../core/layout/responsive.dart';
 import '../widgets/app_header.dart';
 import '../widgets/bottom_nav.dart';
-import '../core/layout/responsive.dart';
-
-import 'tabs/home_screen.dart';
-import 'tabs/products_screen.dart';
-import 'tabs/coupons_screen.dart';
-import 'tabs/account_screen.dart';
 import 'detail/product_detail_screen.dart';
 import 'detail/voucher_detail_screen.dart';
+import 'tabs/account_screen.dart';
+import 'tabs/coupons_screen.dart';
+import 'tabs/home_screen.dart';
+import 'tabs/products_screen.dart';
 
-/// Định nghĩa route đặt dùng chung
 class AppRoutes {
   static const product = '/product';
   static const coupon = '/coupon';
@@ -18,14 +17,15 @@ class AppRoutes {
 
 class AppShell extends StatefulWidget {
   const AppShell({super.key});
+
   @override
   State<AppShell> createState() => _AppShellState();
 }
 
 class _AppShellState extends State<AppShell> {
   int _index = 0;
+  final ValueNotifier<int> _homeReload = ValueNotifier<int>(0);
 
-  // Navigator riêng cho từng tab
   final _navKeys = [
     GlobalKey<NavigatorState>(),
     GlobalKey<NavigatorState>(),
@@ -33,14 +33,31 @@ class _AppShellState extends State<AppShell> {
     GlobalKey<NavigatorState>(),
   ];
 
+  void _onTabSelected(int i) {
+    if (_index == i) {
+      if (i == 0) {
+        _homeReload.value++;
+      } else {
+        final nav = _navKeys[i].currentState;
+        nav?.popUntil((route) => route.isFirst);
+      }
+    } else {
+      setState(() => _index = i);
+    }
+  }
+
+  @override
+  void dispose() {
+    _homeReload.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
-        if (didPop) {
-          return;
-        }
+        if (didPop) return;
         final nav = _navKeys[_index].currentState!;
         if (nav.canPop()) {
           nav.pop();
@@ -58,13 +75,22 @@ class _AppShellState extends State<AppShell> {
               child: IndexedStack(
                 index: _index,
                 children: [
-                  _TabNavigator(key: _navKeys[0], child: const HomeScreen()),
                   _TabNavigator(
-                    key: _navKeys[1],
+                    navigatorKey: _navKeys[0],
+                    child: HomeScreen(reloadTrigger: _homeReload),
+                  ),
+                  _TabNavigator(
+                    navigatorKey: _navKeys[1],
                     child: const ProductsScreen(),
                   ),
-                  _TabNavigator(key: _navKeys[2], child: const CouponsScreen()),
-                  _TabNavigator(key: _navKeys[3], child: const AccountScreen()),
+                  _TabNavigator(
+                    navigatorKey: _navKeys[2],
+                    child: const CouponsScreen(),
+                  ),
+                  _TabNavigator(
+                    navigatorKey: _navKeys[3],
+                    child: const AccountScreen(),
+                  ),
                 ],
               ),
             ),
@@ -73,7 +99,7 @@ class _AppShellState extends State<AppShell> {
         bottomNavigationBar: Responsive(
           mobile: BottomNav(
             index: _index,
-            onTap: (i) => setState(() => _index = i),
+            onTap: _onTabSelected,
           ),
           desktop: const SizedBox.shrink(),
         ),
@@ -82,10 +108,13 @@ class _AppShellState extends State<AppShell> {
   }
 }
 
-/// Mỗi tab có 1 Navigator riêng để push màn chi tiết
 class _TabNavigator extends StatelessWidget {
   final Widget child;
-  const _TabNavigator({super.key, required this.child});
+  final GlobalKey<NavigatorState> navigatorKey;
+  const _TabNavigator({
+    required this.child,
+    required this.navigatorKey,
+  });
 
   Route<dynamic> _onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -108,6 +137,9 @@ class _TabNavigator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Navigator(onGenerateRoute: _onGenerateRoute);
+    return Navigator(
+      key: navigatorKey,
+      onGenerateRoute: _onGenerateRoute,
+    );
   }
 }

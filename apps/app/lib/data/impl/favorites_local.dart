@@ -2,26 +2,34 @@ import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class FavoritesLocal {
-  static const _k = 'favorites_ids';
+  FavoritesLocal(this._storageKey);
+
+  final String _storageKey;
   final _ctrl = StreamController<Set<String>>.broadcast();
 
   Stream<Set<String>> watch() => _ctrl.stream;
 
-  Future<Set<String>> getAll() async {
-    final sp = await SharedPreferences.getInstance();
-    return (sp.getStringList(_k) ?? const []).toSet();
+  Future<Set<String>> _read(SharedPreferences sp) async {
+    return (sp.getStringList(_storageKey) ?? const []).toSet();
   }
 
-  Future<void> toggle(String id) async {
+  Future<Set<String>> getAll() async {
     final sp = await SharedPreferences.getInstance();
-    final set = (sp.getStringList(_k) ?? const []).toSet();
-    if (set.contains(id)) {
-      set.remove(id);
-    } else {
+    return _read(sp);
+  }
+
+  Future<bool> toggle(String id) async {
+    final sp = await SharedPreferences.getInstance();
+    final set = await _read(sp);
+    final added = !set.contains(id);
+    if (added) {
       set.add(id);
+    } else {
+      set.remove(id);
     }
-    await sp.setStringList(_k, set.toList());
+    await sp.setStringList(_storageKey, set.toList());
     _ctrl.add(set);
+    return added;
   }
 
   Future<bool> has(String id) async {

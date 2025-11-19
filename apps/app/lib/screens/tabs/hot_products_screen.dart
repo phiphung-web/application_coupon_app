@@ -1,65 +1,49 @@
 import 'package:flutter/material.dart';
-import '../../models/product.dart';
+
 import '../../data/impl/product_repo_remote.dart';
 import '../../data/repo/product_repo.dart';
-import '../../widgets/product_card.dart';
+import '../../models/product.dart';
+import '../../widgets/product_grid_card.dart';
 import '../detail/product_detail_screen.dart';
 
-class HotProductsScreen extends StatefulWidget {
+class HotProductsScreen extends StatelessWidget {
   const HotProductsScreen({super.key});
-  @override
-  State<HotProductsScreen> createState() => _HotProductsScreenState();
-}
-
-class _HotProductsScreenState extends State<HotProductsScreen> {
-  final ProductRepo _repo = ProductRepoRemote();
-  List<Product> _items = [];
-  bool _loading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    final list = await _repo.hot(limit: 120);
-    list.sort((a, b) => b.discountPercent.compareTo(a.discountPercent));
-    if (!mounted) return;
-    setState(() {
-      _items = list;
-      _loading = false;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
+    final ProductRepo repo = ProductRepoRemote();
     return Scaffold(
-      appBar: AppBar(title: const Text('Sản phẩm hot')),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.all(16),
-              child: GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 0.55,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                ),
-                itemCount: _items.length,
-                itemBuilder: (_, i) => ProductCard(
-                  product: _items[i],
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          ProductDetailScreen(productId: _items[i].id),
-                    ),
+      appBar: AppBar(title: const Text('Sản phẩm nổi bật')),
+      body: FutureBuilder<List<Product>>(
+        future: repo.hot(limit: 40),
+        builder: (_, snapshot) {
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          final items = snapshot.data!;
+          return Padding(
+            padding: const EdgeInsets.all(16),
+            child: GridView.builder(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+                childAspectRatio: .62,
+              ),
+              itemCount: items.length,
+              itemBuilder: (_, i) => ProductGridCard(
+                product: items[i],
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ProductDetailScreen(productId: items[i].id),
                   ),
                 ),
               ),
             ),
+          );
+        },
+      ),
     );
   }
 }
