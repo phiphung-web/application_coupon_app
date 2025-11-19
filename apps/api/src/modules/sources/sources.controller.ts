@@ -9,7 +9,7 @@ import {
   Post,
 } from "@nestjs/common";
 import { SourcesService } from "./sources.service";
-import { CreateSourceDto, UpdateSourceDto } from "./dto";
+import { CreateSourceDto, SourceHighlightQueryDto, UpdateSourceDto } from "./dto";
 
 @Controller("sources")
 export class SourcesController {
@@ -18,6 +18,11 @@ export class SourcesController {
   @Get()
   list() {
     return this.svc.list();
+  }
+
+  @Get("highlights")
+  highlights(@Query() q: SourceHighlightQueryDto) {
+    return this.svc.highlights(q);
   }
 
   @Get(":id")

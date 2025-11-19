@@ -33,4 +33,20 @@ export class CouponCategoriesService {
     await this.repo.delete({ id });
     return { ok: true };
   }
+
+  async highlights(limit = 8) {
+    const qb = this.repo
+      .createQueryBuilder("c")
+      .leftJoin("c.coupons", "coupon")
+      .select("c")
+      .addSelect("COUNT(coupon.id)", "coupon_count")
+      .groupBy("c.id")
+      .orderBy("COUNT(coupon.id)", "DESC")
+      .limit(limit);
+    const rows = await qb.getRawAndEntities();
+    return rows.entities.map((entity, idx) => ({
+      ...entity,
+      couponCount: Number(rows.raw[idx].coupon_count ?? 0),
+    }));
+  }
 }

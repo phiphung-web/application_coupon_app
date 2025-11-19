@@ -2,8 +2,7 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { Coupon } from "../../entities/coupon.entity";
-import { UpsertCouponDto } from "./dto";
-import { PaginationDto } from "../../common/dtos/pagination.dto";
+import { UpsertCouponDto, CouponQueryDto } from "./dto";
 
 @Injectable()
 export class CouponsService {
@@ -11,7 +10,7 @@ export class CouponsService {
     @InjectRepository(Coupon) private readonly repo: Repository<Coupon>
   ) {}
 
-  async paginate(q: PaginationDto & { active?: string }) {
+  async paginate(q: CouponQueryDto & { active?: string }) {
     const qb = this.repo
       .createQueryBuilder("c")
       .leftJoinAndSelect("c.source", "source")
@@ -31,13 +30,43 @@ export class CouponsService {
         slug: q.badge,
         slugLike: `%${q.badge}%`,
       });
+    if (q.discountType) {
+      qb.andWhere("c.discountType = :dtype", { dtype: q.discountType });
+    }
+    if (q.expiresFrom) {
+      qb.andWhere("c.endDate >= :expiresFrom", {
+        expiresFrom: new Date(q.expiresFrom),
+      });
+    }
+    if (q.expiresTo) {
+      qb.andWhere("c.endDate <= :expiresTo", {
+        expiresTo: new Date(q.expiresTo),
+      });
+    }
     if (q.active === "true") {
       qb.andWhere(
         "(c.startDate IS NULL OR c.startDate <= NOW()) AND (c.endDate IS NULL OR c.endDate >= NOW())"
       );
     }
 
-    qb.orderBy("COALESCE(c.startDate, c.createdAt)", "DESC");
+    switch (q.sort) {
+      case "ending":
+        qb.orderBy("COALESCE(c.endDate, c.createdAt)", "ASC");
+        break;
+      case "value":
+        qb.orderBy("COALESCE(c.discountValue, 0)", "DESC");
+        break;
+      case "hot":
+        qb
+          .orderBy(
+            "CASE WHEN badge.slug = 'hot' THEN 1 ELSE 0 END",
+            "DESC"
+          )
+          .addOrderBy("c.updatedAt", "DESC");
+        break;
+      default:
+        qb.orderBy("COALESCE(c.startDate, c.createdAt)", "DESC");
+    }
 
     const page = q.page ?? 1;
     const limit = q.limit ?? 20;

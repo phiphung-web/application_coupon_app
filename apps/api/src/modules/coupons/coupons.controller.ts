@@ -9,15 +9,14 @@ import {
   Query,
 } from "@nestjs/common";
 import { CouponsService } from "./coupons.service";
-import { PaginationDto } from "../../common/dtos/pagination.dto";
-import { UpsertCouponDto } from "./dto";
+import { UpsertCouponDto, CouponQueryDto } from "./dto";
 
 @Controller("coupons")
 export class CouponsController {
   constructor(private readonly svc: CouponsService) {}
 
   @Get()
-  list(@Query() q: PaginationDto, @Query("active") active?: string) {
+  list(@Query() q: CouponQueryDto, @Query("active") active?: string) {
     return this.svc.paginate({ ...q, active });
   }
 

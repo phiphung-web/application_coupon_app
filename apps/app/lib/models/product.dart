@@ -19,6 +19,7 @@ class Product {
   final List<Badge> badges;
   final ProductDeal? bestDeal;
   final int? primaryCouponId;
+  final int viewCount;
 
   const Product({
     required this.id,
@@ -36,6 +37,7 @@ class Product {
     this.badges = const [],
     this.bestDeal,
     this.primaryCouponId,
+    this.viewCount = 0,
   });
 
   static int _toCents(dynamic value) {
@@ -106,6 +108,9 @@ class Product {
       badges: _parseBadges(json),
       bestDeal: bestDeal,
       primaryCouponId: _toInt(json['primaryCouponId']),
+      viewCount: json['viewCount'] is int
+          ? json['viewCount'] as int
+          : int.tryParse('${json['viewCount']}') ?? 0,
     );
   }
 
@@ -142,5 +147,6 @@ class Product {
         'badges': badges.map((b) => b.toJson()).toList(),
         if (bestDeal != null) 'bestDeal': bestDeal!.toJson(),
         'primaryCouponId': primaryCouponId,
+        'viewCount': viewCount,
       };
 }

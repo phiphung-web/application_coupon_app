@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  DefaultValuePipe,
   Delete,
   Get,
   Param,
@@ -19,6 +20,11 @@ export class CategoriesController {
   @Get()
   list(@Query() q: CategoryQueryDto) {
     return this.svc.paginate(q);
+  }
+
+  @Get("highlights")
+  highlights(@Query("limit", new DefaultValuePipe(6), ParseIntPipe) limit: number) {
+    return this.svc.highlights(limit);
   }
 
   @Get("all")

@@ -8,6 +8,7 @@ import {
   IsString,
 } from "class-validator";
 import { DiscountType } from "../../entities/coupon.entity";
+import { PaginationDto } from "../../common/dtos/pagination.dto";
 
 export class UpsertCouponDto {
   @IsOptional()
@@ -55,4 +56,18 @@ export class UpsertCouponDto {
   @IsOptional()
   @IsDateString()
   endDate?: string;
+}
+
+export class CouponQueryDto extends PaginationDto {
+  @IsOptional()
+  @IsEnum(DiscountType)
+  discountType?: DiscountType;
+
+  @IsOptional()
+  @IsDateString()
+  expiresFrom?: string;
+
+  @IsOptional()
+  @IsDateString()
+  expiresTo?: string;
 }

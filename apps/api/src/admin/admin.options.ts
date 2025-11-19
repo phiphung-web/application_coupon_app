@@ -1,6 +1,7 @@
 import {
   ActionRequest,
   ActionResponse,
+  ComponentLoader,
   Locale,
   ResourceWithOptions,
 } from "adminjs";
@@ -16,6 +17,7 @@ import { Badge } from "../entities/badge.entity";
 import { Source } from "../entities/source.entity";
 import { ItemCouponLink } from "../entities/item_coupon_link.entity";
 import { User } from "../entities/user.entity";
+import { Notification } from "../entities/notification.entity";
 
 const UPLOADS_ROOT = join(process.cwd(), "apps", "api", "uploads");
 
@@ -48,13 +50,23 @@ function imageUploadFeature(folder: string, property = "imageUrl") {
 export function buildAdminOptions(ds: DataSource) {
   const couponRepo = ds.getRepository(Coupon);
   const linkRepo = ds.getRepository(ItemCouponLink);
+  const componentLoader = new ComponentLoader();
+  const Components = {
+    CouponLinkPreview: componentLoader.add(
+      "CouponLinkPreview",
+      "./components/coupon-link-preview"
+    ),
+    ItemLinkPreview: componentLoader.add(
+      "ItemLinkPreview",
+      "./components/item-link-preview"
+    ),
+  };
 
   const handleItemExtras = (actionName: string) => ({
     before: async (request: ActionRequest, context: any) => {
       if (request.payload) {
         const extras = {
           linkCouponId: request.payload.linkCouponId,
-          linkIsPrimary: request.payload.linkIsPrimary,
           newCouponCode: request.payload.newCouponCode,
           newCouponDescription: request.payload.newCouponDescription,
           newCouponDiscountType: request.payload.newCouponDiscountType,
@@ -82,13 +94,12 @@ export function buildAdminOptions(ds: DataSource) {
       if (extras.linkCouponId) {
         const couponId = Number(extras.linkCouponId);
         if (!Number.isNaN(couponId)) {
+          await linkRepo.delete({ itemId });
           await linkRepo.save(
             linkRepo.create({
               itemId,
               couponId,
-              isPrimaryDisplay:
-                extras.linkIsPrimary === true ||
-                extras.linkIsPrimary === "true",
+              isPrimaryDisplay: true,
             })
           );
         }
@@ -121,12 +132,10 @@ export function buildAdminOptions(ds: DataSource) {
       if (request.payload) {
         const extras = {
           linkItemId: request.payload.linkItemId,
-          linkIsPrimary: request.payload.couponLinkIsPrimary,
         };
         context.couponActionExtras = extras;
         if (request.payload) {
           delete request.payload.linkItemId;
-          delete request.payload.couponLinkIsPrimary;
         }
       }
       return request;
@@ -144,13 +153,12 @@ export function buildAdminOptions(ds: DataSource) {
       if (extras.linkItemId) {
         const itemId = Number(extras.linkItemId);
         if (!Number.isNaN(itemId)) {
+          await linkRepo.delete({ itemId });
           await linkRepo.save(
             linkRepo.create({
               itemId,
               couponId,
-              isPrimaryDisplay:
-                extras.linkIsPrimary === true ||
-                extras.linkIsPrimary === "true",
+              isPrimaryDisplay: true,
             })
           );
         }
@@ -189,9 +197,12 @@ export function buildAdminOptions(ds: DataSource) {
             isVisible: { list: false, filter: false, show: false, edit: true },
             position: 120,
           },
-          linkIsPrimary: {
-            type: "boolean",
+          linkCouponPreview: {
             isVisible: { list: false, filter: false, show: false, edit: true },
+            components: {
+              edit: Components.CouponLinkPreview,
+            },
+            isDisabled: true,
             position: 121,
           },
           newCouponCode: {
@@ -261,9 +272,12 @@ export function buildAdminOptions(ds: DataSource) {
             isVisible: { list: false, filter: false, show: false, edit: true },
             position: 110,
           },
-          couponLinkIsPrimary: {
-            type: "boolean",
+          linkItemPreview: {
             isVisible: { list: false, filter: false, show: false, edit: true },
+            components: {
+              edit: Components.ItemLinkPreview,
+            },
+            isDisabled: true,
             position: 111,
           },
         },
@@ -281,6 +295,18 @@ export function buildAdminOptions(ds: DataSource) {
         },
       },
       features: [imageUploadFeature("coupons")],
+    },
+    {
+      resource: Notification,
+      options: {
+        navigation: { name: "Engagement", icon: "Notification" },
+        listProperties: ["id", "title", "category", "importance", "createdAt"],
+        properties: {
+          message: { type: "textarea" },
+          payload: { type: "mixed" },
+          tags: { type: "mixed" },
+        },
+      },
     },
     {
       resource: Source,
@@ -331,6 +357,7 @@ export function buildAdminOptions(ds: DataSource) {
     rootPath: "/admin",
     databases: [ds],
     resources,
+    componentLoader,
     branding: {
       companyName: "Coupon App Admin",
       softwareBrothers: false,

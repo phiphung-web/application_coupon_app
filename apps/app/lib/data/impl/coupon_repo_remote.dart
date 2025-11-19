@@ -44,6 +44,9 @@ class CouponRepoRemote implements CouponRepo {
     String? sort,
     String? shopId,
     String? badgeKey,
+    String? discountType,
+    DateTime? expiresFrom,
+    DateTime? expiresTo,
   }) async {
     final query = <String, dynamic>{
       'page': page,
@@ -53,6 +56,9 @@ class CouponRepoRemote implements CouponRepo {
       if (sort != null && sort.isNotEmpty) 'sort': sort,
       if (shopId != null && shopId.isNotEmpty) 'source': shopId,
       if (badgeKey != null && badgeKey.isNotEmpty) 'badge': badgeKey,
+      if (discountType != null && discountType.isNotEmpty) 'discountType': discountType,
+      if (expiresFrom != null) 'from': expiresFrom.toIso8601String(),
+      if (expiresTo != null) 'to': expiresTo.toIso8601String(),
     };
     try {
       final response = await _api.get('coupons', query: query);

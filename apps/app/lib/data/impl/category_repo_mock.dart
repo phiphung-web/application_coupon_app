@@ -1,5 +1,5 @@
 import '../../models/category.dart';
-import '../repo/category_repo.dart'; // 👈 import interface (đường dẫn đúng)
+import '../repo/category_repo.dart';
 
 class CategoryRepoMock implements CategoryRepo {
   final List<Category> _cats =
@@ -7,4 +7,9 @@ class CategoryRepoMock implements CategoryRepo {
 
   @override
   Future<List<Category>> list() async => _cats;
+
+  @override
+  Future<List<Category>> highlights({int limit = 6}) async =>
+      _cats.take(limit).toList();
 }
+

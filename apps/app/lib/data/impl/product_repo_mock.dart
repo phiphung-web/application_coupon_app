@@ -55,6 +55,10 @@ class ProductRepoMock implements ProductRepo {
     String? q,
     String? sort,
     String? shopId,
+    String? itemType,
+    int? minPrice,
+    int? maxPrice,
+    bool? hasCoupon,
   }) async {
     var list = [..._data];
     if (categoryId != null) {

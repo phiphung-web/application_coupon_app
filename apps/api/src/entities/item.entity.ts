@@ -84,6 +84,9 @@ export class Item extends BaseEntity {
   @OneToMany(() => ItemCouponLink, (link) => link.item)
   couponLinks!: ItemCouponLink[];
 
+  @Column({ name: "view_count", type: "int", default: 0 })
+  viewCount!: number;
+
   @CreateDateColumn({ name: "created_at" })
   createdAt!: Date;
 
