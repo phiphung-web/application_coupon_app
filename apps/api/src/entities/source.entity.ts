@@ -6,9 +6,11 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  AfterLoad,
 } from "typeorm";
 import { Item } from "./item.entity";
 import { Coupon } from "./coupon.entity";
+import { toPublicUrl } from "../common/utils/storage.util";
 
 @Entity("sources")
 export class Source extends BaseEntity {
@@ -38,4 +40,11 @@ export class Source extends BaseEntity {
 
   @UpdateDateColumn({ name: "updated_at" })
   updatedAt!: Date;
+
+  @AfterLoad()
+  hydrateUrls() {
+    if (this.imageUrl) {
+      this.imageUrl = toPublicUrl(this.imageUrl);
+    }
+  }
 }

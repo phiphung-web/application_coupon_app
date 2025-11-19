@@ -15,6 +15,7 @@ const source_entity_1 = require("./source.entity");
 const coupon_category_entity_1 = require("./coupon_category.entity");
 const badge_entity_1 = require("./badge.entity");
 const item_coupon_link_entity_1 = require("./item_coupon_link.entity");
+const storage_util_1 = require("../common/utils/storage.util");
 var DiscountType;
 (function (DiscountType) {
     DiscountType["PERCENT"] = "PERCENT";
@@ -23,6 +24,11 @@ var DiscountType;
     DiscountType["GIFT"] = "GIFT";
 })(DiscountType || (exports.DiscountType = DiscountType = {}));
 let Coupon = class Coupon extends typeorm_1.BaseEntity {
+    hydrateUrls() {
+        if (this.imageUrl) {
+            this.imageUrl = (0, storage_util_1.toPublicUrl)(this.imageUrl);
+        }
+    }
 };
 exports.Coupon = Coupon;
 __decorate([
@@ -115,6 +121,12 @@ __decorate([
     (0, typeorm_1.UpdateDateColumn)({ name: "updated_at" }),
     __metadata("design:type", Date)
 ], Coupon.prototype, "updatedAt", void 0);
+__decorate([
+    (0, typeorm_1.AfterLoad)(),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], Coupon.prototype, "hydrateUrls", null);
 exports.Coupon = Coupon = __decorate([
     (0, typeorm_1.Entity)("coupons")
 ], Coupon);

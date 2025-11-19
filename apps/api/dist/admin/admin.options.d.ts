@@ -1,12 +1,9 @@
-import { ResourceOptions } from "adminjs";
+import { ResourceWithOptions } from "adminjs";
 import { DataSource } from "typeorm";
 export declare function buildAdminOptions(ds: DataSource): {
     rootPath: string;
-    resources: {
-        resource: any;
-        options?: ResourceOptions;
-    }[];
     databases: DataSource[];
+    resources: ResourceWithOptions[];
     branding: {
         companyName: string;
         softwareBrothers: boolean;

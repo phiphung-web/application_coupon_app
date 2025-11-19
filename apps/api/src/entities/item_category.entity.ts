@@ -8,8 +8,10 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
+  AfterLoad,
 } from "typeorm";
 import { Item } from "./item.entity";
+import { toPublicUrl } from "../common/utils/storage.util";
 
 @Entity("item_categories")
 export class ItemCategory extends BaseEntity {
@@ -40,4 +42,11 @@ export class ItemCategory extends BaseEntity {
 
   @UpdateDateColumn({ name: "updated_at" })
   updatedAt!: Date;
+
+  @AfterLoad()
+  hydrateUrls() {
+    if (this.imageUrl) {
+      this.imageUrl = toPublicUrl(this.imageUrl);
+    }
+  }
 }

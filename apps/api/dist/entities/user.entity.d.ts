@@ -18,4 +18,5 @@ export declare class User extends BaseEntity {
     favoriteSources: FavoriteSource[];
     createdAt: Date;
     updatedAt: Date;
+    hydrateUrls(): void;
 }

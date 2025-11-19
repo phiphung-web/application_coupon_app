@@ -13,7 +13,13 @@ exports.Source = void 0;
 const typeorm_1 = require("typeorm");
 const item_entity_1 = require("./item.entity");
 const coupon_entity_1 = require("./coupon.entity");
+const storage_util_1 = require("../common/utils/storage.util");
 let Source = class Source extends typeorm_1.BaseEntity {
+    hydrateUrls() {
+        if (this.imageUrl) {
+            this.imageUrl = (0, storage_util_1.toPublicUrl)(this.imageUrl);
+        }
+    }
 };
 exports.Source = Source;
 __decorate([
@@ -52,6 +58,12 @@ __decorate([
     (0, typeorm_1.UpdateDateColumn)({ name: "updated_at" }),
     __metadata("design:type", Date)
 ], Source.prototype, "updatedAt", void 0);
+__decorate([
+    (0, typeorm_1.AfterLoad)(),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], Source.prototype, "hydrateUrls", null);
 exports.Source = Source = __decorate([
     (0, typeorm_1.Entity)("sources")
 ], Source);

@@ -14,12 +14,18 @@ const typeorm_1 = require("typeorm");
 const favorite_item_entity_1 = require("./favorite_item.entity");
 const favorite_coupon_entity_1 = require("./favorite_coupon.entity");
 const favorite_source_entity_1 = require("./favorite_source.entity");
+const storage_util_1 = require("../common/utils/storage.util");
 var UserRole;
 (function (UserRole) {
     UserRole["USER"] = "USER";
     UserRole["ADMIN"] = "ADMIN";
 })(UserRole || (exports.UserRole = UserRole = {}));
 let User = class User extends typeorm_1.BaseEntity {
+    hydrateUrls() {
+        if (this.imageUrl) {
+            this.imageUrl = (0, storage_util_1.toPublicUrl)(this.imageUrl);
+        }
+    }
 };
 exports.User = User;
 __decorate([
@@ -66,6 +72,12 @@ __decorate([
     (0, typeorm_1.UpdateDateColumn)({ name: "updated_at" }),
     __metadata("design:type", Date)
 ], User.prototype, "updatedAt", void 0);
+__decorate([
+    (0, typeorm_1.AfterLoad)(),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], User.prototype, "hydrateUrls", null);
 exports.User = User = __decorate([
     (0, typeorm_1.Entity)("users")
 ], User);

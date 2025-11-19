@@ -6,10 +6,12 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
+  AfterLoad,
 } from "typeorm";
 import { FavoriteItem } from "./favorite_item.entity";
 import { FavoriteCoupon } from "./favorite_coupon.entity";
 import { FavoriteSource } from "./favorite_source.entity";
+import { toPublicUrl } from "../common/utils/storage.util";
 
 export enum UserRole {
   USER = "USER",
@@ -50,4 +52,11 @@ export class User extends BaseEntity {
 
   @UpdateDateColumn({ name: "updated_at" })
   updatedAt!: Date;
+
+  @AfterLoad()
+  hydrateUrls() {
+    if (this.imageUrl) {
+      this.imageUrl = toPublicUrl(this.imageUrl);
+    }
+  }
 }

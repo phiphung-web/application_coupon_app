@@ -11,4 +11,5 @@ export declare class Source extends BaseEntity {
     coupons: Coupon[];
     createdAt: Date;
     updatedAt: Date;
+    hydrateUrls(): void;
 }

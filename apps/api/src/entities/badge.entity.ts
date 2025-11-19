@@ -6,9 +6,11 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
+  AfterLoad,
 } from "typeorm";
 import { Item } from "./item.entity";
 import { Coupon } from "./coupon.entity";
+import { toPublicUrl } from "../common/utils/storage.util";
 
 @Entity("badges")
 export class Badge extends BaseEntity {
@@ -38,4 +40,11 @@ export class Badge extends BaseEntity {
 
   @UpdateDateColumn({ name: "updated_at" })
   updatedAt!: Date;
+
+  @AfterLoad()
+  hydrateUrls() {
+    if (this.iconUrl) {
+      this.iconUrl = toPublicUrl(this.iconUrl);
+    }
+  }
 }
