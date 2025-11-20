@@ -6,9 +6,9 @@ import '../widgets/bottom_nav.dart';
 import 'detail/product_detail_screen.dart';
 import 'detail/voucher_detail_screen.dart';
 import 'tabs/account_screen.dart';
-import 'tabs/coupons_screen.dart';
+import 'tabs/explore_screen.dart';
 import 'tabs/home_screen.dart';
-import 'tabs/products_screen.dart';
+import 'tabs/notifications_screen.dart';
 
 class AppRoutes {
   static const product = '/product';
@@ -81,11 +81,11 @@ class _AppShellState extends State<AppShell> {
                   ),
                   _TabNavigator(
                     navigatorKey: _navKeys[1],
-                    child: const ProductsScreen(),
+                    child: const ExploreScreen(),
                   ),
                   _TabNavigator(
                     navigatorKey: _navKeys[2],
-                    child: const CouponsScreen(),
+                    child: const NotificationsScreen(),
                   ),
                   _TabNavigator(
                     navigatorKey: _navKeys[3],

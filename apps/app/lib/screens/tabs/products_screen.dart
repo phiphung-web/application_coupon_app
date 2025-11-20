@@ -41,6 +41,12 @@ class _ProductsScreenState extends State<ProductsScreen> {
   int? _selectedCategory;
   String? _selectedShop;
   String? _sort;
+  String? _itemType;
+  int? _priceMin;
+  int? _priceMax;
+  bool _hasCouponOnly = false;
+  final TextEditingController _minCtrl = TextEditingController();
+  final TextEditingController _maxCtrl = TextEditingController();
 
   @override
   void initState() {
@@ -58,6 +64,8 @@ class _ProductsScreenState extends State<ProductsScreen> {
   @override
   void dispose() {
     _scroll.dispose();
+    _minCtrl.dispose();
+    _maxCtrl.dispose();
     super.dispose();
   }
 
@@ -97,6 +105,10 @@ class _ProductsScreenState extends State<ProductsScreen> {
         categoryId: _selectedCategory,
         shopId: _selectedShop,
         sort: _sort,
+        itemType: _itemType,
+        minPrice: _priceMin,
+        maxPrice: _priceMax,
+        hasCoupon: _hasCouponOnly ? true : null,
       );
       setState(() {
         _items
@@ -125,6 +137,10 @@ class _ProductsScreenState extends State<ProductsScreen> {
       categoryId: _selectedCategory,
       shopId: _selectedShop,
       sort: _sort,
+      itemType: _itemType,
+      minPrice: _priceMin,
+      maxPrice: _priceMax,
+      hasCoupon: _hasCouponOnly ? true : null,
     );
     setState(() {
       _items.addAll(data.data);
@@ -218,6 +234,11 @@ class _ProductsScreenState extends State<ProductsScreen> {
           if (!_loadingFilters && _categories.isNotEmpty) _buildCategoryChips(),
           if (!_loadingFilters && _shops.isNotEmpty) _buildShopChips(),
           const SizedBox(height: 8),
+          _buildItemTypeChips(),
+          const SizedBox(height: 8),
+          _buildPriceInputs(),
+          const SizedBox(height: 8),
+          _buildCouponToggle(),
           if (_items.isEmpty && _loading)
             Padding(
               padding: const EdgeInsets.all(16),
@@ -336,6 +357,104 @@ class _ProductsScreenState extends State<ProductsScreen> {
       ),
     );
   }
+
+  Widget _buildItemTypeChips() {
+    const types = [
+      ('PRODUCT', 'Product'),
+      ('APP', 'App'),
+      ('GAME', 'Game'),
+      ('SERVICE', 'Service'),
+    ];
+    return SizedBox(
+      height: 40,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: ChoiceChip(
+              label: const Text('Tất cả loại'),
+              selected: _itemType == null,
+              onSelected: (_) {
+                setState(() => _itemType = null);
+                _loadFirst();
+              },
+            ),
+          ),
+          ...types.map(
+            (type) => Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: ChoiceChip(
+                label: Text(type.$2),
+                selected: _itemType == type.$1,
+                onSelected: (_) {
+                  setState(() => _itemType = type.$1);
+                  _loadFirst();
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPriceInputs() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: _minCtrl,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Giá min',
+                prefixIcon: Icon(Icons.price_check),
+              ),
+              onSubmitted: (_) => _applyPriceFilter(),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: TextField(
+              controller: _maxCtrl,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Giá max',
+                prefixIcon: Icon(Icons.price_change),
+              ),
+              onSubmitted: (_) => _applyPriceFilter(),
+            ),
+          ),
+          IconButton(
+            onPressed: _applyPriceFilter,
+            icon: const Icon(Icons.check),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCouponToggle() {
+    return SwitchListTile(
+      value: _hasCouponOnly,
+      onChanged: (value) {
+        setState(() => _hasCouponOnly = value);
+        _loadFirst();
+      },
+      title: const Text('Chỉ hiển thị item có mã giảm giá'),
+    );
+  }
+
+  void _applyPriceFilter() {
+    setState(() {
+      _priceMin = int.tryParse(_minCtrl.text);
+      _priceMax = int.tryParse(_maxCtrl.text);
+    });
+    _loadFirst();
+  }
 }
 
 class _SortOption {
@@ -347,7 +466,9 @@ class _SortOption {
 }
 
 const List<_SortOption> _sortOptions = [
-  _SortOption(null, 'Mac dinh', Icons.sort),
-  _SortOption('price_asc', 'Gia tang dan', Icons.arrow_upward),
-  _SortOption('price_desc', 'Gia giam dan', Icons.arrow_downward),
+  _SortOption(null, 'Mặc định', Icons.sort),
+  _SortOption('newest', 'Mới nhất', Icons.fiber_new),
+  _SortOption('popular', 'Được xem nhiều', Icons.visibility),
+  _SortOption('price_asc', 'Giá tăng dần', Icons.arrow_upward),
+  _SortOption('price_desc', 'Giá giảm dần', Icons.arrow_downward),
 ];
