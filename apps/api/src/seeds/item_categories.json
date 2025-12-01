@@ -1,0 +1,14 @@
+[
+  {
+    "name": "Công nghệ",
+    "imageUrl": "https://cdn.example.com/categories/tech.png"
+  },
+  {
+    "name": "Gia dụng",
+    "imageUrl": "https://cdn.example.com/categories/home.png"
+  },
+  {
+    "name": "Ẩm thực",
+    "imageUrl": "https://cdn.example.com/categories/food.png"
+  }
+]

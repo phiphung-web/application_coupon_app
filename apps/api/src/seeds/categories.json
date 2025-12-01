@@ -1,0 +1,8 @@
+[
+  { "name": "Công nghệ", "priority": 10 },
+  { "name": "Gia dụng", "priority": 9 },
+  { "name": "Thời trang", "priority": 8 },
+  { "name": "Giải trí", "priority": 7 },
+  { "name": "Game", "priority": 6 },
+  { "name": "Ứng dụng", "priority": 5 }
+]

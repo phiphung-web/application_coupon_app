@@ -1,0 +1,35 @@
+[
+  {
+    "name": "Tai nghe TWS XYZ",
+    "description": "Tai nghe không dây với khả năng chống ồn chủ động.",
+    "imageUrl": "https://cdn.example.com/items/tws.png",
+    "itemType": "PRODUCT",
+    "itemUrl": "https://shopee.vn/tai-nghe-tws-xyz",
+    "price": 49.99,
+    "source": "Shopee",
+    "category": "Công nghệ",
+    "badge": "hot"
+  },
+  {
+    "name": "Nồi chiên 4L",
+    "description": "Nồi chiên không dầu dung tích 4L phù hợp gia đình nhỏ.",
+    "imageUrl": "https://cdn.example.com/items/air-fryer.png",
+    "itemType": "PRODUCT",
+    "itemUrl": "https://www.lazada.vn/noi-chien-4l",
+    "price": 159.99,
+    "source": "Lazada",
+    "category": "Gia dụng",
+    "badge": "top-sell"
+  },
+  {
+    "name": "Ứng dụng đặt xe FastGo",
+    "description": "Ứng dụng gọi xe với nhiều ưu đãi cho người dùng mới.",
+    "imageUrl": "https://cdn.example.com/items/fastgo.png",
+    "itemType": "APP",
+    "itemUrl": "https://play.google.com/fastgo",
+    "price": null,
+    "source": "Tiki",
+    "category": "Công nghệ",
+    "badge": "new"
+  }
+]

@@ -1,0 +1,10 @@
+{
+  "name": "coupon-monorepo",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -n API,APP -c green,blue \"cd apps/api && npm run start:dev\" \"cd apps/app && flutter run --dart-define=BASE_URL=http://localhost:3000/api\"",
+    "api:seed": "cd apps/api && npm run seed",
+    "api:start": "cd apps/api && npm run start"
+  },
+  "devDependencies": { "concurrently": "^9.0.0" }
+}

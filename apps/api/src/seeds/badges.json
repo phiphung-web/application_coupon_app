@@ -1,0 +1,20 @@
+[
+  {
+    "name": "Hot",
+    "slug": "hot",
+    "iconUrl": "https://cdn.example.com/badges/hot.svg",
+    "colorCode": "#FF5722"
+  },
+  {
+    "name": "Top Sell",
+    "slug": "top-sell",
+    "iconUrl": "https://cdn.example.com/badges/top-sell.svg",
+    "colorCode": "#FFC107"
+  },
+  {
+    "name": "New",
+    "slug": "new",
+    "iconUrl": "https://cdn.example.com/badges/new.svg",
+    "colorCode": "#3F51B5"
+  }
+]

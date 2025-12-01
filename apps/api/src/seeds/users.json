@@ -1,0 +1,16 @@
+[
+  {
+    "username": "linh.nguyen",
+    "imageUrl": "https://cdn.example.com/users/linh.png",
+    "email": "linh@example.com",
+    "password": "$2a$10$abcdefghijklmnopqrstuv", 
+    "role": "ADMIN"
+  },
+  {
+    "username": "thanh.tran",
+    "imageUrl": "https://cdn.example.com/users/thanh.png",
+    "email": "thanh@example.com",
+    "password": "$2a$10$abcdefghijklmnopqrstuv",
+    "role": "USER"
+  }
+]
