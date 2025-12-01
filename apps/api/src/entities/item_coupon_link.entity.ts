@@ -6,11 +6,13 @@ import {
   JoinColumn,
   ManyToOne,
   PrimaryColumn,
+  Index,
 } from "typeorm";
 import { Item } from "./item.entity";
 import { Coupon } from "./coupon.entity";
 
 @Entity("item_coupon_links")
+@Index("item_coupon_links_item_unique", ["itemId"], { unique: true })
 export class ItemCouponLink extends BaseEntity {
   @PrimaryColumn({ name: "item_id" })
   itemId!: number;

@@ -1,5 +1,6 @@
 import { ItemType } from "../../entities/item.entity";
 import { DiscountType } from "../../entities/coupon.entity";
+import { PaginationDto } from "../../common/dtos/pagination.dto";
 declare class CreateInlineCouponDto {
     code: string;
     description?: string;
@@ -37,6 +38,11 @@ export declare class UpdateProductDto {
 }
 export declare class LinkCouponDto {
     couponId: number;
-    isPrimary: boolean;
+}
+export declare class ProductQueryDto extends PaginationDto {
+    itemType?: ItemType;
+    minPrice?: number;
+    maxPrice?: number;
+    hasCoupon?: string;
 }
 export {};

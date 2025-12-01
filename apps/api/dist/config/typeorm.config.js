@@ -13,6 +13,7 @@ const favorite_item_entity_1 = require("../entities/favorite_item.entity");
 const favorite_coupon_entity_1 = require("../entities/favorite_coupon.entity");
 const favorite_source_entity_1 = require("../entities/favorite_source.entity");
 const item_category_entity_1 = require("../entities/item_category.entity");
+const notification_entity_1 = require("../entities/notification.entity");
 exports.typeormConfig = {
     type: "postgres",
     url: process.env.DATABASE_URL,
@@ -31,6 +32,7 @@ exports.typeormConfig = {
         favorite_item_entity_1.FavoriteItem,
         favorite_coupon_entity_1.FavoriteCoupon,
         favorite_source_entity_1.FavoriteSource,
+        notification_entity_1.Notification,
     ],
     migrations: ["dist/migrations/*.js"],
 };

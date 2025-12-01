@@ -1,4 +1,13 @@
-import { IsNotEmpty, IsOptional, IsString, MaxLength } from "class-validator";
+import {
+  IsEnum,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MaxLength,
+  Min,
+} from "class-validator";
+import { SourceType } from "../../entities/source.entity";
 
 export class CreateSourceDto {
   @IsString()
@@ -36,4 +45,23 @@ export class UpdateSourceDto {
   @IsOptional()
   @IsString()
   websiteUrl?: string;
+
+  @IsOptional()
+  @IsEnum(SourceType)
+  type?: SourceType;
+
+  @IsOptional()
+  @IsInt()
+  priority?: number;
+}
+
+export class SourceHighlightQueryDto {
+  @IsOptional()
+  @IsEnum(SourceType)
+  type?: SourceType;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  limit?: number;
 }

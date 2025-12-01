@@ -1,10 +1,9 @@
 import { CouponsService } from "./coupons.service";
-import { PaginationDto } from "../../common/dtos/pagination.dto";
-import { UpsertCouponDto } from "./dto";
+import { UpsertCouponDto, CouponQueryDto } from "./dto";
 export declare class CouponsController {
     private readonly svc;
     constructor(svc: CouponsService);
-    list(q: PaginationDto, active?: string): Promise<{
+    list(q: CouponQueryDto, active?: string): Promise<{
         items: import("../../entities/coupon.entity").Coupon[];
         meta: {
             page: number;

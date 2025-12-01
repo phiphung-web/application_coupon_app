@@ -10,6 +10,9 @@ abstract class CouponRepo {
     String? sort,
     String? shopId,
     String? badgeKey,
+    String? discountType,
+    DateTime? expiresFrom,
+    DateTime? expiresTo,
   });
 
   Future<List<Coupon>> hot({int limit = 10});

@@ -64,6 +64,9 @@ class CouponRepoMock implements CouponRepo {
     String? sort,
     String? shopId,
     String? badgeKey,
+    String? discountType,
+    DateTime? expiresFrom,
+    DateTime? expiresTo,
   }) async {
     var list = _data.where((c) => c.isActive).toList();
     if (categoryId != null) {

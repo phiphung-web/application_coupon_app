@@ -13,6 +13,7 @@ import '../../data/repo/product_repo.dart';
 import '../../models/coupon.dart';
 import '../../models/product.dart';
 import '../../models/shop.dart';
+import '../../services/copy_history_service.dart';
 import '../../services/favorites_service.dart';
 import '../../widgets/loading_skeleton.dart';
 import '../../widgets/product_grid_card.dart';

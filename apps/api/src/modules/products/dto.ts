@@ -1,5 +1,5 @@
 import {
-  IsBoolean,
+  IsBooleanString,
   IsEnum,
   IsInt,
   IsNotEmpty,
@@ -11,6 +11,7 @@ import {
 import { Type } from "class-transformer";
 import { ItemType } from "../../entities/item.entity";
 import { DiscountType } from "../../entities/coupon.entity";
+import { PaginationDto } from "../../common/dtos/pagination.dto";
 
 class CreateInlineCouponDto {
   @IsString()
@@ -135,7 +136,22 @@ export class UpdateProductDto {
 export class LinkCouponDto {
   @IsInt()
   couponId!: number;
+}
 
-  @IsBoolean()
-  isPrimary = false;
+export class ProductQueryDto extends PaginationDto {
+  @IsOptional()
+  @IsEnum(ItemType)
+  itemType?: ItemType;
+
+  @IsOptional()
+  @IsNumber()
+  minPrice?: number;
+
+  @IsOptional()
+  @IsNumber()
+  maxPrice?: number;
+
+  @IsOptional()
+  @IsBooleanString()
+  hasCoupon?: string;
 }

@@ -10,4 +10,13 @@ export declare class CouponCategoriesService {
     remove(id: number): Promise<{
         ok: boolean;
     }>;
+    highlights(limit?: number): Promise<{
+        couponCount: number;
+        id: number;
+        name: string;
+        description?: string;
+        coupons: import("../../entities/coupon.entity").Coupon[];
+        createdAt: Date;
+        updatedAt: Date;
+    }[]>;
 }

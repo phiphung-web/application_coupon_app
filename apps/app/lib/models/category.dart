@@ -5,6 +5,7 @@ class Category {
   final int? parentId;
   final int priority;
   final bool isActive;
+  final int? itemCount;
 
   const Category({
     required this.id,
@@ -13,6 +14,7 @@ class Category {
     this.parentId,
     this.priority = 0,
     this.isActive = true,
+    this.itemCount,
   });
 
   factory Category.fromJson(Map<String, dynamic> json) => Category(
@@ -24,6 +26,9 @@ class Category {
             ? json['priority'] as int
             : int.tryParse('${json['priority']}') ?? 0,
         isActive: json['isActive'] ?? true,
+        itemCount: json['itemCount'] is int
+            ? json['itemCount'] as int
+            : int.tryParse('${json['itemCount']}'),
       );
 
   Map<String, dynamic> toJson() => {
@@ -33,5 +38,6 @@ class Category {
         'parentId': parentId,
         'priority': priority,
         'isActive': isActive,
+        'itemCount': itemCount,
       };
 }

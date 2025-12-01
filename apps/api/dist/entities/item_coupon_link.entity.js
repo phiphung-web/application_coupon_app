@@ -47,5 +47,6 @@ __decorate([
     __metadata("design:type", Date)
 ], ItemCouponLink.prototype, "linkedAt", void 0);
 exports.ItemCouponLink = ItemCouponLink = __decorate([
-    (0, typeorm_1.Entity)("item_coupon_links")
+    (0, typeorm_1.Entity)("item_coupon_links"),
+    (0, typeorm_1.Index)("item_coupon_links_item_unique", ["itemId"], { unique: true })
 ], ItemCouponLink);

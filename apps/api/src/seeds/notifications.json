@@ -1,0 +1,26 @@
+[
+  {
+    "title": "Bảo trì hệ thống",
+    "message": "Ứng dụng sẽ bảo trì vào 02:00 - 03:00 ngày mai.",
+    "category": "SYSTEM",
+    "importance": 2,
+    "tags": ["maintenance"]
+  },
+  {
+    "title": "Flash sale 11.11",
+    "message": "Shopee tung mã 500K cho đơn điện tử. Số lượng cực giới hạn!",
+    "category": "EVENT",
+    "source": "Shopee",
+    "tags": ["flash_sale", "hot-deal"]
+  },
+  {
+    "title": "Item bạn yêu thích có mã mới",
+    "message": "iPhone 15 Pro Max vừa có mã FREESHIP áp dụng trong 24h.",
+    "category": "PERSONAL",
+    "importance": 3,
+    "tags": ["personalized"],
+    "item": "iPhone 15 Pro Max",
+    "coupon": "IPHONEFLASH"
+  }
+]
+

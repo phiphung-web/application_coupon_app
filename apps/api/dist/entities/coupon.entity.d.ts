@@ -28,4 +28,5 @@ export declare class Coupon extends BaseEntity {
     itemLinks: ItemCouponLink[];
     createdAt: Date;
     updatedAt: Date;
+    hydrateUrls(): void;
 }

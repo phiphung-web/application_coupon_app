@@ -10,4 +10,5 @@ export declare class ItemCategory extends BaseEntity {
     items: Item[];
     createdAt: Date;
     updatedAt: Date;
+    hydrateUrls(): void;
 }

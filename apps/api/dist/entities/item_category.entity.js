@@ -12,7 +12,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ItemCategory = void 0;
 const typeorm_1 = require("typeorm");
 const item_entity_1 = require("./item.entity");
+const storage_util_1 = require("../common/utils/storage.util");
 let ItemCategory = class ItemCategory extends typeorm_1.BaseEntity {
+    hydrateUrls() {
+        if (this.imageUrl) {
+            this.imageUrl = (0, storage_util_1.toPublicUrl)(this.imageUrl);
+        }
+    }
 };
 exports.ItemCategory = ItemCategory;
 __decorate([
@@ -52,6 +58,12 @@ __decorate([
     (0, typeorm_1.UpdateDateColumn)({ name: "updated_at" }),
     __metadata("design:type", Date)
 ], ItemCategory.prototype, "updatedAt", void 0);
+__decorate([
+    (0, typeorm_1.AfterLoad)(),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], ItemCategory.prototype, "hydrateUrls", null);
 exports.ItemCategory = ItemCategory = __decorate([
     (0, typeorm_1.Entity)("item_categories")
 ], ItemCategory);

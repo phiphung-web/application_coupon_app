@@ -11,6 +11,18 @@ export declare class CategoriesController {
             total: number;
         };
     }>;
+    highlights(limit: number): Promise<{
+        itemCount: number;
+        id: number;
+        name: string;
+        parentId?: number;
+        parent?: import("../../entities/item_category.entity").ItemCategory;
+        children: import("../../entities/item_category.entity").ItemCategory[];
+        imageUrl?: string;
+        items: import("../../entities/item.entity").Item[];
+        createdAt: Date;
+        updatedAt: Date;
+    }[]>;
     listAll(): Promise<import("../../entities/item_category.entity").ItemCategory[]>;
     tree(): Promise<any[]>;
     get(id: number): Promise<import("../../entities/item_category.entity").ItemCategory>;

@@ -25,9 +25,9 @@ class ShopRepoMock implements ShopRepo {
 
   @override
   Future<Shop?> get(String id) async {
-    final list = await list();
+    final shops = await list();
     try {
-      return list.firstWhere((shop) => shop.id == id);
+      return shops.firstWhere((shop) => shop.id == id);
     } catch (_) {
       return null;
     }

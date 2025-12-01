@@ -9,9 +9,10 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UpsertCouponDto = void 0;
+exports.CouponQueryDto = exports.UpsertCouponDto = void 0;
 const class_validator_1 = require("class-validator");
 const coupon_entity_1 = require("../../entities/coupon.entity");
+const pagination_dto_1 = require("../../common/dtos/pagination.dto");
 class UpsertCouponDto {
 }
 exports.UpsertCouponDto = UpsertCouponDto;
@@ -73,3 +74,21 @@ __decorate([
     (0, class_validator_1.IsDateString)(),
     __metadata("design:type", String)
 ], UpsertCouponDto.prototype, "endDate", void 0);
+class CouponQueryDto extends pagination_dto_1.PaginationDto {
+}
+exports.CouponQueryDto = CouponQueryDto;
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsEnum)(coupon_entity_1.DiscountType),
+    __metadata("design:type", String)
+], CouponQueryDto.prototype, "discountType", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsDateString)(),
+    __metadata("design:type", String)
+], CouponQueryDto.prototype, "expiresFrom", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsDateString)(),
+    __metadata("design:type", String)
+], CouponQueryDto.prototype, "expiresTo", void 0);

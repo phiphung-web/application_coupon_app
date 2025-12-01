@@ -3,18 +3,25 @@
     "name": "Shopee",
     "description": "Nền tảng thương mại điện tử phổ biến với nhiều ngành hàng.",
     "imageUrl": "https://cdn.example.com/sources/shopee.png",
-    "websiteUrl": "https://shopee.vn"
+    "websiteUrl": "https://shopee.vn",
+    "type": "ECOM",
+    "priority": 120
   },
   {
     "name": "Lazada",
-    "description": "Hệ sinh thái mua sắm Lazada.",
+    "description": "Hệ sinh thái mua sắm trực tuyến Lazada.",
     "imageUrl": "https://cdn.example.com/sources/lazada.png",
-    "websiteUrl": "https://www.lazada.vn"
+    "websiteUrl": "https://www.lazada.vn",
+    "type": "ECOM",
+    "priority": 90
   },
   {
     "name": "Tiki",
     "description": "Sàn thương mại điện tử Tiki.",
     "imageUrl": "https://cdn.example.com/sources/tiki.png",
-    "websiteUrl": "https://tiki.vn"
+    "websiteUrl": "https://tiki.vn",
+    "type": "ECOM",
+    "priority": 80
   }
 ]
+

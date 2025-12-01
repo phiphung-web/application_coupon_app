@@ -12,6 +12,7 @@ class ProductGridCard extends StatelessWidget {
     final current = product.priceEffective;
     final original = product.priceOriginal;
     final pct = product.discountPercent;
+    final badge = product.badges.isNotEmpty ? product.badges.first : null;
 
     return InkWell(
       borderRadius: BorderRadius.circular(14),
@@ -34,16 +35,36 @@ class ProductGridCard extends StatelessWidget {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(10),
-              child: (product.imageUrl != null && product.imageUrl!.isNotEmpty)
-                  ? Image.network(
-                      product.imageUrl!,
-                      height: 140,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) =>
-                          Container(height: 140, color: const Color(0xFFEDEDED)),
-                    )
-                  : Container(height: 140, color: const Color(0xFFEDEDED)),
+              child: Stack(
+                children: [
+                  (product.imageUrl != null && product.imageUrl!.isNotEmpty)
+                      ? Image.network(
+                          product.imageUrl!,
+                          height: 140,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) =>
+                              Container(height: 140, color: const Color(0xFFEDEDED)),
+                        )
+                      : Container(height: 140, color: const Color(0xFFEDEDED)),
+                  if (badge != null)
+                    Positioned(
+                      top: 8,
+                      left: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(.6),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          badge.label,
+                          style: const TextStyle(color: Colors.white, fontSize: 11),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ),
             const SizedBox(height: 8),
             Text(
@@ -52,6 +73,13 @@ class ProductGridCard extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
+            if (product.sourceName != null) ...[
+              const SizedBox(height: 2),
+              Text(
+                product.sourceName!,
+                style: const TextStyle(fontSize: 12, color: Colors.black54),
+              ),
+            ],
             const SizedBox(height: 4),
             Row(
               children: [

@@ -8,11 +8,13 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
   JoinColumn,
+  AfterLoad,
 } from "typeorm";
 import { Source } from "./source.entity";
 import { ItemCategory } from "./item_category.entity";
 import { Badge } from "./badge.entity";
 import { ItemCouponLink } from "./item_coupon_link.entity";
+import { toPublicUrl } from "../common/utils/storage.util";
 
 export enum ItemType {
   PRODUCT = "PRODUCT",
@@ -82,9 +84,19 @@ export class Item extends BaseEntity {
   @OneToMany(() => ItemCouponLink, (link) => link.item)
   couponLinks!: ItemCouponLink[];
 
+  @Column({ name: "view_count", type: "int", default: 0 })
+  viewCount!: number;
+
   @CreateDateColumn({ name: "created_at" })
   createdAt!: Date;
 
   @UpdateDateColumn({ name: "updated_at" })
   updatedAt!: Date;
+
+  @AfterLoad()
+  hydrateUrls() {
+    if (this.imageUrl) {
+      this.imageUrl = toPublicUrl(this.imageUrl);
+    }
+  }
 }

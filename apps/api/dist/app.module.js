@@ -23,6 +23,8 @@ const coupon_categories_module_1 = require("./modules/coupon-categories/coupon-c
 const badges_module_1 = require("./modules/badges/badges.module");
 const sources_module_1 = require("./modules/sources/sources.module");
 const pricing_module_1 = require("./modules/pricing/pricing.module");
+const uploads_module_1 = require("./modules/uploads/uploads.module");
+const notifications_module_1 = require("./modules/notifications/notifications.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -64,6 +66,8 @@ exports.AppModule = AppModule = __decorate([
             badges_module_1.BadgesModule,
             sources_module_1.SourcesModule,
             pricing_module_1.PricingModule,
+            uploads_module_1.UploadsModule,
+            notifications_module_1.NotificationsModule,
         ],
         providers: [
             // Validate DTO toàn cục

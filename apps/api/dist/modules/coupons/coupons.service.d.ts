@@ -1,11 +1,10 @@
 import { Repository } from "typeorm";
 import { Coupon } from "../../entities/coupon.entity";
-import { UpsertCouponDto } from "./dto";
-import { PaginationDto } from "../../common/dtos/pagination.dto";
+import { UpsertCouponDto, CouponQueryDto } from "./dto";
 export declare class CouponsService {
     private readonly repo;
     constructor(repo: Repository<Coupon>);
-    paginate(q: PaginationDto & {
+    paginate(q: CouponQueryDto & {
         active?: string;
     }): Promise<{
         items: Coupon[];

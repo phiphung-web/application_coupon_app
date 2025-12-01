@@ -1,4 +1,5 @@
 import { DiscountType } from "../../entities/coupon.entity";
+import { PaginationDto } from "../../common/dtos/pagination.dto";
 export declare class UpsertCouponDto {
     id?: number;
     code: string;
@@ -12,4 +13,9 @@ export declare class UpsertCouponDto {
     badgeId?: number;
     startDate?: string;
     endDate?: string;
+}
+export declare class CouponQueryDto extends PaginationDto {
+    discountType?: DiscountType;
+    expiresFrom?: string;
+    expiresTo?: string;
 }

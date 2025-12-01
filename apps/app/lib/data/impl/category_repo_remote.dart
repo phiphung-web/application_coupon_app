@@ -35,4 +35,18 @@ class CategoryRepoRemote implements CategoryRepo {
       return _fallback.list();
     }
   }
+
+  @override
+  Future<List<Category>> highlights({int limit = 6}) async {
+    try {
+      final json = await _api.get('categories/highlights', query: {'limit': limit});
+      if (json is List) {
+        return json.map((e) => Category.fromJson(Map<String, dynamic>.from(e as Map))).toList();
+      }
+      return const [];
+    } catch (e) {
+      debugPrint('CategoryRepoRemote.highlights fallback: $e');
+      return list();
+    }
+  }
 }

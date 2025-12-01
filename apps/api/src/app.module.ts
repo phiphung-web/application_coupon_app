@@ -16,6 +16,8 @@ import { CouponCategoriesModule } from "./modules/coupon-categories/coupon-categ
 import { BadgesModule } from "./modules/badges/badges.module";
 import { SourcesModule } from "./modules/sources/sources.module";
 import { PricingModule } from "./modules/pricing/pricing.module";
+import { UploadsModule } from "./modules/uploads/uploads.module";
+import { NotificationsModule } from "./modules/notifications/notifications.module";
 
 @Module({
   imports: [
@@ -57,6 +59,8 @@ import { PricingModule } from "./modules/pricing/pricing.module";
     BadgesModule,
     SourcesModule,
     PricingModule,
+    UploadsModule,
+    NotificationsModule,
   ],
   providers: [
     // Validate DTO toàn cục

@@ -15,6 +15,7 @@ const source_entity_1 = require("./source.entity");
 const item_category_entity_1 = require("./item_category.entity");
 const badge_entity_1 = require("./badge.entity");
 const item_coupon_link_entity_1 = require("./item_coupon_link.entity");
+const storage_util_1 = require("../common/utils/storage.util");
 var ItemType;
 (function (ItemType) {
     ItemType["PRODUCT"] = "PRODUCT";
@@ -23,6 +24,11 @@ var ItemType;
     ItemType["SERVICE"] = "SERVICE";
 })(ItemType || (exports.ItemType = ItemType = {}));
 let Item = class Item extends typeorm_1.BaseEntity {
+    hydrateUrls() {
+        if (this.imageUrl) {
+            this.imageUrl = (0, storage_util_1.toPublicUrl)(this.imageUrl);
+        }
+    }
 };
 exports.Item = Item;
 __decorate([
@@ -99,6 +105,10 @@ __decorate([
     __metadata("design:type", Array)
 ], Item.prototype, "couponLinks", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ name: "view_count", type: "int", default: 0 }),
+    __metadata("design:type", Number)
+], Item.prototype, "viewCount", void 0);
+__decorate([
     (0, typeorm_1.CreateDateColumn)({ name: "created_at" }),
     __metadata("design:type", Date)
 ], Item.prototype, "createdAt", void 0);
@@ -106,6 +116,12 @@ __decorate([
     (0, typeorm_1.UpdateDateColumn)({ name: "updated_at" }),
     __metadata("design:type", Date)
 ], Item.prototype, "updatedAt", void 0);
+__decorate([
+    (0, typeorm_1.AfterLoad)(),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], Item.prototype, "hydrateUrls", null);
 exports.Item = Item = __decorate([
     (0, typeorm_1.Entity)("items")
 ], Item);

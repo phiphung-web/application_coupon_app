@@ -24,6 +24,8 @@ export declare class Item extends BaseEntity {
     badgeId?: number;
     badge?: Badge;
     couponLinks: ItemCouponLink[];
+    viewCount: number;
     createdAt: Date;
     updatedAt: Date;
+    hydrateUrls(): void;
 }

@@ -13,6 +13,10 @@ import { User } from "../entities/user.entity";
 import { FavoriteItem } from "../entities/favorite_item.entity";
 import { FavoriteCoupon } from "../entities/favorite_coupon.entity";
 import { FavoriteSource } from "../entities/favorite_source.entity";
+import {
+  Notification,
+  NotificationCategory,
+} from "../entities/notification.entity";
 
 function load<T>(file: string): T {
   const p = join(__dirname, file);
@@ -36,8 +40,26 @@ function load<T>(file: string): T {
   const favItemRepo = ds.getRepository(FavoriteItem);
   const favCouponRepo = ds.getRepository(FavoriteCoupon);
   const favSourceRepo = ds.getRepository(FavoriteSource);
+  const notificationRepo = ds.getRepository(Notification);
 
-  console.log("🌱 Starting seed...");
+  console.log("🔄 Seeding data...");
+
+  await ds.query(`
+    TRUNCATE TABLE
+      item_coupon_links,
+      favorite_items,
+      favorite_coupons,
+      favorite_sources,
+      items,
+      coupons,
+      item_categories,
+      coupon_categories,
+      badges,
+      sources,
+      users,
+      notifications
+    RESTART IDENTITY CASCADE
+  `);
 
   const sourceMap = new Map<string, Source>();
   for (const s of load<any[]>("./sources.json")) {
@@ -156,6 +178,22 @@ function load<T>(file: string): T {
     if (!user || !source) continue;
     await favSourceRepo.save(
       favSourceRepo.create({ userId: user.id, sourceId: source.id })
+    );
+  }
+
+  for (const raw of load<any[]>("./notifications.json")) {
+    await notificationRepo.save(
+      notificationRepo.create({
+        title: raw.title,
+        message: raw.message,
+        category:
+          (raw.category as NotificationCategory) ?? NotificationCategory.SYSTEM,
+        importance: raw.importance ?? 0,
+        tags: raw.tags,
+        sourceId: raw.source ? sourceMap.get(raw.source)?.id : undefined,
+        itemId: raw.item ? itemMap.get(raw.item)?.id : undefined,
+        couponId: raw.coupon ? couponMap.get(raw.coupon)?.id : undefined,
+      })
     );
   }
 

@@ -59,6 +59,10 @@ class ProductRepoRemote implements ProductRepo {
     String? q,
     String? sort,
     String? shopId,
+    String? itemType,
+    int? minPrice,
+    int? maxPrice,
+    bool? hasCoupon,
   }) async {
     final query = <String, dynamic>{
       'page': page,
@@ -68,6 +72,10 @@ class ProductRepoRemote implements ProductRepo {
       if (q != null && q.isNotEmpty) 'q': q,
       if (sort != null && sort.isNotEmpty) 'sort': sort,
       if (shopId != null && shopId.isNotEmpty) 'source': shopId,
+      if (itemType != null && itemType.isNotEmpty) 'itemType': itemType,
+      if (minPrice != null) 'minPrice': minPrice,
+      if (maxPrice != null) 'maxPrice': maxPrice,
+      if (hasCoupon != null) 'hasCoupon': hasCoupon ? 'true' : 'false',
     };
     try {
       final response = await _api.get('products', query: query);

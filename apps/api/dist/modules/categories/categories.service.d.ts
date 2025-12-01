@@ -19,6 +19,18 @@ export declare class CategoriesService {
     remove(id: number): Promise<{
         ok: boolean;
     }>;
+    highlights(limit?: number): Promise<{
+        itemCount: number;
+        id: number;
+        name: string;
+        parentId?: number;
+        parent?: Category;
+        children: Category[];
+        imageUrl?: string;
+        items: import("../../entities/item.entity").Item[];
+        createdAt: Date;
+        updatedAt: Date;
+    }[]>;
     tree(): Promise<any[]>;
     breadcrumbs(id: number): Promise<Category[]>;
 }

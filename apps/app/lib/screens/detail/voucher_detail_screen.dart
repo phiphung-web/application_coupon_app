@@ -6,6 +6,7 @@ import '../../core/money.dart';
 import '../../data/impl/coupon_repo_remote.dart';
 import '../../data/repo/coupon_repo.dart';
 import '../../models/coupon.dart';
+import '../../services/copy_history_service.dart';
 import '../../widgets/coupon_list_item.dart';
 import '../../widgets/loading_skeleton.dart';
 

@@ -57,6 +57,7 @@ class _CouponsScreenState extends State<CouponsScreen> {
   String? _selectedBadge;
   String? _selectedDiscountType;
   String _sort = 'newest';
+  String? _expiryFilter;
 
   final List<Coupon> _hot = [];
   final List<Coupon> _items = [];
@@ -146,6 +147,8 @@ class _CouponsScreenState extends State<CouponsScreen> {
         shopId: _selectedSource,
         badgeKey: _selectedBadge,
         sort: _apiSort(),
+        discountType: _selectedDiscountType,
+        expiresTo: _expiryDate(),
       );
       if (!mounted) return;
       final data = _filterAndSort(res.data);
@@ -178,6 +181,8 @@ class _CouponsScreenState extends State<CouponsScreen> {
         shopId: _selectedSource,
         badgeKey: _selectedBadge,
         sort: _apiSort(),
+        discountType: _selectedDiscountType,
+        expiresTo: _expiryDate(),
       );
       if (!mounted) return;
       final data = _filterAndSort(res.data);
@@ -514,6 +519,18 @@ class _CouponsScreenState extends State<CouponsScreen> {
     }
   }
 
+  DateTime? _expiryDate() {
+    final now = DateTime.now();
+    switch (_expiryFilter) {
+      case 'soon':
+        return now.add(const Duration(days: 7));
+      case 'month':
+        return now.add(const Duration(days: 30));
+      default:
+        return null;
+    }
+  }
+
   Widget _buildFilterBar() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -524,6 +541,7 @@ class _CouponsScreenState extends State<CouponsScreen> {
           SizedBox(width: 200, child: _categoryDropdown()),
           SizedBox(width: 200, child: _sourceDropdown()),
           SizedBox(width: 200, child: _discountDropdown()),
+           SizedBox(width: 200, child: _expiryDropdown()),
           SizedBox(width: 200, child: _sortDropdown()),
         ],
       ),
@@ -584,6 +602,22 @@ class _CouponsScreenState extends State<CouponsScreen> {
       items: options,
       onChanged: (value) {
         setState(() => _selectedDiscountType = value);
+        _loadFirst();
+      },
+    );
+  }
+
+  Widget _expiryDropdown() {
+    return DropdownButtonFormField<String?>(
+      decoration: const InputDecoration(labelText: 'Hạn sử dụng'),
+      value: _expiryFilter,
+      items: const [
+        DropdownMenuItem<String?>(value: null, child: Text('Tất cả')),
+        DropdownMenuItem<String?>(value: 'soon', child: Text('Sắp hết hạn (<7 ngày)')),
+        DropdownMenuItem<String?>(value: 'month', child: Text('Trong 30 ngày')),
+      ],
+      onChanged: (value) {
+        setState(() => _expiryFilter = value);
         _loadFirst();
       },
     );

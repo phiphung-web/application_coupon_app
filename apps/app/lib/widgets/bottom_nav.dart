@@ -14,22 +14,22 @@ class BottomNav extends StatelessWidget {
         NavigationDestination(
           icon: Icon(Icons.home_outlined),
           selectedIcon: Icon(Icons.home),
-          label: 'Trang chá»§',
+          label: 'Home',
         ),
         NavigationDestination(
-          icon: Icon(Icons.grid_view_outlined),
-          selectedIcon: Icon(Icons.grid_view),
-          label: 'Sáº£n pháº©m',
+          icon: Icon(Icons.explore_outlined),
+          selectedIcon: Icon(Icons.explore),
+          label: 'Khám phá',
         ),
         NavigationDestination(
-          icon: Icon(Icons.confirmation_number_outlined),
-          selectedIcon: Icon(Icons.confirmation_number),
-          label: 'Coupon',
+          icon: Icon(Icons.notifications_none),
+          selectedIcon: Icon(Icons.notifications),
+          label: 'Thông báo',
         ),
         NavigationDestination(
           icon: Icon(Icons.person_outline),
           selectedIcon: Icon(Icons.person),
-          label: 'Account',
+          label: 'Tài kho?n',
         ),
       ],
     );

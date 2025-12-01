@@ -60,6 +60,22 @@ export class CategoriesService {
     return { ok: true };
   }
 
+  async highlights(limit = 10) {
+    const qb = this.repo
+      .createQueryBuilder("c")
+      .leftJoin("c.items", "items")
+      .select("c")
+      .addSelect("COUNT(items.id)", "item_count")
+      .groupBy("c.id")
+      .orderBy("COUNT(items.id)", "DESC")
+      .limit(limit);
+    const rows = await qb.getRawAndEntities();
+    return rows.entities.map((entity, idx) => ({
+      ...entity,
+      itemCount: Number(rows.raw[idx].item_count ?? 0),
+    }));
+  }
+
   async tree() {
     const rows = await this.listAll();
     const byParent = new Map<number | null, Category[]>();

@@ -11,15 +11,14 @@ import {
   Delete,
 } from "@nestjs/common";
 import { ProductsService } from "./products.service";
-import { PaginationDto } from "../../common/dtos/pagination.dto";
-import { CreateProductDto, LinkCouponDto, UpdateProductDto } from "./dto";
+import { CreateProductDto, LinkCouponDto, ProductQueryDto, UpdateProductDto } from "./dto";
 
 @Controller("products")
 export class ProductsController {
   constructor(private readonly svc: ProductsService) {}
 
   @Get()
-  list(@Query() q: PaginationDto, @Query("withDeal") withDeal?: string) {
+  list(@Query() q: ProductQueryDto, @Query("withDeal") withDeal?: string) {
     return this.svc.paginate({ ...q, withDeal: withDeal === "true" });
   }
 
