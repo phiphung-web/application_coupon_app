@@ -9,11 +9,18 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Source = void 0;
+exports.Source = exports.SourceType = void 0;
 const typeorm_1 = require("typeorm");
 const item_entity_1 = require("./item.entity");
 const coupon_entity_1 = require("./coupon.entity");
 const storage_util_1 = require("../common/utils/storage.util");
+var SourceType;
+(function (SourceType) {
+    SourceType["ECOM"] = "ECOM";
+    SourceType["FOOD"] = "FOOD";
+    SourceType["TRAVEL"] = "TRAVEL";
+    SourceType["APP"] = "APP";
+})(SourceType || (exports.SourceType = SourceType = {}));
 let Source = class Source extends typeorm_1.BaseEntity {
     hydrateUrls() {
         if (this.imageUrl) {
@@ -42,6 +49,18 @@ __decorate([
     (0, typeorm_1.Column)({ name: "website_url", length: 255, nullable: true }),
     __metadata("design:type", String)
 ], Source.prototype, "websiteUrl", void 0);
+__decorate([
+    (0, typeorm_1.Column)({
+        type: "enum",
+        enum: SourceType,
+        default: SourceType.ECOM,
+    }),
+    __metadata("design:type", String)
+], Source.prototype, "type", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: "int", default: 0 }),
+    __metadata("design:type", Number)
+], Source.prototype, "priority", void 0);
 __decorate([
     (0, typeorm_1.OneToMany)(() => item_entity_1.Item, (item) => item.source),
     __metadata("design:type", Array)

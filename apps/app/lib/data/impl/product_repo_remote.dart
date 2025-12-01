@@ -75,7 +75,7 @@ class ProductRepoRemote implements ProductRepo {
       if (itemType != null && itemType.isNotEmpty) 'itemType': itemType,
       if (minPrice != null) 'minPrice': minPrice,
       if (maxPrice != null) 'maxPrice': maxPrice,
-      if (hasCoupon != null) 'hasCoupon': hasCoupon,
+      if (hasCoupon != null) 'hasCoupon': hasCoupon ? 'true' : 'false',
     };
     try {
       final response = await _api.get('products', query: query);

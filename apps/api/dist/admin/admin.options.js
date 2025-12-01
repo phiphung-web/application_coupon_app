@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.buildAdminOptions = buildAdminOptions;
+const adminjs_1 = require("adminjs");
 const upload_1 = __importDefault(require("@adminjs/upload"));
 const path_1 = require("path");
 const fs_1 = require("fs");
@@ -15,6 +16,7 @@ const badge_entity_1 = require("../entities/badge.entity");
 const source_entity_1 = require("../entities/source.entity");
 const item_coupon_link_entity_1 = require("../entities/item_coupon_link.entity");
 const user_entity_1 = require("../entities/user.entity");
+const notification_entity_1 = require("../entities/notification.entity");
 const UPLOADS_ROOT = (0, path_1.join)(process.cwd(), "apps", "api", "uploads");
 function ensureDir(path) {
     if (!(0, fs_1.existsSync)(path)) {
@@ -41,12 +43,16 @@ function imageUploadFeature(folder, property = "imageUrl") {
 function buildAdminOptions(ds) {
     const couponRepo = ds.getRepository(coupon_entity_1.Coupon);
     const linkRepo = ds.getRepository(item_coupon_link_entity_1.ItemCouponLink);
+    const componentLoader = new adminjs_1.ComponentLoader();
+    const Components = {
+        CouponLinkPreview: componentLoader.add("CouponLinkPreview", "./components/coupon-link-preview"),
+        ItemLinkPreview: componentLoader.add("ItemLinkPreview", "./components/item-link-preview"),
+    };
     const handleItemExtras = (actionName) => ({
         before: async (request, context) => {
             if (request.payload) {
                 const extras = {
                     linkCouponId: request.payload.linkCouponId,
-                    linkIsPrimary: request.payload.linkIsPrimary,
                     newCouponCode: request.payload.newCouponCode,
                     newCouponDescription: request.payload.newCouponDescription,
                     newCouponDiscountType: request.payload.newCouponDiscountType,
@@ -70,11 +76,11 @@ function buildAdminOptions(ds) {
             if (extras.linkCouponId) {
                 const couponId = Number(extras.linkCouponId);
                 if (!Number.isNaN(couponId)) {
+                    await linkRepo.delete({ itemId });
                     await linkRepo.save(linkRepo.create({
                         itemId,
                         couponId,
-                        isPrimaryDisplay: extras.linkIsPrimary === true ||
-                            extras.linkIsPrimary === "true",
+                        isPrimaryDisplay: true,
                     }));
                 }
             }
@@ -103,12 +109,10 @@ function buildAdminOptions(ds) {
             if (request.payload) {
                 const extras = {
                     linkItemId: request.payload.linkItemId,
-                    linkIsPrimary: request.payload.couponLinkIsPrimary,
                 };
                 context.couponActionExtras = extras;
                 if (request.payload) {
                     delete request.payload.linkItemId;
-                    delete request.payload.couponLinkIsPrimary;
                 }
             }
             return request;
@@ -122,11 +126,11 @@ function buildAdminOptions(ds) {
             if (extras.linkItemId) {
                 const itemId = Number(extras.linkItemId);
                 if (!Number.isNaN(itemId)) {
+                    await linkRepo.delete({ itemId });
                     await linkRepo.save(linkRepo.create({
                         itemId,
                         couponId,
-                        isPrimaryDisplay: extras.linkIsPrimary === true ||
-                            extras.linkIsPrimary === "true",
+                        isPrimaryDisplay: true,
                     }));
                 }
             }
@@ -163,9 +167,12 @@ function buildAdminOptions(ds) {
                         isVisible: { list: false, filter: false, show: false, edit: true },
                         position: 120,
                     },
-                    linkIsPrimary: {
-                        type: "boolean",
+                    linkCouponPreview: {
                         isVisible: { list: false, filter: false, show: false, edit: true },
+                        components: {
+                            edit: Components.CouponLinkPreview,
+                        },
+                        isDisabled: true,
                         position: 121,
                     },
                     newCouponCode: {
@@ -235,9 +242,12 @@ function buildAdminOptions(ds) {
                         isVisible: { list: false, filter: false, show: false, edit: true },
                         position: 110,
                     },
-                    couponLinkIsPrimary: {
-                        type: "boolean",
+                    linkItemPreview: {
                         isVisible: { list: false, filter: false, show: false, edit: true },
+                        components: {
+                            edit: Components.ItemLinkPreview,
+                        },
+                        isDisabled: true,
                         position: 111,
                     },
                 },
@@ -255,6 +265,18 @@ function buildAdminOptions(ds) {
                 },
             },
             features: [imageUploadFeature("coupons")],
+        },
+        {
+            resource: notification_entity_1.Notification,
+            options: {
+                navigation: { name: "Engagement", icon: "Notification" },
+                listProperties: ["id", "title", "category", "importance", "createdAt"],
+                properties: {
+                    message: { type: "textarea" },
+                    payload: { type: "mixed" },
+                    tags: { type: "mixed" },
+                },
+            },
         },
         {
             resource: source_entity_1.Source,
@@ -304,6 +326,7 @@ function buildAdminOptions(ds) {
         rootPath: "/admin",
         databases: [ds],
         resources,
+        componentLoader,
         branding: {
             companyName: "Coupon App Admin",
             softwareBrothers: false,

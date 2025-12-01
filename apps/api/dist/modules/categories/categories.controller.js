@@ -23,6 +23,9 @@ let CategoriesController = class CategoriesController {
     list(q) {
         return this.svc.paginate(q);
     }
+    highlights(limit) {
+        return this.svc.highlights(limit);
+    }
     listAll() {
         return this.svc.listAll();
     }
@@ -53,6 +56,13 @@ __decorate([
     __metadata("design:paramtypes", [dto_1.CategoryQueryDto]),
     __metadata("design:returntype", void 0)
 ], CategoriesController.prototype, "list", null);
+__decorate([
+    (0, common_1.Get)("highlights"),
+    __param(0, (0, common_1.Query)("limit", new common_1.DefaultValuePipe(6), common_1.ParseIntPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number]),
+    __metadata("design:returntype", void 0)
+], CategoriesController.prototype, "highlights", null);
 __decorate([
     (0, common_1.Get)("all"),
     __metadata("design:type", Function),

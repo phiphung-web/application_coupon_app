@@ -44,12 +44,34 @@ let ProductsService = class ProductsService {
                 slug: q.badge,
                 slugLike: `%${q.badge}%`,
             });
+        if (q.itemType)
+            qb.andWhere("i.itemType = :itemType", { itemType: q.itemType });
+        if (typeof q.minPrice === "number")
+            qb.andWhere("COALESCE(i.price, 0) >= :minPrice", {
+                minPrice: q.minPrice,
+            });
+        if (typeof q.maxPrice === "number")
+            qb.andWhere("COALESCE(i.price, 0) <= :maxPrice", {
+                maxPrice: q.maxPrice,
+            });
+        if (q.hasCoupon === "true") {
+            qb.andWhere("EXISTS (SELECT 1 FROM item_coupon_links link WHERE link.item_id = i.id)");
+        }
+        else if (q.hasCoupon === "false") {
+            qb.andWhere("NOT EXISTS (SELECT 1 FROM item_coupon_links link WHERE link.item_id = i.id)");
+        }
         switch (q.sort) {
             case "price_asc":
                 qb.orderBy("i.price", "ASC");
                 break;
             case "price_desc":
                 qb.orderBy("i.price", "DESC");
+                break;
+            case "popular":
+                qb.orderBy("i.viewCount", "DESC").addOrderBy("i.id", "DESC");
+                break;
+            case "newest":
+                qb.orderBy("i.createdAt", "DESC");
                 break;
             default:
                 qb.orderBy("i.id", "DESC");
@@ -61,19 +83,35 @@ let ProductsService = class ProductsService {
         if (!q.withDeal) {
             return { items, meta: { page, limit, total } };
         }
-        const enriched = await Promise.all(items.map(async (item) => {
-            const links = await this.linkRepo.find({ where: { itemId: item.id } });
-            if (!links.length) {
+        const itemIds = items.map((it) => it.id);
+        const links = itemIds.length
+            ? await this.linkRepo.find({ where: { itemId: (0, typeorm_2.In)(itemIds) } })
+            : [];
+        const byItem = new Map();
+        const couponIds = new Set();
+        for (const link of links) {
+            if (!byItem.has(link.itemId)) {
+                byItem.set(link.itemId, link.couponId);
+                couponIds.add(link.couponId);
+            }
+        }
+        const coupons = couponIds.size
+            ? await this.couponRepo.findBy({ id: (0, typeorm_2.In)([...couponIds]) })
+            : [];
+        const couponMap = new Map();
+        coupons.forEach((c) => couponMap.set(c.id, c));
+        const enriched = items.map((item) => {
+            const couponId = byItem.get(item.id);
+            if (!couponId) {
                 return { ...item, bestDeal: null, primaryCouponId: null };
             }
-            const ids = links.map((l) => l.couponId);
-            const coupons = ids.length
-                ? await this.couponRepo.findBy({ id: (0, typeorm_2.In)(ids) })
-                : [];
-            const primary = links.find((l) => l.isPrimaryDisplay)?.couponId ?? null;
-            const best = this.pricing.bestDealForProduct(item, coupons);
-            return { ...item, bestDeal: best, primaryCouponId: primary };
-        }));
+            const coupon = couponMap.get(couponId);
+            if (!coupon) {
+                return { ...item, bestDeal: null, primaryCouponId: null };
+            }
+            const best = this.pricing.bestDealForProduct(item, [coupon]);
+            return { ...item, bestDeal: best, primaryCouponId: coupon.id };
+        });
         return { items: enriched, meta: { page, limit, total } };
     }
     async findOne(id, withDeal = true) {
@@ -83,21 +121,21 @@ let ProductsService = class ProductsService {
         });
         if (!item)
             throw new common_1.NotFoundException("Item not found");
+        this.repo.increment({ id }, "viewCount", 1).catch(() => undefined);
         if (!withDeal)
             return item;
-        const links = await this.linkRepo.find({ where: { itemId: id } });
-        if (!links.length) {
+        const link = await this.linkRepo.findOne({ where: { itemId: id } });
+        if (!link) {
             return { ...item, bestDeal: null, primaryCouponId: null };
         }
-        const ids = links.map((l) => l.couponId);
-        const coupons = ids.length
-            ? await this.couponRepo.findBy({ id: (0, typeorm_2.In)(ids) })
-            : [];
-        const primary = links.find((l) => l.isPrimaryDisplay)?.couponId ?? null;
-        const best = coupons.length
-            ? this.pricing.bestDealForProduct(item, coupons)
-            : null;
-        return { ...item, bestDeal: best, primaryCouponId: primary };
+        const coupon = await this.couponRepo.findOne({
+            where: { id: link.couponId },
+        });
+        if (!coupon) {
+            return { ...item, bestDeal: null, primaryCouponId: null };
+        }
+        const best = this.pricing.bestDealForProduct(item, [coupon]);
+        return { ...item, bestDeal: best, primaryCouponId: coupon.id };
     }
     async create(dto) {
         const entity = this.repo.create({
@@ -168,29 +206,12 @@ let ProductsService = class ProductsService {
         });
         if (!coupon)
             throw new common_1.NotFoundException("Coupon not found");
-        if (dto.isPrimary) {
-            const primaries = await this.linkRepo.find({
-                where: { itemId, isPrimaryDisplay: true },
-            });
-            for (const link of primaries) {
-                link.isPrimaryDisplay = false;
-                await this.linkRepo.save(link);
-            }
-        }
-        let link = await this.linkRepo.findOne({
-            where: { itemId, couponId: dto.couponId },
-        });
-        if (!link) {
-            link = this.linkRepo.create({
-                itemId,
-                couponId: dto.couponId,
-                isPrimaryDisplay: dto.isPrimary,
-            });
-        }
-        else {
-            link.isPrimaryDisplay = dto.isPrimary;
-        }
-        await this.linkRepo.save(link);
+        await this.linkRepo.delete({ itemId });
+        await this.linkRepo.save(this.linkRepo.create({
+            itemId,
+            couponId: dto.couponId,
+            isPrimaryDisplay: true,
+        }));
         return { ok: true };
     }
     async unlinkCoupon(itemId, couponId) {

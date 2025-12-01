@@ -48,6 +48,29 @@ let SourcesService = class SourcesService {
         await this.repo.delete({ id });
         return { ok: true };
     }
+    async highlights(q) {
+        const limit = Math.min(q.limit ?? 12, 50);
+        const qb = this.repo
+            .createQueryBuilder("s")
+            .leftJoin("s.items", "items")
+            .leftJoin("s.coupons", "coupons")
+            .select("s")
+            .addSelect("COUNT(DISTINCT items.id)", "item_count")
+            .addSelect("COUNT(DISTINCT coupons.id)", "coupon_count");
+        if (q.type) {
+            qb.where("s.type = :type", { type: q.type });
+        }
+        qb.groupBy("s.id")
+            .orderBy("s.priority", "DESC")
+            .addOrderBy("COUNT(DISTINCT coupons.id)", "DESC")
+            .limit(limit);
+        const rows = await qb.getRawAndEntities();
+        return rows.entities.map((entity, idx) => ({
+            ...entity,
+            itemCount: Number(rows.raw[idx].item_count ?? 0),
+            couponCount: Number(rows.raw[idx].coupon_count ?? 0),
+        }));
+    }
 };
 exports.SourcesService = SourcesService;
 exports.SourcesService = SourcesService = __decorate([

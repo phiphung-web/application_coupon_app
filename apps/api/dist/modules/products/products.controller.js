@@ -15,7 +15,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ProductsController = void 0;
 const common_1 = require("@nestjs/common");
 const products_service_1 = require("./products.service");
-const pagination_dto_1 = require("../../common/dtos/pagination.dto");
 const dto_1 = require("./dto");
 let ProductsController = class ProductsController {
     constructor(svc) {
@@ -46,7 +45,7 @@ __decorate([
     __param(0, (0, common_1.Query)()),
     __param(1, (0, common_1.Query)("withDeal")),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [pagination_dto_1.PaginationDto, String]),
+    __metadata("design:paramtypes", [dto_1.ProductQueryDto, String]),
     __metadata("design:returntype", void 0)
 ], ProductsController.prototype, "list", null);
 __decorate([

@@ -22,10 +22,10 @@ class ExploreScreen extends StatelessWidget {
           ),
           Expanded(
             child: TabBarView(
-              children: [
+              children: const [
                 ProductsScreen(),
                 CouponsScreen(),
-                const SourcesScreen(),
+                SourcesScreen(),
               ],
             ),
           ),
@@ -34,4 +34,3 @@ class ExploreScreen extends StatelessWidget {
     );
   }
 }
-

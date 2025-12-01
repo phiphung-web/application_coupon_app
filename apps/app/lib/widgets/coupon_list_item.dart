@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../core/money.dart';
 import '../models/coupon.dart';
@@ -13,10 +12,7 @@ class CouponListItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final primaryBadge = coupon.badges.isNotEmpty ? coupon.badges.first : null;
     final badgeColor = _colorFromHex(primaryBadge?.color ?? primaryBadge?.bgColor);
-    final isHot = coupon.badges.any(
-          (b) => b.key.toUpperCase() == 'HOT',
-        ) ||
-        (coupon.priority ?? 0) >= 80;
+    final isHot = coupon.badges.any((b) => b.key.toUpperCase() == 'HOT') || (coupon.priority ?? 0) >= 80;
 
     return InkWell(
       borderRadius: BorderRadius.circular(14),
@@ -91,14 +87,14 @@ class CouponListItem extends StatelessWidget {
                       _chip(
                         context,
                         coupon.isPercent
-                            ? 'Giảm ${coupon.discountValue}%'
-                            : 'Giảm ${money(coupon.discountValue)}',
+                            ? 'Gi?m ${coupon.discountValue}%'
+                            : 'Gi?m ${money(coupon.discountValue)}',
                       ),
                     ],
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Nguồn: ${coupon.sourceName ?? (coupon.sourceId ?? 'Toàn sàn')}',
+                    'Ngu?n: ${coupon.sourceName ?? (coupon.sourceId ?? 'To�n s�n')}',
                     style: const TextStyle(fontSize: 12, color: Colors.black54),
                   ),
                   Text(
@@ -108,16 +104,7 @@ class CouponListItem extends StatelessWidget {
                 ],
               ),
             ),
-            IconButton(
-              tooltip: 'Copy mã',
-              icon: Icon(isHot ? Icons.whatshot : Icons.copy),
-              onPressed: () {
-                Clipboard.setData(ClipboardData(text: coupon.code));
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Đã copy mã ${coupon.code}')),
-                );
-              },
-            ),
+            Icon(isHot ? Icons.whatshot : Icons.chevron_right),
           ],
         ),
       ),

@@ -9,11 +9,12 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.LinkCouponDto = exports.UpdateProductDto = exports.CreateProductDto = void 0;
+exports.ProductQueryDto = exports.LinkCouponDto = exports.UpdateProductDto = exports.CreateProductDto = void 0;
 const class_validator_1 = require("class-validator");
 const class_transformer_1 = require("class-transformer");
 const item_entity_1 = require("../../entities/item.entity");
 const coupon_entity_1 = require("../../entities/coupon.entity");
+const pagination_dto_1 = require("../../common/dtos/pagination.dto");
 class CreateInlineCouponDto {
 }
 __decorate([
@@ -169,16 +170,32 @@ __decorate([
     __metadata("design:type", Number)
 ], UpdateProductDto.prototype, "badgeId", void 0);
 class LinkCouponDto {
-    constructor() {
-        this.isPrimary = false;
-    }
 }
 exports.LinkCouponDto = LinkCouponDto;
 __decorate([
     (0, class_validator_1.IsInt)(),
     __metadata("design:type", Number)
 ], LinkCouponDto.prototype, "couponId", void 0);
+class ProductQueryDto extends pagination_dto_1.PaginationDto {
+}
+exports.ProductQueryDto = ProductQueryDto;
 __decorate([
-    (0, class_validator_1.IsBoolean)(),
-    __metadata("design:type", Object)
-], LinkCouponDto.prototype, "isPrimary", void 0);
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsEnum)(item_entity_1.ItemType),
+    __metadata("design:type", String)
+], ProductQueryDto.prototype, "itemType", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], ProductQueryDto.prototype, "minPrice", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], ProductQueryDto.prototype, "maxPrice", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBooleanString)(),
+    __metadata("design:type", String)
+], ProductQueryDto.prototype, "hasCoupon", void 0);

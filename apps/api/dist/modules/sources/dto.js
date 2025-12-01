@@ -9,8 +9,9 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UpdateSourceDto = exports.CreateSourceDto = void 0;
+exports.SourceHighlightQueryDto = exports.UpdateSourceDto = exports.CreateSourceDto = void 0;
 const class_validator_1 = require("class-validator");
+const source_entity_1 = require("../../entities/source.entity");
 class CreateSourceDto {
 }
 exports.CreateSourceDto = CreateSourceDto;
@@ -59,3 +60,27 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], UpdateSourceDto.prototype, "websiteUrl", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsEnum)(source_entity_1.SourceType),
+    __metadata("design:type", String)
+], UpdateSourceDto.prototype, "type", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsInt)(),
+    __metadata("design:type", Number)
+], UpdateSourceDto.prototype, "priority", void 0);
+class SourceHighlightQueryDto {
+}
+exports.SourceHighlightQueryDto = SourceHighlightQueryDto;
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsEnum)(source_entity_1.SourceType),
+    __metadata("design:type", String)
+], SourceHighlightQueryDto.prototype, "type", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsInt)(),
+    (0, class_validator_1.Min)(1),
+    __metadata("design:type", Number)
+], SourceHighlightQueryDto.prototype, "limit", void 0);

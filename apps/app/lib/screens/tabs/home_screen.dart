@@ -27,7 +27,6 @@ import '../detail/source_detail_screen.dart';
 import '../detail/voucher_detail_screen.dart';
 import 'categories_screen.dart';
 import 'coupon_categories_screen.dart';
-import 'coupons_screen.dart';
 import 'hot_coupons_screen.dart';
 import 'hot_products_screen.dart';
 import 'search_screen.dart';
@@ -239,7 +238,7 @@ class _HomeScreenState extends State<HomeScreen> {
             context,
             MaterialPageRoute(builder: (_) => const SourcesScreen()),
           ),
-          child: const Text('View deals'),
+          child: const Text('View all'),
         ),
       ),
       _buildSourcesSection(),

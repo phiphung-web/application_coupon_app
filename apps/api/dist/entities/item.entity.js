@@ -105,6 +105,10 @@ __decorate([
     __metadata("design:type", Array)
 ], Item.prototype, "couponLinks", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ name: "view_count", type: "int", default: 0 }),
+    __metadata("design:type", Number)
+], Item.prototype, "viewCount", void 0);
+__decorate([
     (0, typeorm_1.CreateDateColumn)({ name: "created_at" }),
     __metadata("design:type", Date)
 ], Item.prototype, "createdAt", void 0);

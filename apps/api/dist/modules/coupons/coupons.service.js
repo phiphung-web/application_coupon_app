@@ -40,10 +40,37 @@ let CouponsService = class CouponsService {
                 slug: q.badge,
                 slugLike: `%${q.badge}%`,
             });
+        if (q.discountType) {
+            qb.andWhere("c.discountType = :dtype", { dtype: q.discountType });
+        }
+        if (q.expiresFrom) {
+            qb.andWhere("c.endDate >= :expiresFrom", {
+                expiresFrom: new Date(q.expiresFrom),
+            });
+        }
+        if (q.expiresTo) {
+            qb.andWhere("c.endDate <= :expiresTo", {
+                expiresTo: new Date(q.expiresTo),
+            });
+        }
         if (q.active === "true") {
             qb.andWhere("(c.startDate IS NULL OR c.startDate <= NOW()) AND (c.endDate IS NULL OR c.endDate >= NOW())");
         }
-        qb.orderBy("COALESCE(c.startDate, c.createdAt)", "DESC");
+        switch (q.sort) {
+            case "ending":
+                qb.orderBy("COALESCE(c.endDate, c.createdAt)", "ASC");
+                break;
+            case "value":
+                qb.orderBy("COALESCE(c.discountValue, 0)", "DESC");
+                break;
+            case "hot":
+                qb
+                    .orderBy("CASE WHEN badge.slug = 'hot' THEN 1 ELSE 0 END", "DESC")
+                    .addOrderBy("c.updatedAt", "DESC");
+                break;
+            default:
+                qb.orderBy("COALESCE(c.startDate, c.createdAt)", "DESC");
+        }
         const page = q.page ?? 1;
         const limit = q.limit ?? 20;
         qb.skip((page - 1) * limit).take(limit);

@@ -18,6 +18,7 @@ const user_entity_1 = require("../entities/user.entity");
 const favorite_item_entity_1 = require("../entities/favorite_item.entity");
 const favorite_coupon_entity_1 = require("../entities/favorite_coupon.entity");
 const favorite_source_entity_1 = require("../entities/favorite_source.entity");
+const notification_entity_1 = require("../entities/notification.entity");
 function load(file) {
     const p = (0, path_1.join)(__dirname, file);
     return JSON.parse((0, fs_1.readFileSync)(p, "utf8"));
@@ -38,7 +39,24 @@ function load(file) {
     const favItemRepo = ds.getRepository(favorite_item_entity_1.FavoriteItem);
     const favCouponRepo = ds.getRepository(favorite_coupon_entity_1.FavoriteCoupon);
     const favSourceRepo = ds.getRepository(favorite_source_entity_1.FavoriteSource);
-    console.log("🌱 Starting seed...");
+    const notificationRepo = ds.getRepository(notification_entity_1.Notification);
+    console.log("🔄 Seeding data...");
+    await ds.query(`
+    TRUNCATE TABLE
+      item_coupon_links,
+      favorite_items,
+      favorite_coupons,
+      favorite_sources,
+      items,
+      coupons,
+      item_categories,
+      coupon_categories,
+      badges,
+      sources,
+      users,
+      notifications
+    RESTART IDENTITY CASCADE
+  `);
     const sourceMap = new Map();
     for (const s of load("./sources.json")) {
         const entity = sourceRepo.create(s);
@@ -141,6 +159,18 @@ function load(file) {
         if (!user || !source)
             continue;
         await favSourceRepo.save(favSourceRepo.create({ userId: user.id, sourceId: source.id }));
+    }
+    for (const raw of load("./notifications.json")) {
+        await notificationRepo.save(notificationRepo.create({
+            title: raw.title,
+            message: raw.message,
+            category: raw.category ?? notification_entity_1.NotificationCategory.SYSTEM,
+            importance: raw.importance ?? 0,
+            tags: raw.tags,
+            sourceId: raw.source ? sourceMap.get(raw.source)?.id : undefined,
+            itemId: raw.item ? itemMap.get(raw.item)?.id : undefined,
+            couponId: raw.coupon ? couponMap.get(raw.coupon)?.id : undefined,
+        }));
     }
     console.log("✅ Seed done");
     if (ds.isInitialized) {

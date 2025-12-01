@@ -22,6 +22,9 @@ let CouponCategoriesController = class CouponCategoriesController {
     list() {
         return this.svc.list();
     }
+    highlights(limit) {
+        return this.svc.highlights(limit);
+    }
     get(id) {
         return this.svc.get(id);
     }
@@ -42,6 +45,13 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], CouponCategoriesController.prototype, "list", null);
+__decorate([
+    (0, common_1.Get)("highlights"),
+    __param(0, (0, common_1.Query)("limit", new common_1.DefaultValuePipe(6), common_1.ParseIntPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number]),
+    __metadata("design:returntype", void 0)
+], CouponCategoriesController.prototype, "highlights", null);
 __decorate([
     (0, common_1.Get)(":id"),
     __param(0, (0, common_1.Param)("id", common_1.ParseIntPipe)),

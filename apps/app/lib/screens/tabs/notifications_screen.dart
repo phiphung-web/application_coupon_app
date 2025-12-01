@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../models/app_notification.dart';
@@ -15,6 +17,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   NotificationType? _filter;
   bool _loading = true;
   List<AppNotification> _items = const [];
+  StreamSubscription<List<AppNotification>>? _sub;
 
   @override
   void initState() {
@@ -25,7 +28,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Future<void> _bootstrap() async {
     await _load();
     if (!mounted) return;
-    _service.stream().listen((value) {
+    _sub = _service.stream().listen((value) {
       if (mounted) {
         setState(() => _items = value);
       }
@@ -92,6 +95,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _sub?.cancel();
+    super.dispose();
   }
 
   Widget _buildFilterBar() {
@@ -174,4 +183,3 @@ class _NotificationTile extends StatelessWidget {
     }
   }
 }
-

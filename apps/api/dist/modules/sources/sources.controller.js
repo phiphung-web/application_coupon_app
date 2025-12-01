@@ -23,6 +23,9 @@ let SourcesController = class SourcesController {
     list() {
         return this.svc.list();
     }
+    highlights(q) {
+        return this.svc.highlights(q);
+    }
     get(id) {
         return this.svc.get(id);
     }
@@ -43,6 +46,13 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], SourcesController.prototype, "list", null);
+__decorate([
+    (0, common_1.Get)("highlights"),
+    __param(0, (0, common_1.Query)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [dto_1.SourceHighlightQueryDto]),
+    __metadata("design:returntype", void 0)
+], SourcesController.prototype, "highlights", null);
 __decorate([
     (0, common_1.Get)(":id"),
     __param(0, (0, common_1.Param)("id", common_1.ParseIntPipe)),

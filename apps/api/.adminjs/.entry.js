@@ -23,3 +23,7 @@ import Component10 from '../node_modules/@adminjs/upload/src/features/upload-fil
 AdminJS.UserComponents.Component10 = Component10
 import Component11 from '../node_modules/@adminjs/upload/src/features/upload-file/components/show'
 AdminJS.UserComponents.Component11 = Component11
+import Component12 from '../src/admin/components/coupon-link-preview'
+AdminJS.UserComponents.Component12 = Component12
+import Component13 from '../src/admin/components/item-link-preview'
+AdminJS.UserComponents.Component13 = Component13
